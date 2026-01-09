@@ -1,0 +1,29 @@
+{
+    "hotels": {
+      "hotel_demo": {
+        "name": "Grand Hotel Barcelona",
+        "city": "Barcelona",
+        "address": "Passeig de Gràcia, 132, 08008 Barcelona",
+        "coordinates": "41.3967, 2.1604",
+        "logo_url": "https://cdn-icons-png.flaticon.com/512/2983/2983973.png",
+        "main_color": "#1a1a1a",
+        "partners": [
+          "Restaurante Botafumeiro (Prioridad: Cena elegante)",
+          "Bicing Barcelona (Descuento con código HOTELGRAN)",
+          "Museu del Disseny (Entrada 2x1)"
+        ]
+      },
+      "hotel_luxury_sitges": {
+        "name": "Sitges Sea Resort",
+        "city": "Sitges",
+        "address": "Passeig Marítim, 1, 08870 Sitges",
+        "coordinates": "41.2333, 1.8000",
+        "logo_url": "https://cdn-icons-png.flaticon.com/512/628/628318.png",
+        "main_color": "#0056b3",
+        "partners": [
+          "Chiringuito El Sol",
+          "Club Náutico Sitges"
+        ]
+      }
+    }
+  }
