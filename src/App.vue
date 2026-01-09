@@ -1,370 +1,357 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { db } from './firebase';
-import { doc, getDoc } from 'firebase/firestore';
-import html2pdf from 'html2pdf.js';
-import QrcodeVue from 'qrcode.vue';
-import { useGeolocation } from '@vueuse/core'; // Para la distancia real
+import { ref, onMounted } from "vue";
+import { db } from "./firebase";
+import { doc, getDoc } from "firebase/firestore";
+import html2pdf from "html2pdf.js/dist/html2pdf.bundle.min.js";
 
-// === ESTADOS REACTIVOS ===
+// === ESTADOS ===
 const loading = ref(true);
 const generating = ref(false);
 const hotelData = ref(null);
 const itinerary = ref(null);
 const error = ref(null);
-const showShareModal = ref(false); // Para el QR y WhatsApp
 
-// === FORMULARIO DE PREFERENCIAS ===
+// === FORMULARIO ===
 const formData = ref({
-  people: '2',
+  people: "2",
   days: 3,
-  group: 'Pareja',
-  activity_style: 'Explorar ciudad',
-  food_type: 'Local',
-  transport: 'Transporte público',
+  group: "Pareja",
+  style: "Explorar ciudad",
+  food: "Local",
+  transport: "Transporte público",
 });
 
-// Opciones predefinidas para el formulario (lo que el usuario puede elegir)
-const formOptions = {
-  people: ['1', '2', '3', '4', '5', 'Más de 5'],
-  group: ['Solo', 'Pareja', 'Familia con niños', 'Amigos', 'Trabajo/Negocios'],
-  activity_style: ['Vida nocturna', 'Madrugador (Early bird)', 'Naturaleza', 'Explorar ciudad', 'Historia', 'Arquitectura', 'Arte', 'Deportes', 'Relajación', 'Compras'],
-  food_type: ['Fast food', 'Fusión', 'Local/Tradicional', 'Vegano/Vegetariano', 'Comida de mar', 'Gourmet', 'Económico'],
-  transport: ['Transporte público', 'Coche', 'Bicicleta', 'A pie', 'Barca'],
+const options = {
+  people: ["1", "2", "3", "4", "5", "+5"],
+  group: ["Solo", "Pareja", "Familia", "Amigos", "Negocios"],
+  style: [
+    "Vida nocturna",
+    "Naturaleza",
+    "Historia",
+    "Arte",
+    "Deportes",
+    "Relax",
+  ],
+  food: ["Local", "Fusión", "Veggie", "Sea food", "Fast Food"],
+  transport: ["Público", "Coche", "Bicicleta", "A pie"],
 };
 
-// === LOCALIZACIÓN DEL USUARIO ===
-const { coords, located, error: geoError } = useGeolocation();
+const loadingStep = ref(0);
+const loadingPhrases = [
+  "Consultando con nuestro experto local...",
+  "Buscando los mejores rincones de la ciudad...",
+  "Evitando las trampas para turistas...",
+  "Casi listo, tu itinerario está quedando genial...",
+];
 
-// === PROPIEDADES COMPUTADAS ===
-const currentLoadingImage = ref('');
-const currentLoadingText = ref('');
-
-const backgroundStyle = computed(() => {
-  if (hotelData.value && hotelData.value.main_color) {
-    return {
-      backgroundColor: hotelData.value.main_color,
-      color: getContrastColor(hotelData.value.main_color)
-    };
-  }
-  return {};
-});
-
-const getContrastColor = (hexcolor) => {
-  if (!hexcolor) return '#000000'; // Default
-  const r = parseInt(hexcolor.slice(1, 3), 16);
-  const g = parseInt(hexcolor.slice(3, 5), 16);
-  const b = parseInt(hexcolor.slice(5, 7), 16);
-  const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
-  return (yiq >= 128) ? '#000000' : '#FFFFFF';
-};
-
-const getDynamicTextColor = computed(() => {
-  if (hotelData.value && hotelData.value.main_color) {
-    return getContrastColor(hotelData.value.main_color);
-  }
-  return '#000000';
-});
-
-// === FUNCIONES ===
-// Carga los datos del hotel y gestiona el error
 onMounted(async () => {
   const params = new URLSearchParams(window.location.search);
-  const hotelId = params.get('hotel');
-
+  const hotelId = params.get("hotel");
   if (!hotelId) {
-    error.value = "URL Inválida: No se especificó el ID del hotel. Asegúrate de usar '?hotel=tu_id_de_hotel'";
+    error.value =
+      "Por favor, accede con un ID de hotel (ej: ?hotel=hotel_demo)";
     loading.value = false;
     return;
   }
-
   try {
-    const docRef = doc(db, "hotels", hotelId);
-    const docSnap = await getDoc(docRef);
-
+    const docSnap = await getDoc(doc(db, "hotels", hotelId));
     if (docSnap.exists()) {
       hotelData.value = docSnap.data();
-      // Inicia el carrusel de imágenes/textos de carga
-      startLoadingCarousel();
     } else {
-      error.value = `Hotel "${hotelId}" no encontrado en nuestra base de datos.`;
+      error.value = "Hotel no encontrado en Firebase";
     }
   } catch (e) {
-    error.value = "Error al conectar con la base de datos: " + e.message;
+    error.value = "Error de conexión";
   } finally {
     loading.value = false;
   }
 });
 
-// Carrusel para la pantalla de carga
-let loadingCarouselInterval;
-const startLoadingCarousel = () => {
-  let imageIndex = 0;
-  let textIndex = 0;
-  const updateContent = () => {
-    if (hotelData.value.loading_images && hotelData.value.loading_images.length > 0) {
-      currentLoadingImage.value = hotelData.value.loading_images[imageIndex];
-      imageIndex = (imageIndex + 1) % hotelData.value.loading_images.length;
-    }
-    if (hotelData.value.loading_texts && hotelData.value.loading_texts.length > 0) {
-      currentLoadingText.value = hotelData.value.loading_texts[textIndex];
-      textIndex = (textIndex + 1) % hotelData.value.loading_texts.length;
-    }
-  };
-  updateContent(); // Muestra el primero inmediatamente
-  loadingCarouselInterval = setInterval(updateContent, 4000); // Cambia cada 4 segundos
-};
-
-// Llama a la API para generar el itinerario
 const createItinerary = async () => {
   generating.value = true;
-  itinerary.value = null;
-  error.value = null;
-  
-  if (loadingCarouselInterval) clearInterval(loadingCarouselInterval); // Detiene el carrusel
+  let timer = setInterval(() => {
+    loadingStep.value = (loadingStep.value + 1) % loadingPhrases.length;
+  }, 3000);
 
   try {
-    const response = await fetch('/api/generate-itinerary', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        hotel: hotelData.value,
-        user: formData.value
-      })
+    const response = await fetch("/api/generate-itinerary", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ hotel: hotelData.value, user: formData.value }),
     });
-
-    if (!response.ok) {
-        const errData = await response.json();
-        throw new Error(errData.error || 'Error desconocido al generar itinerario.');
-    }
-
     const data = await response.json();
-    if (data.itinerary) {
-      itinerary.value = data.itinerary;
-    } else {
-      error.value = "No se pudo generar un itinerario. Intenta con otras preferencias.";
-    }
+    itinerary.value = data.itinerary;
   } catch (e) {
-    error.value = "Hubo un problema: " + e.message;
-    console.error(e);
+    alert("Error al generar el itinerario");
   } finally {
+    clearInterval(timer);
     generating.value = false;
-    startLoadingCarousel(); // Reinicia el carrusel si el usuario vuelve a la pantalla de preferencias
   }
 };
 
-// Navegación a Google Maps
-const openGoogleMaps = (coordinates, placeName) => {
-  if (coordinates) {
-    window.open(`https://www.google.com/maps/search/?api=1&query=${coordinates}(${encodeURIComponent(placeName)})`, '_blank');
-  } else {
-    alert('Coordenadas no disponibles para este lugar.');
-  }
+const openMap = (coords) => {
+  window.open(
+    `https://www.google.com/maps/search/?api=1&query=${coords}`,
+    "_blank"
+  );
 };
 
-// Compartir por WhatsApp
-const shareOnWhatsApp = () => {
-  if (itinerary.value) {
-    const shareText = `¡Hola! He generado un itinerario increíble para mi viaje a ${hotelData.value.city} con el concierge de ${hotelData.value.name}. Échale un vistazo: ${window.location.href}`;
-    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`, '_blank');
-  }
+const shareWhatsApp = () => {
+  const text = `¡Mira mi itinerario en ${hotelData.value.name}! 🌍`;
+  window.open(
+    `https://wa.me/?text=${encodeURIComponent(
+      text + " " + window.location.href
+    )}`
+  );
 };
 
-// Generar PDF
-const generatePdf = () => {
-  const element = document.getElementById('itinerary-pdf-content'); // ID del div a convertir
-  html2pdf().from(element).save(`${hotelData.value.name}_Itinerario.pdf`);
+const downloadPDF = () => {
+  const element = document.getElementById("itinerary-content");
+  const opt = {
+    margin: 1,
+    filename: "itinerario.pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
+  };
+  html2pdf().set(opt).from(element).save();
 };
-
-// Función para calcular distancia real si la ubicación del usuario está disponible
-const calculateRealDistance = (activityCoords) => {
-  if (!located.value || !coords.value || !activityCoords) return 'N/A';
-  
-  const [lat1, lon1] = [coords.value.latitude, coords.value.longitude];
-  const [lat2, lon2] = activityCoords.split(',').map(Number);
-
-  // Implementación básica de la fórmula de Haversine para distancia en km
-  const R = 6371; // Radio de la Tierra en kilómetros
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c; // Distancia en km
-  
-  return `${distance.toFixed(1)} km`;
-};
-
 </script>
 
 <template>
-  <div :style="backgroundStyle" class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 relative transition-colors duration-500">
-    <header v-if="hotelData" class="w-full max-w-2xl flex justify-center py-4 px-2 sm:px-4 bg-white bg-opacity-90 rounded-b-xl shadow-md z-10 sticky top-0">
-      <img :src="hotelData.logo_url" alt="Logo del Hotel" class="h-16 object-contain">
+  <div class="min-h-screen bg-gray-50 font-sans text-gray-900 pb-10">
+    <header
+      v-if="hotelData"
+      class="bg-white shadow-sm border-b sticky top-0 z-50 p-4 flex justify-between items-center"
+    >
+      <img :src="hotelData.logo_url" class="h-10 object-contain" alt="logo" />
+      <div class="text-right">
+        <p class="text-xs font-bold uppercase tracking-widest text-gray-400">
+          {{ hotelData.city }}
+        </p>
+      </div>
     </header>
 
-    <div class="w-full max-w-2xl bg-white rounded-lg shadow-xl p-6 sm:p-8 md:p-10 my-8 relative z-0">
-      
-      <div v-if="error" class="text-red-600 font-bold text-center py-4">{{ error }}</div>
-
-      <div v-else-if="loading" class="flex flex-col items-center justify-center py-10">
-        <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mb-4"></div>
-        <p class="text-xl font-semibold text-gray-700">Cargando perfil del hotel...</p>
+    <main class="max-w-md mx-auto p-4">
+      <div
+        v-if="error"
+        class="bg-red-100 text-red-700 p-4 rounded-xl mt-10 text-center"
+      >
+        {{ error }}
       </div>
 
-      <div v-else-if="!itinerary && !generating" class="transition-opacity duration-500 ease-in-out opacity-100">
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-6 text-center">
-          Tu aventura en <span :style="{ color: hotelData.main_color }">{{ hotelData.city }}</span> comienza aquí
-        </h2>
-        <p class="text-gray-600 mb-8 text-center text-lg">
-          Cuéntanos tus preferencias y tu concierge personal te creará un itinerario a medida.
-        </p>
+      <section
+        v-else-if="!itinerary && !generating"
+        class="animate-in fade-in duration-500"
+      >
+        <h1 class="text-3xl font-black mb-2 mt-6">Hola.</h1>
+        <p class="text-gray-500 mb-8">Personaliza tu estancia en la ciudad.</p>
 
-        <form @submit.prevent="createItinerary" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="form-group">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">¿Cuántas personas?</label>
-            <select v-model="formData.people" class="form-select">
-              <option v-for="option in formOptions.people" :key="option" :value="option">{{ option }}</option>
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">¿Cuántos días?</label>
-            <select v-model="formData.days" class="form-select">
-              <option v-for="n in 7" :key="n" :value="n">{{ n }} Días</option>
-            </select>
-          </div>
-          
-          <div class="form-group md:col-span-2">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">Tipo de viaje</label>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" v-for="option in formOptions.group" :key="option" 
-                      @click="formData.group = option" 
-                      :class="{'btn-option-active': formData.group === option, 'btn-option-inactive': formData.group !== option}"
-                      :style="formData.group === option ? { backgroundColor: hotelData.main_color, color: getContrastColor(hotelData.main_color) } : {}"
+        <div class="space-y-6">
+          <div>
+            <label
+              class="text-xs font-black text-gray-400 uppercase tracking-tighter"
+              >¿Con quién viajas?</label
+            >
+            <div class="flex flex-wrap gap-2 mt-2">
+              <button
+                v-for="opt in options.group"
+                :key="opt"
+                @click="formData.group = opt"
+                :class="
+                  formData.group === opt
+                    ? 'bg-black text-white shadow-lg'
+                    : 'bg-white border text-gray-600'
+                "
+                class="px-5 py-2.5 rounded-full text-sm font-bold transition-all active:scale-95"
               >
-                {{ option }}
+                {{ opt }}
               </button>
             </div>
           </div>
 
-          <div class="form-group md:col-span-2">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">Estilo de actividades</label>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" v-for="option in formOptions.activity_style" :key="option" 
-                      @click="formData.activity_style = option" 
-                      :class="{'btn-option-active': formData.activity_style === option, 'btn-option-inactive': formData.activity_style !== option}"
-                      :style="formData.activity_style === option ? { backgroundColor: hotelData.main_color, color: getContrastColor(hotelData.main_color) } : {}"
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="text-xs font-black text-gray-400 uppercase"
+                >Días</label
               >
-                {{ option }}
-              </button>
+              <select
+                v-model="formData.days"
+                class="w-full mt-2 p-3 bg-white border rounded-2xl font-bold"
+              >
+                <option v-for="n in 7" :key="n" :value="n">
+                  {{ n }} día{{ n > 1 ? "s" : "" }}
+                </option>
+              </select>
+            </div>
+            <div>
+              <label class="text-xs font-black text-gray-400 uppercase"
+                >Estilo</label
+              >
+              <select
+                v-model="formData.style"
+                class="w-full mt-2 p-3 bg-white border rounded-2xl font-bold"
+              >
+                <option v-for="s in options.style" :key="s" :value="s">
+                  {{ s }}
+                </option>
+              </select>
             </div>
           </div>
 
-          <div class="form-group md:col-span-2">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">Tipo de comida preferida</label>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" v-for="option in formOptions.food_type" :key="option" 
-                      @click="formData.food_type = option" 
-                      :class="{'btn-option-active': formData.food_type === option, 'btn-option-inactive': formData.food_type !== option}"
-                      :style="formData.food_type === option ? { backgroundColor: hotelData.main_color, color: getContrastColor(hotelData.main_color) } : {}"
+          <div>
+            <label class="text-xs font-black text-gray-400 uppercase"
+              >Comida favorita</label
+            >
+            <div class="flex flex-wrap gap-2 mt-2">
+              <button
+                v-for="opt in options.food"
+                :key="opt"
+                @click="formData.food = opt"
+                :class="
+                  formData.food === opt
+                    ? 'bg-black text-white shadow-lg'
+                    : 'bg-white border text-gray-600'
+                "
+                class="px-5 py-2.5 rounded-full text-sm font-bold"
               >
-                {{ option }}
+                {{ opt }}
               </button>
             </div>
           </div>
-
-          <div class="form-group md:col-span-2">
-            <label class="block text-gray-700 text-sm font-semibold mb-2">Transporte preferido</label>
-            <div class="flex flex-wrap gap-2">
-              <button type="button" v-for="option in formOptions.transport" :key="option" 
-                      @click="formData.transport = option" 
-                      :class="{'btn-option-active': formData.transport === option, 'btn-option-inactive': formData.transport !== option}"
-                      :style="formData.transport === option ? { backgroundColor: hotelData.main_color, color: getContrastColor(hotelData.main_color) } : {}"
-              >
-                {{ option }}
-              </button>
-            </div>
-          </div>
-
-          <button type="submit" :disabled="generating" 
-                  :style="{ backgroundColor: hotelData.main_color, color: getContrastColor(hotelData.main_color) }"
-                  class="btn-primary md:col-span-2">
-            {{ generating ? 'Creando tu itinerario...' : 'Generar mi itinerario' }}
-          </button>
-        </form>
-      </div>
-
-      <div v-else-if="generating" class="flex flex-col items-center justify-center py-10 text-center transition-opacity duration-500 ease-in-out opacity-100">
-        <div class="relative w-full max-w-xs h-48 rounded-lg overflow-hidden mb-6 shadow-lg">
-          <img :src="currentLoadingImage" alt="Cargando imagen" class="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ease-in-out opacity-100">
-          <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
-          <p class="absolute bottom-4 left-4 right-4 text-white text-xl font-bold z-10 animate-pulse">{{ currentLoadingText }}</p>
         </div>
-        <p class="text-xl sm:text-2xl font-semibold text-gray-700 mt-4">Tu concierge personal está perfeccionando cada detalle...</p>
-        <div class="loader ease-linear rounded-full border-4 border-t-4 border-gray-200 h-12 w-12 mt-6" 
-             :style="{ borderTopColor: hotelData.main_color }"></div>
-      </div>
 
-      <div v-else-if="itinerary" class="results-section transition-opacity duration-500 ease-in-out opacity-100">
-        <button @click="itinerary = null" 
-                :style="{ color: hotelData.main_color }"
-                class="flex items-center text-sm font-medium mb-6 hover:underline">
-          <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
-          Volver / Cambiar preferencias
+        <button
+          @click="createItinerary"
+          class="w-full bg-black text-white py-5 rounded-2xl font-black mt-10 shadow-xl active:scale-95 transition-transform uppercase tracking-widest"
+        >
+          Crear mi Plan
         </button>
-        
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-4 text-center">
-          ¡Tu itinerario está listo!
-        </h2>
-        <p class="text-gray-600 mb-8 text-center text-lg">
-          Explora las recomendaciones que tu concierge ha preparado para ti.
-        </p>
+      </section>
 
-        <div class="flex flex-wrap justify-center gap-4 mb-8">
-            <button @click="shareOnWhatsApp" :style="{ backgroundColor: hotelData.secondary_color, color: getContrastColor(hotelData.secondary_color) }" class="btn-action">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/WhatsApp.svg/1200px-WhatsApp.svg.png" alt="WhatsApp" class="h-5 w-5 mr-2">
-                Compartir por WhatsApp
+      <section
+        v-else-if="generating"
+        class="flex flex-col items-center justify-center pt-24 text-center"
+      >
+        <div
+          class="w-16 h-16 border-4 border-black border-t-transparent rounded-full animate-spin"
+        ></div>
+        <p class="mt-10 text-2xl font-black leading-tight">
+          {{ loadingPhrases[loadingStep] }}
+        </p>
+        <p class="text-gray-400 mt-2">Diseñando una experiencia única...</p>
+      </section>
+
+      <section
+        v-else-if="itinerary"
+        class="animate-in slide-in-from-bottom duration-700"
+      >
+        <div class="flex justify-between items-center mb-8">
+          <button
+            @click="itinerary = null"
+            class="text-xs font-black uppercase tracking-widest text-gray-400"
+          >
+            ← Volver
+          </button>
+          <div class="flex gap-2">
+            <button
+              @click="shareWhatsApp"
+              class="bg-green-500 text-white p-3 rounded-xl shadow-md"
+            >
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                <path
+                  d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"
+                />
+              </svg>
             </button>
-            <button @click="generatePdf" :style="{ backgroundColor: hotelData.secondary_color, color: getContrastColor(hotelData.secondary_color) }" class="btn-action">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                Guardar como PDF
+            <button
+              @click="downloadPDF"
+              class="bg-black text-white p-3 rounded-xl shadow-md text-xs font-bold uppercase"
+            >
+              PDF
             </button>
-            <button @click="showShareModal = true" :style="{ backgroundColor: hotelData.secondary_color, color: getContrastColor(hotelData.secondary_color) }" class="btn-action">
-                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.5 16h-1.5a2 2 0 01-2-2V7.5M14 6l4-4m0 0l4 4m-4-4v10a4 4 0 01-4 4H6a4 4 0 01-4-4V6a4 4 0 014-4h8a4 4 0 014 4z"></path></svg>
-                Código QR
-            </button>
+          </div>
         </div>
 
-        <div id="itinerary-pdf-content" class="space-y-8">
-            <div v-for="day in itinerary" :key="day.day" class="day-card bg-gray-50 p-6 rounded-xl shadow-sm border border-gray-100">
-                <h3 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
-                    <span :style="{ backgroundColor: hotelData.main_color, color: getDynamicTextColor }" class="rounded-full h-8 w-8 flex items-center justify-center text-sm font-bold mr-3">
-                        {{ day.day }}
-                    </span>
-                    {{ day.title }}
+        <div id="itinerary-content">
+          <div v-for="day in itinerary" :key="day.day" class="mb-12">
+            <h2
+              class="text-xs font-black text-gray-400 tracking-[0.2em] uppercase mb-6 flex items-center"
+            >
+              <span class="w-8 h-px bg-gray-300 mr-3"></span> Día
+              {{ day.day }} • {{ day.title }}
+            </h2>
+
+            <div class="space-y-6">
+              <div
+                v-for="act in day.activities"
+                :key="act.title"
+                class="bg-white p-6 rounded-[2.5rem] shadow-sm border border-gray-100 relative overflow-hidden group"
+              >
+                <div
+                  v-if="act.is_partner"
+                  class="absolute top-0 right-0 bg-yellow-400 text-[10px] font-black px-4 py-1.5 rounded-bl-2xl uppercase tracking-tighter"
+                >
+                  ⭐ Favorito del Hotel
+                </div>
+
+                <span class="text-xs font-black text-blue-600 block mb-2">{{
+                  act.time
+                }}</span>
+                <h3 class="font-black text-xl mb-3 leading-tight">
+                  {{ act.title }}
                 </h3>
-                <div class="relative border-l-2 border-dashed border-gray-300 ml-4 pl-4">
-                    <div v-for="(act, index) in day.activities" :key="index" class="activity flex items-start mb-6">
-                        <div class="flex-shrink-0 w-3 h-3 rounded-full absolute -left-[7px] transform -translate-y-1/2" 
-                             :style="{ backgroundColor: hotelData.main_color, top: 'calc(50% + 8px)' }"></div>
-                        <div class="flex-grow pl-4 py-1" :class="{'bg-yellow-50 bg-opacity-70 border-l-4 border-yellow-400 rounded-lg p-3': act.is_partner}">
-                            <div class="flex items-center justify-between mb-1">
-                                <h4 class="font-semibold text-lg text-gray-900">{{ act.title }}</h4>
-                                <span v-if="act.is_partner" class="badge-partner" 
-                                      :style="{ backgroundColor: hotelData.secondary_color, color: getContrastColor(hotelData.secondary_color) }">
-                                    🌟 Recomendado Hotel
-                                </span>
-                            </div>
-                            <p class="text-gray-700 text-sm mb-2">{{ act.description }}</p>
-                            <div class="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-gray-500">
-                                <span v-if="act.time" class="flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    {{ act.time }}
-                                </span>
-                                <span v-if="act.distance_from_hotel_km" class="flex items-center">
-                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                                    {{ act.distance_from_hotel_km }} km del hotel
-                                </span>
-                                <span v-if="located && act.coordinates" class="flex items-
+                <p class="text-gray-500 text-sm leading-relaxed mb-6">
+                  {{ act.description }}
+                </p>
+
+                <div
+                  class="flex justify-between items-center border-t border-gray-50 pt-5"
+                >
+                  <span
+                    class="text-[10px] font-bold text-gray-300 uppercase tracking-widest"
+                    >{{ act.distance_from_hotel_km || "Cerca" }} KM DE TI</span
+                  >
+                  <button
+                    @click="openMap(act.coordinates)"
+                    class="text-xs font-black underline underline-offset-4 hover:text-blue-600 transition-colors"
+                  >
+                    VER MAPA
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</template>
+
+<style>
+/* Animaciones básicas */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+</style>
