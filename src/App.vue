@@ -11,15 +11,25 @@ const hotelData = ref(null);
 const itinerary = ref(null);
 const error = ref(null);
 
-// === FORMULARIO ===
+// FORMULARIO
 const formData = ref({
-  people: "2",
+  people: '2',
   days: 3,
-  group: "Pareja",
-  style: "Explorar ciudad",
-  food: "Local",
-  transport: "Transporte público",
+  group: 'Pareja',
+  style: [], // Ahora es un array para selección múltiple
+  food: [],  // Ahora es un array para selección múltiple
+  transport: 'Transporte público'
 });
+
+// Añade esta función para manejar los clics
+const toggleOption = (field, value) => {
+  const index = formData.value[field].indexOf(value);
+  if (index > -1) {
+    formData.value[field].splice(index, 1); // Si ya está, lo quita
+  } else {
+    formData.value[field].push(value); // Si no está, lo añade
+  }
+};
 
 const options = {
   people: ["1", "2", "3", "4", "5", "+5"],
@@ -185,41 +195,27 @@ const downloadPDF = () => {
               </select>
             </div>
             <div>
-              <label class="text-xs font-black text-gray-400 uppercase"
-                >Estilo</label
-              >
-              <select
-                v-model="formData.style"
-                class="w-full mt-2 p-3 bg-white border rounded-2xl font-bold"
-              >
-                <option v-for="s in options.style" :key="s" :value="s">
-                  {{ s }}
-                </option>
-              </select>
+              <label class="text-xs font-black text-gray-400 uppercase tracking-tighter">¿Qué te apetece? (Elige varios)</label>
+              <div class="flex flex-wrap gap-2 mt-2">
+                <button v-for="opt in options.style" :key="opt" @click="toggleOption('style', opt)"
+                  :class="formData.style.includes(opt) ? 'bg-black text-white shadow-lg' : 'bg-white border text-gray-600'"
+                  class="px-5 py-2.5 rounded-full text-sm font-bold transition-all active:scale-95">
+                  {{ opt }}
+                </button>
+              </div>
             </div>
           </div>
 
           <div>
-            <label class="text-xs font-black text-gray-400 uppercase"
-              >Comida favorita</label
-            >
+            <label class="text-xs font-black text-gray-400 uppercase">Comida (Elige varias)</label>
             <div class="flex flex-wrap gap-2 mt-2">
-              <button
-                v-for="opt in options.food"
-                :key="opt"
-                @click="formData.food = opt"
-                :class="
-                  formData.food === opt
-                    ? 'bg-black text-white shadow-lg'
-                    : 'bg-white border text-gray-600'
-                "
-                class="px-5 py-2.5 rounded-full text-sm font-bold"
-              >
+              <button v-for="opt in options.food" :key="opt" @click="toggleOption('food', opt)"
+                :class="formData.food.includes(opt) ? 'bg-black text-white shadow-lg' : 'bg-white border text-gray-600'"
+                class="px-5 py-2.5 rounded-full text-sm font-bold">
                 {{ opt }}
               </button>
             </div>
           </div>
-        </div>
 
         <button
           @click="createItinerary"
