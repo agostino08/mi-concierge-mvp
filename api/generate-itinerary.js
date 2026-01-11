@@ -49,6 +49,11 @@ export default async function handler(req, res) {
   1. CATEGORÍA ACTIVIDADES (8 opciones): Basadas en ${guestStyles}. Mezcla iconos y secretos locales.
   2. CATEGORÍA GASTRONOMÍA (6 opciones): Basadas en ${guestFood} y presupuesto ${user.budget}.
   3. CATEGORÍA TRANSPORTE (3 opciones): Consejos expertos para moverse usando ${user.transport}.
+      IMPORTANTE - CATEGORÍA TRANSPORTE: 
+      No listes opciones genéricas. Explica LOGÍSTICA REAL para ${user.transport}:
+      - Dónde comprar boletos/tickets exactamente.
+      - Apps recomendadas para ese transporte en ${hotel.city}.
+      - Costos aproximados y tipos de abonos recomendados.
 
   REGLAS:
   - No inventes coordenadas. Usa nombres comerciales exactos.
@@ -59,7 +64,7 @@ export default async function handler(req, res) {
   {
     "activities": [{ "title": "Nombre", "description": "...", "is_partner": false, "category_tag": "..." }],
     "food": [{ "title": "Nombre", "description": "...", "is_partner": false }],
-    "transport": [{ "title": "Nombre", "description": "..." }]
+    "transport": [{ "title": "Guía de...", "description": "Explicación paso a paso de compra y uso..." }]
   }
 `;
 
