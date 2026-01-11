@@ -52,7 +52,7 @@ const fetchOptions = async () => {
   step.value = 7; 
 
   try {
-    const response = await fetch("/api/generate-options", {
+    const response = await fetch("/api/generate-itinerary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
