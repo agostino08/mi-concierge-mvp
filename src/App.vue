@@ -11,7 +11,7 @@ const lang = ref("es");
 const loading = ref(true);
 const generating = ref(false);
 const hotelData = ref(null);
-const error = ref(null); // Estado para errores
+const error = ref(null); 
 const recommendations = ref({ activities: [], food: [], transport: [] });
 const myItinerary = ref([]);
 const activeTab = ref("activities");
@@ -65,7 +65,6 @@ const fetchOptions = async () => {
     if (!response.ok) throw new Error("Error en la respuesta de la IA");
     
     const data = await response.json();
-    // Validamos que la data traiga las propiedades necesarias
     recommendations.value = {
       activities: data.activities || [],
       food: data.food || [],
@@ -89,7 +88,6 @@ const removeFromItinerary = (index) => {
   myItinerary.value.splice(index, 1);
 };
 
-// CORREGIDO: Sintaxis de template string para Google Maps
 const getGoogleMapsUrl = (title, city) => {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(title + " " + city)}`;
 };
@@ -101,7 +99,7 @@ const generateQR = async () => {
 };
 
 const shareWhatsApp = () => {
-  const text = `¡Mira el itinerario que he creado para mi estancia en ${hotelData.value.name}! ✨`;
+  const text = `¡Mira mi itinerario en ${hotelData.value.name}! ✨`;
   window.open(`https://wa.me/?text=${encodeURIComponent(text + " " + window.location.href)}`);
 };
 
@@ -109,7 +107,7 @@ const downloadPDF = () => {
   const element = document.getElementById("itinerary-pdf-content");
   const opt = {
     margin: 0.5,
-    filename: "mi-itinerario.pdf",
+    filename: "itinerario-lujo.pdf",
     image: { type: "jpeg", quality: 0.98 },
     html2canvas: { scale: 2 },
     jsPDF: { unit: "in", format: "letter", orientation: "portrait" },
@@ -151,125 +149,154 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#faf9f6] text-[#1a1a1a] font-light">
-    <div v-if="loading" class="flex items-center justify-center h-screen">
-      <div class="loader"></div>
+  <div class="min-h-screen cosy-gradient text-stone-800 selection:bg-stone-200">
+    <div v-if="loading" class="flex flex-col items-center justify-center h-screen space-y-4">
+      <div class="elegant-loader"></div>
+      <p class="font-sans tracking-widest text-xs uppercase text-stone-400">Iniciando Experiencia</p>
     </div>
 
     <template v-else>
-      <header v-if="hotelData" class="p-6 flex justify-between items-center">
-        <img :src="hotelData.logo_url" class="h-8 grayscale" alt="Logo" />
-        <div v-if="step > 0 && step < 7" class="h-1 w-24 bg-gray-200 rounded-full">
-          <div class="h-full bg-black transition-all" :style="{ width: (step / 6) * 100 + '%' }"></div>
+      <header v-if="hotelData" class="p-8 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md bg-white/30">
+        <img :src="hotelData.logo_url" class="h-10 mix-blend-multiply opacity-80" alt="Hotel Logo" />
+        <div v-if="step > 0 && step < 7" class="h-[2px] w-32 bg-stone-200 rounded-full overflow-hidden">
+          <div class="h-full bg-stone-500 transition-all duration-700 ease-in-out" :style="{ width: (step / 6) * 100 + '%' }"></div>
         </div>
       </header>
 
-      <main class="max-w-2xl mx-auto px-6 py-12">
-        <div v-if="error" class="bg-red-50 text-red-600 p-6 rounded-3xl text-center mb-6">
-          {{ error }}
-          <button @click="step = 0; error = null" class="block mx-auto mt-4 underline">Reintentar</button>
+      <main class="max-w-xl mx-auto px-6 py-8 pb-24">
+        <div v-if="error" class="bg-rose-50 border border-rose-100 text-rose-700 p-8 rounded-[2rem] text-center mb-6 animate-in fade-in slide-in-from-top-4">
+          <p class="font-medium">{{ error }}</p>
+          <button @click="step = 0; error = null" class="mt-4 text-sm font-bold uppercase tracking-widest underline decoration-2 underline-offset-4">Reintentar</button>
         </div>
 
-        <transition name="fade" mode="out-in">
-          <section v-if="step === 0" class="text-center space-y-8">
-            <h1 class="text-5xl font-serif italic">{{ lang === 'es' ? 'Bienvenido' : 'Welcome' }}</h1>
-            <div class="flex gap-4 justify-center">
-              <button @click="lang='es'; nextStep()" class="btn-primary">Español</button>
-              <button @click="lang='en'; nextStep()" class="btn-primary">English</button>
+        <transition name="page" mode="out-in">
+          <section v-if="step === 0" class="text-center space-y-12 py-12">
+            <div class="space-y-4">
+              <span class="text-xs font-bold tracking-[0.3em] uppercase text-stone-400">Concierge Privado</span>
+              <h1 class="text-5xl font-serif leading-tight text-stone-900">{{ hotelData?.name }}</h1>
+            </div>
+            <div class="flex flex-col gap-4 max-w-xs mx-auto">
+              <button @click="lang='es'; nextStep()" class="btn-elegant">Español</button>
+              <button @click="lang='en'; nextStep()" class="btn-elegant">English</button>
             </div>
           </section>
         </transition>
 
-        <transition name="slide-up" mode="out-in">
-          <section v-if="step >= 1 && step <= 6" class="space-y-10">
+        <transition name="page" mode="out-in">
+          <section v-if="step >= 1 && step <= 6" class="space-y-12">
             <div v-if="step === 1">
-              <h2 class="text-4xl font-serif mb-8 italic">{{ lang === 'es' ? '¿Con quién viajas?' : 'Travel group?' }}</h2>
-              <div class="grid gap-3">
+              <h2 class="text-3xl font-serif text-stone-900 mb-8">{{ lang === 'es' ? '¿Con quién viajas?' : 'Who are you traveling with?' }}</h2>
+              <div class="grid gap-4">
                 <button v-for="o in options.group" :key="o" @click="formData.group=o; nextStep()" 
-                  :class="formData.group === o ? 'bg-black text-white' : 'bg-white border'" class="selection-card">{{ o }}</button>
+                  :class="formData.group === o ? 'active-selection' : 'base-selection'" class="selection-card">
+                  {{ o }}
+                </button>
               </div>
             </div>
 
-            <div v-if="step === 2">
-              <h2 class="text-4xl font-serif mb-8 italic">{{ lang === 'es' ? '¿Cuántos días?' : 'How many days?' }}</h2>
-              <input type="range" min="1" max="7" v-model="formData.days" class="w-full accent-black" />
-              <p class="text-center text-6xl font-serif mt-4">{{ formData.days }}</p>
-              <button @click="nextStep" class="w-full btn-black mt-8">Continuar</button>
+            <div v-if="step === 2" class="text-center">
+              <h2 class="text-3xl font-serif text-stone-900 mb-12 text-left">{{ lang === 'es' ? 'Duración de la estancia' : 'Length of stay' }}</h2>
+              <div class="relative py-8">
+                <input type="range" min="1" max="7" v-model="formData.days" class="elegant-range" />
+                <div class="text-[8rem] font-serif leading-none text-stone-200 absolute inset-0 -z-10 flex justify-center items-center opacity-50">{{ formData.days }}</div>
+              </div>
+              <p class="text-stone-500 font-medium mb-12 uppercase tracking-widest text-xs">{{ formData.days }} {{ lang === 'es' ? 'Días' : 'Days' }}</p>
+              <button @click="nextStep" class="btn-dark w-full">Continuar</button>
             </div>
 
             <div v-if="step === 3">
-              <h2 class="text-4xl font-serif mb-8 italic">{{ lang === 'es' ? '¿Qué te apetece?' : 'Interests?' }}</h2>
+              <h2 class="text-3xl font-serif text-stone-900 mb-8">{{ lang === 'es' ? 'Tus intereses' : 'Interests' }}</h2>
               <div class="flex flex-wrap gap-3">
                 <button v-for="o in options.style" :key="o" @click="toggleSelection('style', o)" 
-                  :class="formData.style.includes(o) ? 'bg-black text-white' : 'bg-white border'" class="pill-card">{{ o }}</button>
+                  :class="formData.style.includes(o) ? 'pill-active' : 'pill-base'" class="pill-card">
+                  {{ o }}
+                </button>
               </div>
-              <button @click="nextStep" class="w-full btn-black mt-8" :disabled="formData.style.length === 0">Siguiente</button>
+              <button @click="nextStep" class="btn-dark w-full mt-12" :disabled="formData.style.length === 0">Siguiente</button>
             </div>
 
             <div v-if="step === 4">
-              <h2 class="text-4xl font-serif mb-8 italic">{{ lang === 'es' ? 'Tipo de comida' : 'Food type?' }}</h2>
+              <h2 class="text-3xl font-serif text-stone-900 mb-8">{{ lang === 'es' ? 'Gastronomía' : 'Dining' }}</h2>
               <div class="flex flex-wrap gap-3">
                 <button v-for="o in options.food" :key="o" @click="toggleSelection('food', o)" 
-                  :class="formData.food.includes(o) ? 'bg-black text-white' : 'bg-white border'" class="pill-card">{{ o }}</button>
+                  :class="formData.food.includes(o) ? 'pill-active' : 'pill-base'" class="pill-card">
+                  {{ o }}
+                </button>
               </div>
-              <button @click="nextStep" class="w-full btn-black mt-8" :disabled="formData.food.length === 0">Siguiente</button>
+              <button @click="nextStep" class="btn-dark w-full mt-12" :disabled="formData.food.length === 0">Siguiente</button>
             </div>
 
             <div v-if="step === 5">
-              <h2 class="text-4xl font-serif mb-8 italic">{{ lang === 'es' ? 'Presupuesto' : 'Budget?' }}</h2>
-              <div class="grid gap-3">
+              <h2 class="text-3xl font-serif text-stone-900 mb-8">{{ lang === 'es' ? 'Presupuesto' : 'Budget' }}</h2>
+              <div class="grid gap-4">
                 <button v-for="o in options.budget" :key="o" @click="formData.budget=o; nextStep()" 
-                  :class="formData.budget === o ? 'bg-black text-white' : 'bg-white border'" class="selection-card">{{ o }}</button>
+                  :class="formData.budget === o ? 'active-selection' : 'base-selection'" class="selection-card">
+                  {{ o }}
+                </button>
               </div>
             </div>
 
             <div v-if="step === 6">
-              <h2 class="text-4xl font-serif mb-8 italic">{{ lang === 'es' ? 'Transporte' : 'Transport?' }}</h2>
-              <div class="grid grid-cols-2 gap-3">
+              <h2 class="text-3xl font-serif text-stone-900 mb-8">{{ lang === 'es' ? 'Movilidad' : 'Transport' }}</h2>
+              <div class="grid grid-cols-2 gap-4">
                 <button v-for="o in options.transport" :key="o" @click="formData.transport=o; fetchOptions()" 
-                  class="selection-card border text-center">{{ o }}</button>
+                  class="base-selection selection-card text-center text-sm font-bold uppercase tracking-widest">
+                  {{ o }}
+                </button>
               </div>
             </div>
 
-            <button v-if="step > 1" @click="prevStep" class="text-gray-400 text-sm underline block mx-auto">Volver</button>
+            <button v-if="step > 1" @click="prevStep" class="text-stone-400 text-xs font-bold uppercase tracking-widest block mx-auto hover:text-stone-800 transition-colors">← Volver</button>
           </section>
         </transition>
 
-        <transition name="fade" mode="out-in">
+        <transition name="page" mode="out-in">
           <section v-if="step === 7">
-            <div v-if="generating" class="text-center py-20">
-              <div class="loader mx-auto"></div>
-              <p class="mt-8 font-serif italic text-xl">Curando tu experiencia...</p>
+            <div v-if="generating" class="text-center py-32 space-y-6">
+              <div class="elegant-loader mx-auto"></div>
+              <p class="font-serif italic text-xl text-stone-500 animate-pulse">Diseñando su experiencia a medida...</p>
             </div>
 
-            <div v-else class="space-y-8 animate-fade-in">
-              <div class="bg-black text-white p-6 rounded-[2rem] shadow-2xl">
-                <h3 class="font-serif italic mb-4">Mi Selección ({{ myItinerary.length }})</h3>
-                <div class="flex gap-2 overflow-x-auto pb-2">
-                  <div v-for="(item, idx) in myItinerary" :key="idx" class="bg-white/10 px-4 py-2 rounded-full text-xs flex items-center gap-2 flex-shrink-0">
+            <div v-else class="space-y-12">
+              <div class="bg-stone-900 text-stone-50 p-8 rounded-[2.5rem] shadow-2xl space-y-6 overflow-hidden relative">
+                <div class="flex justify-between items-center">
+                  <h3 class="font-serif text-2xl tracking-tight">Mi Selección</h3>
+                  <span class="bg-stone-700 px-3 py-1 rounded-full text-[10px] font-bold">{{ myItinerary.length }}</span>
+                </div>
+                <div class="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+                  <div v-for="(item, idx) in myItinerary" :key="idx" class="bg-white/10 px-4 py-2 rounded-xl text-xs flex items-center gap-3 flex-shrink-0 animate-in zoom-in">
                     {{ item.title }}
-                    <button @click="removeFromItinerary(idx)">✕</button>
+                    <button @click="removeFromItinerary(idx)" class="hover:text-rose-400">✕</button>
                   </div>
                 </div>
-                <button v-if="myItinerary.length > 0" @click="goToSummary" class="mt-4 w-full bg-white text-black py-3 rounded-xl font-bold text-sm">VER RESUMEN</button>
+                <button v-if="myItinerary.length > 0" @click="goToSummary" class="w-full bg-stone-100 text-stone-900 py-4 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-white transition-colors">Generar Itinerario Final</button>
               </div>
 
-              <div class="flex border-b">
+              <div class="flex p-1 bg-stone-200/50 rounded-2xl">
                 <button v-for="tab in ['activities', 'food', 'transport']" :key="tab" 
                   @click="activeTab = tab" 
-                  :class="activeTab === tab ? 'border-b-2 border-black font-bold' : 'text-gray-400'"
-                  class="flex-1 py-4 capitalize">
-                  {{ lang === 'es' ? (tab === 'activities' ? 'Actividades' : tab === 'food' ? 'Comida' : 'Transporte') : tab }}
+                  :class="activeTab === tab ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500'"
+                  class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all">
+                  {{ lang === 'es' ? (tab === 'activities' ? 'Explorar' : tab === 'food' ? 'Cenar' : 'Moverse') : tab }}
                 </button>
               </div>
 
               <div class="grid gap-6">
-                <div v-for="item in recommendations[activeTab]" :key="item.title" class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-                  <h4 class="text-xl font-bold mb-2">{{ item.title }}</h4>
-                  <p class="text-gray-500 text-sm leading-relaxed mb-4">{{ item.description }}</p>
-                  <div class="flex justify-between items-center pt-4 border-t border-gray-50">
-                    <a :href="getGoogleMapsUrl(item.title, hotelData.city)" target="_blank" class="text-xs underline font-bold tracking-widest uppercase">Ver mapa</a>
-                    <button @click="addToItinerary(item)" class="bg-gray-100 p-3 rounded-full hover:bg-black hover:text-white transition-colors">+</button>
+                <div v-for="item in recommendations[activeTab]" :key="item.title" class="group bg-white/60 backdrop-blur-sm border border-white p-8 rounded-[2.5rem] shadow-sm hover:shadow-xl transition-all duration-500">
+                  <div class="flex justify-between items-start mb-4">
+                    <span v-if="item.is_partner" class="text-[10px] font-bold tracking-widest uppercase text-amber-600 bg-amber-50 px-3 py-1 rounded-full">Partner Hotel</span>
+                    <span v-else class="text-[10px] font-bold tracking-widest uppercase text-stone-400">{{ item.category_tag || activeTab }}</span>
+                  </div>
+                  <h4 class="text-2xl font-serif text-stone-900 mb-3">{{ item.title }}</h4>
+                  <p class="text-stone-500 text-sm leading-relaxed mb-8">{{ item.description }}</p>
+                  <div class="flex justify-between items-center">
+                    <a :href="getGoogleMapsUrl(item.title, hotelData.city)" target="_blank" class="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 hover:text-stone-900 flex items-center gap-2 transition-colors">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                      Ver Ubicación
+                    </a>
+                    <button @click="addToItinerary(item)" class="bg-stone-900 text-white w-12 h-12 rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-lg">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    </button>
                   </div>
                 </div>
               </div>
@@ -277,19 +304,26 @@ onMounted(async () => {
           </section>
         </transition>
 
-        <transition name="fade" mode="out-in">
-          <section v-if="step === 8" class="text-center">
-            <h2 class="text-4xl font-serif italic mb-6">¡Todo listo!</h2>
-            <div id="itinerary-pdf-content" class="bg-white p-8 rounded-3xl shadow-xl inline-block mb-10 text-left w-full">
-              <img :src="qrCodeUrl" class="w-40 h-40 mx-auto mb-6" alt="QR" />
-              <div v-for="(item, idx) in myItinerary" :key="idx" class="mb-4 pb-4 border-b last:border-0">
-                <p class="font-bold text-lg">{{ item.title }}</p>
-                <p class="text-gray-500 text-sm">{{ item.description }}</p>
+        <transition name="page" mode="out-in">
+          <section v-if="step === 8" class="text-center space-y-8">
+            <h2 class="text-4xl font-serif text-stone-900">Su viaje personalizado</h2>
+            <div id="itinerary-pdf-content" class="bg-white p-10 rounded-[3rem] shadow-2xl text-left max-w-md mx-auto space-y-8 border border-stone-100">
+              <div class="flex justify-center py-4">
+                <img :src="qrCodeUrl" class="w-48 h-48 p-2 border border-stone-100 rounded-2xl shadow-inner" alt="Itinerary QR" />
+              </div>
+              <div class="space-y-6">
+                <div v-for="(item, idx) in myItinerary" :key="idx" class="space-y-2 group">
+                  <div class="flex items-baseline gap-3">
+                    <span class="text-[10px] font-bold text-stone-300">0{{ idx + 1 }}</span>
+                    <p class="font-serif text-xl text-stone-800">{{ item.title }}</p>
+                  </div>
+                  <p class="text-stone-400 text-sm leading-relaxed pl-7">{{ item.description }}</p>
+                </div>
               </div>
             </div>
-            <div class="flex gap-4 justify-center">
-              <button @click="shareWhatsApp" class="btn-primary">WhatsApp</button>
-              <button @click="downloadPDF" class="btn-primary">Descargar PDF</button>
+            <div class="flex flex-col gap-4 max-w-xs mx-auto">
+              <button @click="shareWhatsApp" class="btn-dark">Compartir WhatsApp</button>
+              <button @click="downloadPDF" class="btn-elegant">Descargar PDF</button>
             </div>
           </section>
         </transition>
@@ -299,29 +333,85 @@ onMounted(async () => {
 </template>
 
 <style>
-@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");
 @import "tailwindcss";
 
-.font-serif { font-family: "Playfair Display", serif; }
-.btn-primary { @apply px-8 py-4 bg-white border border-gray-200 rounded-full hover:border-black transition-all font-medium text-sm; }
-.btn-black { @apply px-8 py-5 bg-black text-white rounded-2xl font-bold text-sm; }
-.selection-card { @apply p-6 text-left rounded-3xl text-lg font-medium transition-all; }
-.pill-card { @apply px-6 py-3 rounded-full text-sm font-medium transition-all border; }
-
-.fade-enter-active, .fade-leave-active { transition: opacity 0.5s ease; }
-.fade-enter-from, .fade-leave-to { opacity: 0; }
-
-.slide-up-enter-active, .slide-up-leave-active { transition: all 0.6s ease; }
-.slide-up-enter-from { opacity: 0; transform: translateY(30px); }
-.slide-up-leave-to { opacity: 0; transform: translateY(-30px); }
-
-.loader {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #1a1a1a;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
+:root {
+  --champagne: #fdfcfb;
+  --stone: #e2d1c3;
+  --dark-stone: #6c3a3a;
+  --accent: #c5a059;
 }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.cosy-gradient {
+  background: linear-gradient(135deg, var(--champagne) 0%, var(--stone) 100%);
+  background-attachment: fixed;
+}
+
+/* Botones y UI Elements */
+.btn-elegant {
+  @apply px-8 py-5 bg-white/60 backdrop-blur-md border border-white rounded-3xl text-sm font-bold uppercase tracking-widest text-stone-700 
+         hover:bg-white hover:shadow-xl transition-all duration-300 active:scale-95;
+}
+
+.btn-dark {
+  @apply px-8 py-5 bg-stone-900 text-white rounded-3xl text-sm font-bold uppercase tracking-widest 
+         hover:bg-black hover:shadow-2xl transition-all duration-300 active:scale-95;
+}
+
+.selection-card {
+  @apply p-6 text-left rounded-3xl transition-all duration-300 font-medium;
+}
+
+.base-selection {
+  @apply bg-white/40 border border-white hover:bg-white/80 hover:shadow-lg;
+}
+
+.active-selection {
+  @apply bg-stone-900 text-white shadow-2xl scale-[1.02];
+}
+
+.pill-card {
+  @apply px-6 py-3 rounded-full text-xs font-bold uppercase tracking-widest transition-all duration-300 border;
+}
+
+.pill-base {
+  @apply bg-white/40 border-white text-stone-500 hover:bg-white;
+}
+
+.pill-active {
+  @apply bg-stone-900 border-stone-900 text-white shadow-lg;
+}
+
+/* Range Input Moderno */
+.elegant-range {
+  @apply w-full h-[2px] bg-stone-300 appearance-none cursor-pointer accent-stone-900;
+}
+
+/* Loader */
+.elegant-loader {
+  @apply w-12 h-12 border-[2px] border-stone-200 border-t-stone-800 rounded-full animate-spin;
+}
+
+/* Animaciones de Página */
+.page-enter-active, .page-leave-active {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.page-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.page-leave-to {
+  opacity: 0;
+  transform: translateY(-20px);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 </style>
