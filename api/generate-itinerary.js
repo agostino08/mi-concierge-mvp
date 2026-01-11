@@ -1,4 +1,3 @@
-// api/generate-itinerary.js
 import OpenAI from "openai";
 
 const openai = new OpenAI({
@@ -6,12 +5,10 @@ const openai = new OpenAI({
 });
 
 export default async function handler(req, res) {
+  // Configuración de CORS
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
-  );
+  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
   res.setHeader(
     "Access-Control-Allow-Headers",
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
@@ -27,72 +24,42 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { hotel, user } = req.body;
+    // Extraemos lang del body (que viene de tu App.vue)
+    const { hotel, user, lang } = req.body;
 
-    // Prompt Maestro - ¡ACTUALIZADO!
+    // Validación básica para evitar errores de variables no definidas
+    const guestStyles = user.style && user.style.length > 0 ? user.style.join(", ") : "General";
+    const guestFood = user.food && user.food.length > 0 ? user.food.join(", ") : "Local";
+    const hotelPartners = hotel.partners && hotel.partners.length > 0 ? hotel.partners.join(", ") : "Ninguno";
+
     const systemPrompt = `
   Eres el Concierge de Lujo de "${hotel.name}" en ${hotel.city}. 
-  Tu objetivo no es solo informar, sino inspirar al huésped diseñando una selección exclusiva de opciones.
+  Tu misión es inspirar al huésped diseñando una selección exclusiva de opciones.
 
-  IDIOMA DE RESPUESTA: ${lang === "es" ? "Español" : "Inglés"}.
+  IDIOMA DE RESPUESTA: ${lang === "en" ? "Inglés" : "Español"}.
 
-  PERFIL DETALLADO DEL HUÉSPED:
+  PERFIL DEL HUÉSPED:
   - Viaja en: ${user.group}.
-  - Intereses declarados: ${user.style.join(", ")}.
-  - Gustos gastronómicos: ${user.food.join(", ")}.
-  - Nivel de presupuesto: ${
-    user.budget
-  } (Ajusta las opciones estrictamente a este nivel adquisitivo).
-  - Preferencia de movilidad: ${user.transport}.
+  - Intereses: ${guestStyles}.
+  - Comida: ${guestFood}.
+  - Presupuesto: ${user.budget}.
+  - Transporte: ${user.transport}.
 
-  INSTRUCCIONES DE CURACIÓN (MODO LISTA):
-  1. CATEGORÍA ACTIVIDADES (8 opciones): 
-     - Selecciona lugares que encajen con: ${user.style.join(", ")}. 
-     - Mezcla iconos de la ciudad con "tesoros escondidos" que solo un local conocería.
-     - Si eligieron "Arte", busca exposiciones actuales; si es "Relajación", busca los mejores spas o parques silenciosos.
-  2. CATEGORÍA GASTRONOMÍA (6 opciones):
-     - Deben reflejar los gustos: ${user.food.join(", ")}.
-     - Crucial: Deben respetar el presupuesto "${user.budget}".
-     - Incluye una mezcla de desayuno/brunch, comida y cena.
-  3. CATEGORÍA TRANSPORTE (3 opciones):
-     - Basado en "${
-       user.transport
-     }", explica la mejor forma de usarlo en esta ciudad específica.
+  INSTRUCCIONES:
+  1. CATEGORÍA ACTIVIDADES (8 opciones): Basadas en ${guestStyles}. Mezcla iconos y secretos locales.
+  2. CATEGORÍA GASTRONOMÍA (6 opciones): Basadas en ${guestFood} y presupuesto ${user.budget}.
+  3. CATEGORÍA TRANSPORTE (3 opciones): Consejos expertos para moverse usando ${user.transport}.
 
-  REGLAS DE ORO:
-  - PROHIBIDO REPETIR: No menciones el mismo lugar en diferentes categorías.
-  - SIN COORDENADAS INVENTADAS: El "title" debe ser el nombre comercial exacto (ej: "Museo Nacional del Prado" en lugar de "Museo de Arte").
-  - PERSONALIZACIÓN EN LA DESCRIPCIÓN: Cada descripción debe empezar explicando por qué esa opción es perfecta para alguien que busca "${
-    user.style[0]
-  }" o le gusta la comida "${user.food[0]}".
-  - ALIADOS DEL HOTEL: Si estos lugares son partners: [${hotel.partners.join(
-    ", "
-  )}], dales prioridad si encajan con el perfil y marca "is_partner": true.
+  REGLAS:
+  - No inventes coordenadas. Usa nombres comerciales exactos.
+  - Si un lugar es partner (${hotelPartners}), marca "is_partner": true.
+  - Personaliza cada descripción explicando por qué encaja con sus gustos.
 
-  FORMATO DE RESPUESTA (JSON ESTRICTO):
+  RESPUESTA JSON ESTRICTA:
   {
-    "activities": [
-      {
-        "title": "Nombre Exacto",
-        "description": "Texto persuasivo y personalizado...",
-        "is_partner": false,
-        "category_tag": "Arte / Historia / etc"
-      }
-    ],
-    "food": [
-      {
-        "title": "Nombre del Restaurante",
-        "description": "Por qué su menú de ${user.food[0]} es increíble...",
-        "price_range": "${user.budget}",
-        "is_partner": false
-      }
-    ],
-    "transport": [
-      {
-        "title": "Método de transporte",
-        "description": "Consejo experto para moverse en ${hotel.city}..."
-      }
-    ]
+    "activities": [{ "title": "Nombre", "description": "...", "is_partner": false, "category_tag": "..." }],
+    "food": [{ "title": "Nombre", "description": "...", "is_partner": false }],
+    "transport": [{ "title": "Nombre", "description": "..." }]
   }
 `;
 
@@ -100,15 +67,16 @@ export default async function handler(req, res) {
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: "Genera el itinerario ahora." },
+        { role: "user", content: "Genera las recomendaciones personalizadas ahora." },
       ],
       response_format: { type: "json_object" },
     });
 
     const result = JSON.parse(completion.choices[0].message.content);
     return res.status(200).json(result);
+
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ error: "Error generando itinerario" });
+    console.error("Error API:", error);
+    return res.status(500).json({ error: "Error generando opciones", details: error.message });
   }
 }
