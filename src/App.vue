@@ -3,7 +3,6 @@ import { ref, onMounted } from "vue";
 import { db } from "./firebase";
 import { doc, getDoc } from "firebase/firestore";
 import QRCode from "qrcode";
-import html2pdf from "html2pdf.js"; // Nota: A veces la importación directa funciona mejor según la versión
 
 // Importar Componentes
 // Asegúrate de haber creado estos archivos en la carpeta components/
@@ -242,9 +241,9 @@ onMounted(async () => {
             @goToSummary="prepareSummary"
           />
 
-         <FavoritesSummary 
+         <FavoritesSummary
           v-else-if="step === 8"
-          :myItinerary="myItinerary" 
+          :myItinerary="myItinerary"
           :hotelData="hotelData"
           @back="step = 7"
           @remove="(idx) => myItinerary.splice(idx, 1)"
