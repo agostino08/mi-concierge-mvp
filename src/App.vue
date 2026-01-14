@@ -242,16 +242,13 @@ onMounted(async () => {
             @goToSummary="prepareSummary"
           />
 
-          <FavoritesSummary
-            v-else-if="step === 8"
-            :myItinerary="myItinerary"
-            :hotelData="hotelData"
-            :qrCodeUrl="qrCodeUrl"
-            @back="step = 7"
-            @remove="(idx) => myItinerary.splice(idx, 1)"
-            @share="shareWhatsApp"
-            @download="downloadPDF"
-          />
+         <FavoritesSummary 
+          v-else-if="step === 8"
+          :myItinerary="myItinerary" 
+          :hotelData="hotelData"
+          @back="step = 7"
+          @remove="(idx) => myItinerary.splice(idx, 1)"
+        />
         </transition>
       </main>
 
