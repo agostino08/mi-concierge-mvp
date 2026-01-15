@@ -135,6 +135,25 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+// Función para reiniciar la app por completo
+const resetApp = () => {
+  // Limpiamos datos
+  recommendations.value = { activities: [], food: [], transport: [] };
+  myItinerary.value = [];
+  formData.value = {
+    group: "",
+    days: 3,
+    style: [],
+    food: [],
+    budget: "Balanceado",
+    transport: [],
+  };
+  // Volvemos al inicio (WelcomeScreen o paso 1, lo que prefieras)
+  // step = 0 -> Pantalla de Bienvenida
+  step.value = 0; 
+  // Limpiamos el localStorage también si quieres que sea un reinicio total
+  localStorage.removeItem("my_itinerary_backup");
+};
 </script>
 
 <template>
@@ -220,6 +239,7 @@ onMounted(async () => {
             :hotelData="hotelData"
             @toggleFavorite="toggleFavorite"
             @goToSummary="prepareSummary"
+            @reset="resetApp" 
           />
 
          <FavoritesSummary

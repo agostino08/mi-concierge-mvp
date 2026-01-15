@@ -59,7 +59,7 @@ onUnmounted(() => clearInterval(timer));
 // --- FIN LÓGICA ESPERA ---
 
 // Imagen Hero Principal para los resultados
-const heroImage = `https://images.unsplash.com/photo-1583997053204-c5850a011395?auto=format&fit=crop&q=80&w=1200`;
+const heroImage = `https://images.pexels.com/photos/14570751/pexels-photo-14570751.jpeg`;
 
 const addToCalendar = (item) => {
   const title = encodeURIComponent(item.title);
