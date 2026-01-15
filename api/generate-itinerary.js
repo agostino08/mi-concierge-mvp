@@ -8,7 +8,10 @@ export default async function handler(req, res) {
   // Configuración de CORS
   res.setHeader("Access-Control-Allow-Credentials", true);
   res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader("Access-Control-Allow-Methods", "GET,OPTIONS,PATCH,DELETE,POST,PUT");
+  res.setHeader(
+    "Access-Control-Allow-Methods",
+    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
+  );
   res.setHeader(
     "Access-Control-Allow-Headers",
     "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
@@ -28,13 +31,20 @@ export default async function handler(req, res) {
     const { hotel, user, lang } = req.body;
 
     // Validación básica para evitar errores de variables no definidas
-    const guestStyles = user.style && user.style.length > 0 ? user.style.join(", ") : "General";
-    const guestFood = user.food && user.food.length > 0 ? user.food.join(", ") : "Local";
-    const hotelPartners = hotel.partners && hotel.partners.length > 0 ? hotel.partners.join(", ") : "Ninguno";
+    const guestStyles =
+      user.style && user.style.length > 0 ? user.style.join(", ") : "General";
+    const guestFood =
+      user.food && user.food.length > 0 ? user.food.join(", ") : "Local";
+    const hotelPartners =
+      hotel.partners && hotel.partners.length > 0
+        ? hotel.partners.join(", ")
+        : "Ninguno";
 
     const systemPrompt = `
-  Eres el Concierge de Lujo de "${hotel.name}" en ${hotel.city}. 
-  Tu misión es inspirar al huésped diseñando una selección exclusiva de opciones.
+  Eres el Concierge de Lujo de "${hotel.name}" en ${
+      hotel.city
+    }. Experto en la ciudad donde se encuentra el hotel
+  Tu misión es inspirar al huésped diseñando una selección exclusiva de opciones para que el huesped tenga una experiencia personalizada.
 
   IDIOMA DE RESPUESTA: ${lang === "en" ? "Inglés" : "Español"}.
 
@@ -47,10 +57,16 @@ export default async function handler(req, res) {
 
   INSTRUCCIONES:
   1. CATEGORÍA ACTIVIDADES: Basadas en ${guestStyles}. Mezcla iconos, secretos locales y gemas de la ciudad.
-  2. CATEGORÍA GASTRONOMÍA: Basadas en ${guestFood} y presupuesto ${user.budget}.
-  3. CATEGORÍA TRANSPORTE: Consejos expertos para moverse usando ${user.transport}.
+  2. CATEGORÍA GASTRONOMÍA: Basadas en ${guestFood} y presupuesto ${
+      user.budget
+    }.
+  3. CATEGORÍA TRANSPORTE: Consejos expertos para moverse usando ${
+    user.transport
+  }.
       IMPORTANTE - CATEGORÍA TRANSPORTE: 
-      No listes opciones genéricas. Explica LOGÍSTICA REAL para ${user.transport}:
+      No listes opciones genéricas. Explica LOGÍSTICA REAL para ${
+        user.transport
+      }:
       - Dónde comprar boletos/tickets exactamente.
       - Apps recomendadas para ese transporte en ${hotel.city}.
       - Costos aproximados y tipos de abonos recomendados.
@@ -63,14 +79,10 @@ export default async function handler(req, res) {
   - Personaliza cada descripción explicando por qué encaja con sus gustos.
 
   REGLA UBICACIÓN:
-  TODAS las recomendaciones deben estar ESTRICTAMENTE dentro de la ciudad de ${hotel.city}.
+  TODAS las recomendaciones deben estar ESTRICTAMENTE dentro de la ciudad de ${
+    hotel.city
+  }.
   PROHIBIDO recomendar lugares en otras provincias o paises. Si puedes recomendar de los alrededores y/o de pueblos cercanos que se pueda llegar en coche, bus o tren y volver en el dia.
-  
-  INSTRUCCIONES VISUALES (CRÍTICO):
-  Para cada recomendación, genera un campo "image_keyword". 
-  Debe ser una frase CORTA EN INGLÉS para buscar una FOTO REAL en un banco de imágenes.
-  - Si es un lugar famoso (ej: Sagrada Familia), usa su nombre en inglés.
-  - Si es un restaurante genérico, usa el tipo de comida + ambiente (ej: "luxury sushi platter", "cozy spanish tapas bar", "modern cocktail rooftop").
 
   RESPUESTA JSON ESTRICTA:
   {
@@ -84,16 +96,20 @@ export default async function handler(req, res) {
       model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: "Genera las recomendaciones personalizadas ahora." },
+        {
+          role: "user",
+          content: "Genera las recomendaciones personalizadas ahora.",
+        },
       ],
       response_format: { type: "json_object" },
     });
 
     const result = JSON.parse(completion.choices[0].message.content);
     return res.status(200).json(result);
-
   } catch (error) {
     console.error("Error API:", error);
-    return res.status(500).json({ error: "Error generando opciones", details: error.message });
+    return res
+      .status(500)
+      .json({ error: "Error generando opciones", details: error.message });
   }
 }
