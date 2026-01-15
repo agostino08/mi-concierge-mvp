@@ -65,10 +65,12 @@ export default async function handler(req, res) {
   REGLA UBICACIÓN:
   TODAS las recomendaciones deben estar ESTRICTAMENTE dentro de la ciudad de ${hotel.city}.
   PROHIBIDO recomendar lugares en otras provincias o paises. Si puedes recomendar de los alrededores y/o de pueblos cercanos que se pueda llegar en coche, bus o tren y volver en el dia.
-
-  INSTRUCCIONES VISUALES:
-  Para cada recomendación, genera un "image_keyword": una frase corta EN INGLÉS que describa visualmente el lugar para buscar una foto de stock (ej: "luxury sushi plate", "modern art museum interior", "cocktail bar rooftop night").
-
+  
+  INSTRUCCIONES VISUALES (CRÍTICO):
+  Para cada recomendación, genera un campo "image_keyword". 
+  Debe ser una frase CORTA EN INGLÉS para buscar una FOTO REAL en un banco de imágenes.
+  - Si es un lugar famoso (ej: Sagrada Familia), usa su nombre en inglés.
+  - Si es un restaurante genérico, usa el tipo de comida + ambiente (ej: "luxury sushi platter", "cozy spanish tapas bar", "modern cocktail rooftop").
 
   RESPUESTA JSON ESTRICTA:
   {

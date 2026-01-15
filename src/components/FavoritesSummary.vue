@@ -2,9 +2,10 @@
 const props = defineProps(["myItinerary", "hotelData"]);
 const emit = defineEmits(["back", "remove"]);
 
-const getImageUrl = (keyword) => {
-  const encoded = encodeURIComponent(keyword || 'travel architecture');
-  return `https://image.pollinations.ai/prompt/${encoded}?width=200&height=200&nologo=true`;
+// Misma función para mantener coherencia visual
+const getRealImageUrl = (keyword, idx) => {
+  const query = encodeURIComponent(keyword || 'travel');
+  return `https://loremflickr.com/200/200/${query}?lock=${idx + 50}`;
 };
 
 const addToCalendar = (item) => {
@@ -49,26 +50,23 @@ const handleShare = async () => {
       </div>
 
       <div class="space-y-8">
-        <div v-for="(item, idx) in myItinerary" :key="idx" class="relative flex gap-4 border-b border-stone-50 last:border-0 pb-6">
+        <div v-for="(item, idx) in myItinerary" :key="idx" class="relative flex gap-5 border-b border-stone-50 last:border-0 pb-6">
           
-          <div class="w-24 h-24 flex-shrink-0 rounded-2xl overflow-hidden relative">
-            <img :src="getImageUrl(item.image_keyword)" class="w-full h-full object-cover" />
-            <div v-if="item.is_partner" class="absolute bottom-0 left-0 w-full bg-stone-900 text-white text-[6px] font-bold uppercase text-center py-1">
-              Recomendado
-            </div>
+          <div class="w-20 h-20 flex-shrink-0 rounded-2xl overflow-hidden relative shadow-sm">
+            <img :src="getRealImageUrl(item.image_keyword, idx)" class="w-full h-full object-cover" />
           </div>
 
           <div class="flex-1 min-w-0">
             <div class="flex justify-between items-start mb-2">
               <h5 class="font-serif text-lg text-stone-800 leading-tight pr-6">{{ item.title }}</h5>
-              <button @click="$emit('remove', idx)" class="text-rose-300 hover:text-rose-500 no-print">✕</button>
+              <button @click="$emit('remove', idx)" class="text-rose-300 hover:text-rose-500 no-print transition-colors">✕</button>
             </div>
             
             <p class="text-stone-500 text-xs leading-relaxed mb-4 line-clamp-2">{{ item.description }}</p>
 
             <div class="flex gap-2 no-print">
               <button @click="addToCalendar(item)" class="px-4 py-2 bg-stone-50 text-stone-600 rounded-lg text-[8px] font-bold uppercase tracking-widest hover:bg-stone-100">Agendar</button>
-              <a :href="getGoogleMapsUrl(item.title)" target="_blank" class="px-4 py-2 bg-stone-800 text-white rounded-lg flex items-center hover:bg-black">
+              <a :href="getGoogleMapsUrl(item.title)" target="_blank" class="px-4 py-2 bg-stone-800 text-white rounded-lg flex items-center hover:bg-black transition-colors">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>
               </a>
             </div>
