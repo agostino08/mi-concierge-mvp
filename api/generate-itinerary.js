@@ -27,17 +27,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Extraemos lang del body (que viene de tu App.vue)
+    // Dentro de handler(req, res) en generate-itinerary.js
     const { hotel, user, lang } = req.body;
 
-    // Validación básica para evitar errores de variables no definidas
-    const guestStyles =
-      user.style && user.style.length > 0 ? user.style.join(", ") : "General";
-    const guestFood =
-      user.food && user.food.length > 0 ? user.food.join(", ") : "Local";
-    // En api/generate-itinerary.js
-    // Transformamos el array de objetos en un texto legible para la IA
-    const hotelPartners = hotel.partners && hotel.partners.length > 0 
+    // Validación de seguridad: Si no hay hotel, no podemos seguir
+    if (!hotel || !hotel.name) {
+      return res.status(400).json({ error: "Datos del hotel incompletos" });
+    }
+
+    const guestStyles = user.style?.length > 0 ? user.style.join(", ") : "General";
+    const guestFood = user.food?.length > 0 ? user.food.join(", ") : "Local";
+
+    // CORRECCIÓN: Manejo robusto de partners para evitar que el .map falle
+    const hotelPartners = (hotel.partners && Array.isArray(hotel.partners)) 
       ? hotel.partners.map(p => `- ${p.name}: ${p.benefit}`).join("\n")
       : "Actualmente no tenemos socios comerciales.";
 

@@ -79,31 +79,28 @@ const fetchOptions = async () => {
   error.value = null;
   step.value = 7;
   try {
-    // PREPARACIÓN DE DATOS PARA LA IA
-    const cleanHotelData = {
-      ...hotelData.value,
-      // Convertimos el array de objetos de partners en un string legible para el prompt
-      partners: hotelData.value.partners && hotelData.value.partners.length > 0
-        ? hotelData.value.partners.map(p => `${p.name} (Beneficio: ${p.benefit})`).join(", ")
-        : "Ninguno"
-    };
-
     const response = await fetch("/api/generate-itinerary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        hotel: cleanHotelData,
+        // Enviamos el .value del ref
+        hotel: hotelData.value, 
         user: formData.value,
         lang: lang.value,
       }),
     });
-
-    if (!response.ok) throw new Error("Error API");
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.details || "Hubo un error al diseñar tu guía");
+    }
+    
     recommendations.value = await response.json();
   } catch (e) {
-    console.error(e);
-    error.value = "Hubo un problema al diseñar tu guía. Por favor, intenta de nuevo.";
-    step.value = 6; // Devolvemos al usuario al último paso para reintentar
+    console.error("Error detallado:", e);
+    error.value = e.message;
+    // Si hay error, regresamos al paso anterior para que el usuario pueda reintentar
+    step.value = 6; 
   } finally {
     generating.value = false;
   }
@@ -118,22 +115,28 @@ const prepareSummary = async () => {
   step.value = 8;
 };
 
-// SETUP INICIAL - Corregido el .value
+// 1. Corregir el Setup Inicial (onMounted)
 onMounted(async () => {
-  try {
-    // Asegúrate de que este ID coincida con el que subiste en el JSON
-    const docRef = doc(db, "hotels", "hotel-bcn-premium"); 
-    const docSnap = await getDoc(docRef);
+  const params = new URLSearchParams(window.location.search);
+  const hotelId = params.get("hotel");
 
+  if (!hotelId) {
+    error.value = "ID de hotel no encontrado en la URL";
+    loading.value = false;
+    return;
+  }
+
+  try {
+    const docSnap = await getDoc(doc(db, "hotels", hotelId));
     if (docSnap.exists()) {
-      // CORRECCIÓN: Usamos .value para asignar los datos
-      hotelData.value = docSnap.data();
+      // CORRECCIÓN: Usar .value para asignar el objeto de Firebase
+      hotelData.value = docSnap.data(); 
     } else {
-      error.value = "Hotel no encontrado. Verifica el ID en Firebase.";
+      error.value = "Este hotel no existe en nuestra base de datos";
     }
-  } catch (err) {
-    console.error(err);
-    error.value = "Error crítico: No se pudo conectar con Firebase.";
+  } catch (e) {
+    console.error(e);
+    error.value = "Error de conexión con la base de datos";
   } finally {
     loading.value = false;
   }
