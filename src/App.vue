@@ -5,7 +5,6 @@ import { doc, getDoc } from "firebase/firestore";
 import QRCode from "qrcode";
 
 // Importar Componentes
-// Asegúrate de haber creado estos archivos en la carpeta components/
 import WelcomeScreen from "./components/WelcomeScreen.vue";
 import QuestionnaireForm from "./components/QuestionnaireForm.vue";
 import ResultsView from "./components/ResultsView.vue";
@@ -30,7 +29,7 @@ const formData = ref({
   style: [],
   food: [],
   budget: "Balanceado",
-  transport: [], // <--- IMPORTANTE: Ahora es un array para selección múltiple
+  transport: [], 
 });
 
 const options = {
@@ -57,14 +56,12 @@ const options = {
   ],
 };
 
-// Lógica de Toast
 const triggerToast = (msg) => {
   toastMessage.value = msg;
   showToast.value = true;
   setTimeout(() => (showToast.value = false), 3000);
 };
 
-// Lógica de Favoritos
 const toggleFavorite = (item) => {
   const index = myItinerary.value.findIndex((i) => i.title === item.title);
   if (index > -1) {
@@ -76,31 +73,42 @@ const toggleFavorite = (item) => {
   }
 };
 
-// API
+// API - Función corregida para manejar Partners como objetos
 const fetchOptions = async () => {
   generating.value = true;
   error.value = null;
   step.value = 7;
   try {
+    // PREPARACIÓN DE DATOS PARA LA IA
+    const cleanHotelData = {
+      ...hotelData.value,
+      // Convertimos el array de objetos de partners en un string legible para el prompt
+      partners: hotelData.value.partners && hotelData.value.partners.length > 0
+        ? hotelData.value.partners.map(p => `${p.name} (Beneficio: ${p.benefit})`).join(", ")
+        : "Ninguno"
+    };
+
     const response = await fetch("/api/generate-itinerary", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        hotel: hotelData.value,
+        hotel: cleanHotelData,
         user: formData.value,
         lang: lang.value,
       }),
     });
+
     if (!response.ok) throw new Error("Error API");
     recommendations.value = await response.json();
   } catch (e) {
-    error.value = "Error al generar recomendaciones.";
+    console.error(e);
+    error.value = "Hubo un problema al diseñar tu guía. Por favor, intenta de nuevo.";
+    step.value = 6; // Devolvemos al usuario al último paso para reintentar
   } finally {
     generating.value = false;
   }
 };
 
-// Funciones de Resumen (QR, PDF, Share)
 const prepareSummary = async () => {
   if (myItinerary.value.length === 0) {
     triggerToast("Selecciona al menos un favorito");
@@ -110,34 +118,28 @@ const prepareSummary = async () => {
   step.value = 8;
 };
 
-// Setup Inicial
+// SETUP INICIAL - Corregido el .value
 onMounted(async () => {
-  const params = new URLSearchParams(window.location.search);
-  const hotelId = params.get("hotel");
-
-  if (!hotelId) {
-    error.value = "ID de hotel no encontrado";
-    loading.value = false;
-    return;
-  }
-
   try {
-    const docSnap = await getDoc(doc(db, "hotels", hotelId));
+    // Asegúrate de que este ID coincida con el que subiste en el JSON
+    const docRef = doc(db, "hotels", "hotel-bcn-premium"); 
+    const docSnap = await getDoc(docRef);
+
     if (docSnap.exists()) {
+      // CORRECCIÓN: Usamos .value para asignar los datos
       hotelData.value = docSnap.data();
     } else {
-      error.value = "Hotel no encontrado";
+      error.value = "Hotel no encontrado. Verifica el ID en Firebase.";
     }
-  } catch (e) {
-    console.error(e);
-    error.value = "Error de conexión";
+  } catch (err) {
+    console.error(err);
+    error.value = "Error crítico: No se pudo conectar con Firebase.";
   } finally {
     loading.value = false;
   }
 });
-// Función para reiniciar la app por completo
+
 const resetApp = () => {
-  // Limpiamos datos
   recommendations.value = { activities: [], food: [], transport: [] };
   myItinerary.value = [];
   formData.value = {
@@ -148,76 +150,39 @@ const resetApp = () => {
     budget: "Balanceado",
     transport: [],
   };
-  // Volvemos al inicio (WelcomeScreen o paso 1, lo que prefieras)
-  // step = 0 -> Pantalla de Bienvenida
   step.value = 0; 
-  // Limpiamos el localStorage también si quieres que sea un reinicio total
   localStorage.removeItem("my_itinerary_backup");
 };
 </script>
 
 <template>
-  <div
-    class="min-h-screen cosy-gradient text-stone-800 selection:bg-stone-200 font-sans"
-  >
-    <div
-      v-if="loading"
-      class="flex flex-col items-center justify-center h-screen space-y-4"
-    >
+  <div class="min-h-screen cosy-gradient text-stone-800 selection:bg-stone-200 font-sans">
+    
+    <div v-if="loading" class="flex flex-col items-center justify-center h-screen space-y-4">
       <div class="elegant-loader"></div>
-      <p class="tracking-widest text-xs uppercase text-stone-400">
-        Iniciando Experiencia
-      </p>
+      <p class="tracking-widest text-xs uppercase text-stone-400">Iniciando Experiencia</p>
     </div>
 
     <template v-else>
-      <header
-        v-if="hotelData"
-        class="p-8 flex justify-between items-center sticky top-0 z-50 backdrop-blur-md bg-white/30"
-      >
-        <img
-          :src="hotelData.logo_url"
-          class="h-10 mix-blend-multiply opacity-80"
-          alt="Logo"
-        />
-        <div
-          v-if="step > 0 && step < 7"
-          class="h-[2px] w-32 bg-stone-200 rounded-full overflow-hidden"
-        >
-          <div
-            class="h-full bg-stone-500 transition-all duration-700"
-            :style="{ width: (step / 6) * 100 + '%' }"
-          ></div>
+      <header v-if="hotelData" class="p-8 flex flex-col items-center sticky top-0 z-50 backdrop-blur-md bg-white/30">
+        <img :src="hotelData.logo_url" class="h-10 mb-4 opacity-90 object-contain" alt="Logo Hotel" />
+        
+        <div v-if="step > 0 && step < 7" class="h-[2px] w-32 bg-stone-200 rounded-full overflow-hidden">
+          <div class="h-full bg-stone-500 transition-all duration-700" :style="{ width: (step / 6) * 100 + '%' }"></div>
         </div>
       </header>
 
       <main class="max-w-xl mx-auto px-6 py-8 pb-24">
-        <div
-          v-if="error"
-          class="bg-rose-50 border border-rose-100 text-rose-700 p-8 rounded-[2rem] text-center mb-6"
-        >
-          <p>{{ error }}</p>
-          <button
-            @click="
-              step = 0;
-              error = null;
-            "
-            class="mt-4 underline font-bold uppercase text-xs tracking-widest"
-          >
-            Reintentar
-          </button>
+        <div v-if="error" class="bg-rose-50 border border-rose-100 text-rose-700 p-8 rounded-[2rem] text-center mb-6">
+          <p class="font-medium">{{ error }}</p>
+          <button @click="resetApp" class="mt-4 underline font-bold uppercase text-xs tracking-widest">Volver al inicio</button>
         </div>
 
         <transition name="page" mode="out-in">
           <WelcomeScreen
             v-if="step === 0"
             :hotelData="hotelData"
-            @start="
-              (l) => {
-                lang = l;
-                step++;
-              }
-            "
+            @start="(l) => { lang = l; step++; }"
           />
 
           <QuestionnaireForm
@@ -243,20 +208,17 @@ const resetApp = () => {
           />
 
          <FavoritesSummary
-          v-else-if="step === 8"
-          :myItinerary="myItinerary"
-          :hotelData="hotelData"
-          @back="step = 7"
-          @remove="(idx) => myItinerary.splice(idx, 1)"
-        />
+            v-else-if="step === 8"
+            :myItinerary="myItinerary"
+            :hotelData="hotelData"
+            @back="step = 7"
+            @remove="(idx) => myItinerary.splice(idx, 1)"
+          />
         </transition>
       </main>
 
       <transition name="toast">
-        <div
-          v-if="showToast"
-          class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100]"
-        >
+        <div v-if="showToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100]">
           {{ toastMessage }}
         </div>
       </transition>

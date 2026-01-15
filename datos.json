@@ -1,29 +1,48 @@
 {
-    "hotels": {
-      "hotel_demo": {
-        "name": "Grand Hotel Barcelona",
-        "city": "Barcelona",
-        "address": "Passeig de Gràcia, 132, 08008 Barcelona",
-        "coordinates": "41.3967, 2.1604",
-        "logo_url": "https://cdn-icons-png.flaticon.com/512/2983/2983973.png",
-        "main_color": "#1a1a1a",
-        "partners": [
-          "Restaurante Botafumeiro (Prioridad: Cena elegante)",
-          "Bicing Barcelona (Descuento con código HOTELGRAN)",
-          "Museu del Disseny (Entrada 2x1)"
-        ]
-      },
-      "hotel_luxury_sitges": {
-        "name": "Sitges Sea Resort",
-        "city": "Sitges",
-        "address": "Passeig Marítim, 1, 08870 Sitges",
-        "coordinates": "41.2333, 1.8000",
-        "logo_url": "https://cdn-icons-png.flaticon.com/512/628/628318.png",
-        "main_color": "#0056b3",
-        "partners": [
-          "Chiringuito El Sol",
-          "Club Náutico Sitges"
-        ]
-      }
+  "hotels": {
+    "hotel-bcn-premium": {
+      "name": "Majestic Residence Barcelona",
+      "city": "Barcelona",
+      "address": "Passeig de Gràcia, 68, 08007 Barcelona",
+      "coordinates": "41.3927, 2.1648",
+      "logo_url": "https://majestichotelgroup.com/img/logos/logo-mhm.svg",
+      "main_color": "#1c1c1c",
+      "partners": [
+        {
+          "name": "Restaurante Botafumeiro",
+          "category": "Gastronomía",
+          "benefit": "Copa de cava de bienvenida y mesa preferente",
+          "logo": "https://img.icons8.com/ios/100/restaurant.png"
+        },
+        {
+          "name": "Casa Batlló",
+          "category": "Cultura",
+          "benefit": "15% de descuento en ticket Blue con código MAJESTIC15",
+          "logo": "https://img.icons8.com/ios/100/museum.png"
+        }
+      ]
+    },
+    "hotel-mad-luxury": {
+      "name": "Palacio de los Duques",
+      "city": "Madrid",
+      "address": "Cuesta de Santo Domingo, 5, 28013 Madrid",
+      "coordinates": "40.4199, -3.7095",
+      "logo_url": "https://img.icons8.com/ios-filled/100/C5A059/palace.png",
+      "main_color": "#5e4d2d",
+      "partners": [
+        {
+          "name": "Restaurante Amazónico",
+          "category": "Gastronomía",
+          "benefit": "Reserva garantizada en menos de 24h",
+          "logo": "https://img.icons8.com/ios/100/kawaii-steak.png"
+        },
+        {
+          "name": "Museo del Prado",
+          "category": "Cultura",
+          "benefit": "Entrada sin colas (Fast Track)",
+          "logo": "https://img.icons8.com/ios/100/art.png"
+        }
+      ]
     }
   }
+}

@@ -35,10 +35,11 @@ export default async function handler(req, res) {
       user.style && user.style.length > 0 ? user.style.join(", ") : "General";
     const guestFood =
       user.food && user.food.length > 0 ? user.food.join(", ") : "Local";
-    const hotelPartners =
-      hotel.partners && hotel.partners.length > 0
-        ? hotel.partners.join(", ")
-        : "Ninguno";
+    // En api/generate-itinerary.js
+    // Transformamos el array de objetos en un texto legible para la IA
+    const hotelPartners = hotel.partners && hotel.partners.length > 0 
+      ? hotel.partners.map(p => `- ${p.name}: ${p.benefit}`).join("\n")
+      : "Actualmente no tenemos socios comerciales.";
 
     const systemPrompt = `
   Eres el Concierge de Lujo de "${hotel.name}" en ${hotel.city}. Eres un experto local con conocimientos actualizados y precisos de la ciudad.
@@ -69,7 +70,7 @@ export default async function handler(req, res) {
 
   INSTRUCCIONES DE CANTIDAD:
   - "activities": Devuelve al menos ${Math.max(6, user.days * 2)} opciones, basado en ${guestStyles}.
-  - "food": Devuelve al menos ${Math.max(5, user.days * 1.5)} opciones, basado en ${guestFood}.
+  - "food": Devuelve al menos ${Math.max(5, user.days * 1.5)} opciones, basado en ${guestFood}. Que sean lugares reales y bien puntuados.
   - "transport": 2 a 3 guías logísticas detalladas.
 
   REGLAS DE NEGOCIO:
@@ -85,7 +86,7 @@ export default async function handler(req, res) {
 `;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
         {
