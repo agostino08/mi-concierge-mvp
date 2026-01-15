@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, watch } from "vue";
+import { ref, onMounted } from "vue";
 import { db } from "./firebase";
 import { doc, getDoc } from "firebase/firestore";
 import QRCode from "qrcode";
@@ -40,7 +40,7 @@ const options = {
     "Terrazas & Rooftops", "Parques", "Música en vivo", 
     "Teatro & Espectáculos", "Tours Guiados", "Museos & Cultura", 
     "Experiencias Locales", "Shopping de Lujo", "Artesanía", 
-    "Fotografía", "Arquitectura", "Wellness & Spa", "Deportes", 
+    "Arquitectura", "Wellness & Spa", "Deportes", 
     "Historia", "Relax", "Gastronomía"
   ],
   food: [
@@ -72,7 +72,7 @@ const toggleFavorite = (item) => {
     triggerToast("Eliminado de favoritos");
   } else {
     myItinerary.value.push(item);
-    triggerToast("Añadido a favoritos ✨");
+    triggerToast("Añadido a favoritos");
   }
 };
 
@@ -135,42 +135,6 @@ onMounted(async () => {
     loading.value = false;
   }
 });
-
-// Cada vez que el itinerario cambie, se guarda automáticamente
-watch(myItinerary, (newItinerary) => {
-  localStorage.setItem("my_itinerary_backup", JSON.stringify(newItinerary));
-}, { deep: true });
-
-// Al cargar la app, recuperamos los datos
-onMounted(async () => {
-  const saved = localStorage.getItem("my_itinerary_backup");
-  if (saved) {
-    myItinerary.value = JSON.parse(saved);
-  }
-  // ... resto de tu lógica de Firebase ...
-});
-
-// ... código existente ...
-
-// Función para reiniciar la app por completo
-const resetApp = () => {
-  // Limpiamos datos
-  recommendations.value = { activities: [], food: [], transport: [] };
-  myItinerary.value = [];
-  formData.value = {
-    group: "",
-    days: 3,
-    style: [],
-    food: [],
-    budget: "Balanceado",
-    transport: [],
-  };
-  // Volvemos al inicio (WelcomeScreen o paso 1, lo que prefieras)
-  // step = 0 -> Pantalla de Bienvenida
-  step.value = 0; 
-  // Limpiamos el localStorage también si quieres que sea un reinicio total
-  localStorage.removeItem("my_itinerary_backup");
-};
 </script>
 
 <template>
@@ -256,7 +220,6 @@ const resetApp = () => {
             :hotelData="hotelData"
             @toggleFavorite="toggleFavorite"
             @goToSummary="prepareSummary"
-            @reset="resetApp" 
           />
 
          <FavoritesSummary

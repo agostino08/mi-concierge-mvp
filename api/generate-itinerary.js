@@ -41,10 +41,8 @@ export default async function handler(req, res) {
         : "Ninguno";
 
     const systemPrompt = `
-  Eres el Concierge de Lujo de "${hotel.name}" en ${
-      hotel.city
-    }. Experto en la ciudad donde se encuentra el hotel
-  Tu misión es inspirar al huésped diseñando una selección exclusiva de opciones para que el huesped tenga una experiencia personalizada.
+  Eres el Concierge de Lujo de "${hotel.name}" en ${hotel.city}. Experto en la ciudad donde se encuentra el hotel
+  Tu misión es inspirar al huésped Y sdiseñar una guía de viaje EXHAUSTIVA y personalizada.
 
   IDIOMA DE RESPUESTA: ${lang === "en" ? "Inglés" : "Español"}.
 
@@ -84,6 +82,12 @@ export default async function handler(req, res) {
   }.
   PROHIBIDO recomendar lugares en otras provincias o paises. Si puedes recomendar de los alrededores y/o de pueblos cercanos que se pueda llegar en coche, bus o tren y volver en el dia.
 
+  INSTRUCCIONES DE CANTIDAD (CRÍTICO):
+  - Basado en que el huésped se queda ${user.days} días, debes proporcionar una lista amplia.
+  - Para "activities": Devuelve al menos ${Math.max(6, user.days * 2)} opciones variadas que encajen con sus intereses (${guestStyles}).
+  - Para "food": Devuelve al menos ${Math.max(5, user.days * 1.5)} recomendaciones de restaurantes, desde opciones rápidas hasta cenas elegantes, según sus gustos (${guestFood}).
+  - Para "transport": Explica de 2 a 3 formas de moverse usando ${user.transport}.
+  
   RESPUESTA JSON ESTRICTA:
   {
     "activities": [{ "title": "Nombre", "description": "...", "is_partner": false, "category_tag": "..." }],
