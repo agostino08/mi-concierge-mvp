@@ -46,9 +46,9 @@ export default async function handler(req, res) {
   - Transporte: ${user.transport}.
 
   INSTRUCCIONES:
-  1. CATEGORÍA ACTIVIDADES (8 opciones): Basadas en ${guestStyles}. Mezcla iconos y secretos locales.
-  2. CATEGORÍA GASTRONOMÍA (6 opciones): Basadas en ${guestFood} y presupuesto ${user.budget}.
-  3. CATEGORÍA TRANSPORTE (3 opciones): Consejos expertos para moverse usando ${user.transport}.
+  1. CATEGORÍA ACTIVIDADES: Basadas en ${guestStyles}. Mezcla iconos, secretos locales y gemas de la ciudad.
+  2. CATEGORÍA GASTRONOMÍA: Basadas en ${guestFood} y presupuesto ${user.budget}.
+  3. CATEGORÍA TRANSPORTE: Consejos expertos para moverse usando ${user.transport}.
       IMPORTANTE - CATEGORÍA TRANSPORTE: 
       No listes opciones genéricas. Explica LOGÍSTICA REAL para ${user.transport}:
       - Dónde comprar boletos/tickets exactamente.
@@ -57,8 +57,15 @@ export default async function handler(req, res) {
 
   REGLAS:
   - No inventes coordenadas. Usa nombres comerciales exactos.
-  - Si un lugar es partner (${hotelPartners}), marca "is_partner": true.
+  - SOCIOS DEL HOTEL (PARTNERS):
+    Lista de partners: ${hotelPartners}.
+    Si recomiendas uno de estos lugares exactos, marca "is_partner": true.
   - Personaliza cada descripción explicando por qué encaja con sus gustos.
+
+  REGLA UBICACIÓN:
+  TODAS las recomendaciones deben estar ESTRICTAMENTE dentro de la ciudad de ${hotel.city}.
+  PROHIBIDO recomendar lugares en otras provincias o paises. Si puedes recomendar de los alrededores y/o de pueblos cercanos que se pueda llegar en coche, bus o tren y volver en el dia.
+  
 
   RESPUESTA JSON ESTRICTA:
   {
