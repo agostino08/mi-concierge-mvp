@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import { db } from "./firebase";
 import { doc, getDoc } from "firebase/firestore";
 import QRCode from "qrcode";
@@ -134,6 +134,20 @@ onMounted(async () => {
   } finally {
     loading.value = false;
   }
+});
+
+// Cada vez que el itinerario cambie, se guarda automáticamente
+watch(myItinerary, (newItinerary) => {
+  localStorage.setItem("my_itinerary_backup", JSON.stringify(newItinerary));
+}, { deep: true });
+
+// Al cargar la app, recuperamos los datos
+onMounted(async () => {
+  const saved = localStorage.getItem("my_itinerary_backup");
+  if (saved) {
+    myItinerary.value = JSON.parse(saved);
+  }
+  // ... resto de tu lógica de Firebase ...
 });
 </script>
 
