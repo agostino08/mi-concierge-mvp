@@ -102,33 +102,31 @@ const fetchOptions = async () => {
   }
 };
 
-// --- FUNCIÓN CORREGIDA: COMPARTIR EN LUGAR DE COPIAR ---
 const generateShareLink = async () => {
   if (myItinerary.value.length === 0) {
     triggerToast("Añade favoritos antes de compartir");
     return;
   }
 
-  // Avisamos al usuario que estamos procesando
   triggerToast("Generando enlace mágico...");
   
   try {
     // 1. Guardar itinerario en Firebase
+    // ACTUALIZACIÓN: Ahora guardamos también 'recommendations'
     const docRef = await addDoc(collection(db, "shared_itineraries"), {
       hotelId: hotelData.value.id || new URLSearchParams(window.location.search).get("hotel"),
       formData: formData.value,
       myItinerary: myItinerary.value,
+      recommendations: recommendations.value, // <--- GUARDAMOS TODO EL RESULTADO
       lang: lang.value,
       createdAt: serverTimestamp()
     });
 
-    // 2. Crear URL
     const url = new URL(window.location.origin);
     url.searchParams.set("itinerary", docRef.id);
     const finalLink = url.toString();
     shareLink.value = finalLink;
 
-    // 3. COMPARTIR (Lógica nativa del móvil)
     if (navigator.share) {
       await navigator.share({
         title: `Mi Guía en ${hotelData.value.name}`,
@@ -136,13 +134,11 @@ const generateShareLink = async () => {
         url: finalLink
       });
     } else {
-      // FALLBACK: Si están en PC y no hay menú de compartir, abrimos WhatsApp Web
       window.open(`https://wa.me/?text=${encodeURIComponent("Mira mi itinerario: " + finalLink)}`, "_blank");
     }
     
   } catch (e) {
     console.error("Error sharing:", e);
-    // Si el usuario cancela el compartir, no es un error grave
     if (e.name !== 'AbortError') {
       triggerToast("No se pudo compartir");
     }
@@ -158,7 +154,6 @@ const prepareSummary = async () => {
   step.value = 8;
 };
 
-// SETUP INICIAL
 onMounted(async () => {
   const params = new URLSearchParams(window.location.search);
   const itineraryId = params.get("itinerary");
@@ -174,6 +169,10 @@ onMounted(async () => {
         formData.value = data.formData;
         myItinerary.value = data.myItinerary;
         lang.value = data.lang;
+        
+        // ACTUALIZACIÓN: Recuperamos las recomendaciones completas
+        // Si es un link viejo que no las tenía, usamos un objeto vacío para que no rompa
+        recommendations.value = data.recommendations || { activities: [], food: [], transport: [] };
 
         const hotelSnap = await getDoc(doc(db, "hotels", data.hotelId));
         if (hotelSnap.exists()) {
@@ -234,7 +233,7 @@ const resetApp = () => {
 </script>
 
 <template>
-  <div class="min-h-screen cosy-gradient text-stone-800 selection:bg-stone-200 font-sans">
+    <div class="min-h-screen cosy-gradient text-stone-800 selection:bg-stone-200 font-sans">
     
     <div v-if="loading" class="flex flex-col items-center justify-center h-screen space-y-4">
       <div class="elegant-loader"></div>
