@@ -1,7 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { db } from "./firebase";
-// --- NUEVO: Añadimos collection, addDoc y serverTimestamp ---
 import { doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import QRCode from "qrcode";
 
@@ -21,7 +20,7 @@ const myItinerary = ref([]);
 const qrCodeUrl = ref("");
 const showToast = ref(false);
 const toastMessage = ref("");
-const shareLink = ref(""); // --- NUEVO ---
+const shareLink = ref("");
 
 const formData = ref({
   group: "",
@@ -103,18 +102,18 @@ const fetchOptions = async () => {
   }
 };
 
-// --- NUEVO: Función para Generar Link Compartible ---
+// --- FUNCIÓN CORREGIDA: COMPARTIR EN LUGAR DE COPIAR ---
 const generateShareLink = async () => {
-  // Evitamos guardar si no hay favoritos
   if (myItinerary.value.length === 0) {
     triggerToast("Añade favoritos antes de compartir");
     return;
   }
 
-  triggerToast("Generando enlace único...");
+  // Avisamos al usuario que estamos procesando
+  triggerToast("Generando enlace mágico...");
   
   try {
-    // 1. Guardamos en Firebase
+    // 1. Guardar itinerario en Firebase
     const docRef = await addDoc(collection(db, "shared_itineraries"), {
       hotelId: hotelData.value.id || new URLSearchParams(window.location.search).get("hotel"),
       formData: formData.value,
@@ -123,18 +122,30 @@ const generateShareLink = async () => {
       createdAt: serverTimestamp()
     });
 
-    // 2. Creamos la URL
+    // 2. Crear URL
     const url = new URL(window.location.origin);
     url.searchParams.set("itinerary", docRef.id);
-    shareLink.value = url.toString();
-    
-    // 3. Copiamos al portapapeles
-    await navigator.clipboard.writeText(shareLink.value);
-    triggerToast("¡Enlace copiado! Envíalo a tus amigos.");
+    const finalLink = url.toString();
+    shareLink.value = finalLink;
+
+    // 3. COMPARTIR (Lógica nativa del móvil)
+    if (navigator.share) {
+      await navigator.share({
+        title: `Mi Guía en ${hotelData.value.name}`,
+        text: 'He creado esta guía personalizada. ¡Mira mis favoritos!',
+        url: finalLink
+      });
+    } else {
+      // FALLBACK: Si están en PC y no hay menú de compartir, abrimos WhatsApp Web
+      window.open(`https://wa.me/?text=${encodeURIComponent("Mira mi itinerario: " + finalLink)}`, "_blank");
+    }
     
   } catch (e) {
     console.error("Error sharing:", e);
-    triggerToast("Error al generar enlace");
+    // Si el usuario cancela el compartir, no es un error grave
+    if (e.name !== 'AbortError') {
+      triggerToast("No se pudo compartir");
+    }
   }
 };
 
@@ -147,35 +158,32 @@ const prepareSummary = async () => {
   step.value = 8;
 };
 
-// --- NUEVO: OnMounted Inteligente (Carga Hotel o Itinerario Compartido) ---
+// SETUP INICIAL
 onMounted(async () => {
   const params = new URLSearchParams(window.location.search);
-  const itineraryId = params.get("itinerary"); // ¿Viene de un link compartido?
-  const hotelId = params.get("hotel");         // ¿O es un flujo normal?
+  const itineraryId = params.get("itinerary");
+  const hotelId = params.get("hotel");
 
-  // CASO A: Cargar Itinerario Compartido
+  // CASO A: Link Compartido
   if (itineraryId) {
     loading.value = true;
     try {
       const itSnap = await getDoc(doc(db, "shared_itineraries", itineraryId));
       if (itSnap.exists()) {
         const data = itSnap.data();
-        
-        // Restauramos el estado
         formData.value = data.formData;
         myItinerary.value = data.myItinerary;
         lang.value = data.lang;
 
-        // Cargamos el hotel asociado a ese itinerario
         const hotelSnap = await getDoc(doc(db, "hotels", data.hotelId));
         if (hotelSnap.exists()) {
           hotelData.value = { ...hotelSnap.data(), id: hotelSnap.id };
-          step.value = 8; // Saltamos directo al resumen
+          step.value = 8; 
         } else {
           error.value = "El hotel de este itinerario ya no existe.";
         }
       } else {
-        error.value = "El enlace compartido ha expirado o no existe.";
+        error.value = "El enlace compartido ha expirado.";
       }
     } catch (e) {
       console.error(e);
@@ -183,10 +191,10 @@ onMounted(async () => {
     } finally {
       loading.value = false;
     }
-    return; // Terminamos aquí si es compartido
+    return;
   }
 
-  // CASO B: Flujo Normal (Cargar Hotel)
+  // CASO B: Flujo Normal
   if (!hotelId) {
     error.value = "ID de hotel no encontrado en la URL";
     loading.value = false;
@@ -196,7 +204,6 @@ onMounted(async () => {
   try {
     const docSnap = await getDoc(doc(db, "hotels", hotelId));
     if (docSnap.exists()) {
-      // Guardamos ID también por si acaso
       hotelData.value = { ...docSnap.data(), id: docSnap.id }; 
     } else {
       error.value = "Este hotel no existe en nuestra base de datos";
@@ -222,7 +229,6 @@ const resetApp = () => {
   };
   step.value = 0; 
   localStorage.removeItem("my_itinerary_backup");
-  // Limpiamos la URL al resetear para que no recargue el itinerario compartido
   window.history.pushState({}, document.title, window.location.pathname + "?hotel=" + (hotelData.value.id || ""));
 };
 </script>
@@ -285,12 +291,13 @@ const resetApp = () => {
             :hotelData="hotelData"
             @back="step = 7"
             @remove="(idx) => myItinerary.splice(idx, 1)"
+            @copy-link="generateShareLink"
           />
         </transition>
       </main>
 
       <transition name="toast">
-        <div v-if="showToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100]">
+        <div v-if="showToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100] whitespace-nowrap">
           {{ toastMessage }}
         </div>
       </transition>
