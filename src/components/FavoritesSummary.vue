@@ -1,6 +1,7 @@
 <script setup>
 const props = defineProps(["myItinerary", "hotelData"]);
-const emit = defineEmits(["back", "remove"]);
+// Añadimos el evento 'copy-link'
+const emit = defineEmits(["back", "remove", "copy-link"]);
 
 const addToCalendar = (item) => {
   const title = encodeURIComponent(item.title);
@@ -14,6 +15,7 @@ const getGoogleMapsUrl = (title) => {
 };
 
 const handleShare = async () => {
+  // Lógica antigua para compartir texto (WhatsApp, etc.)
   const hotelName = props.hotelData?.name || "mi hotel";
   let message = `📍 MIS FAVORITOS EN ${hotelName.toUpperCase()}\n\n`;
   props.myItinerary.forEach((item, idx) => {
@@ -53,9 +55,8 @@ const handleShare = async () => {
 
       <div class="space-y-16">
         <div v-for="(item, idx) in myItinerary" :key="idx" class="relative group">
-          
           <div v-if="item.is_partner" class="mb-4 inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1 rounded-full border border-amber-100">
-            <span class="text-[7px] font-bold uppercase tracking-widest">Recomendado por el Concierge</span>
+             <span class="text-[7px] font-bold uppercase tracking-widest">Recomendado por el Concierge</span>
           </div>
 
           <div class="flex justify-between items-start mb-4">
@@ -84,12 +85,20 @@ const handleShare = async () => {
       </div>
     </div>
 
-    <div class="max-w-xs mx-auto pb-12 no-print">
-      <button @click="handleShare" 
-        class="w-full py-6 bg-stone-900 text-white rounded-[2rem] text-[10px] font-bold uppercase tracking-[0.3em] shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all hover:bg-black">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
-        Compartir Guía
+    <div class="max-w-xs mx-auto pb-12 no-print space-y-3">
+      
+      <button @click="$emit('copy-link')" 
+        class="w-full py-5 bg-stone-800 text-white rounded-[2rem] text-[10px] font-bold uppercase tracking-[0.2em] shadow-xl flex items-center justify-center gap-3 active:scale-95 transition-all hover:bg-stone-900 hover:-translate-y-1">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
+        Enviar Enlace Único
       </button>
+
+      <button @click="handleShare" 
+        class="w-full py-5 bg-white text-stone-600 border border-stone-200 rounded-[2rem] text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all hover:bg-stone-50">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>
+        Enviar como Texto / WhatsApp
+      </button>
+
     </div>
   </div>
 </template>

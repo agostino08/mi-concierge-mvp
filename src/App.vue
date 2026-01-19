@@ -1,16 +1,15 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import { db } from "./firebase";
-import { doc, getDoc } from "firebase/firestore";
+// --- NUEVO: Añadimos collection, addDoc y serverTimestamp ---
+import { doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
 import QRCode from "qrcode";
 
-// Importar Componentes
 import WelcomeScreen from "./components/WelcomeScreen.vue";
 import QuestionnaireForm from "./components/QuestionnaireForm.vue";
 import ResultsView from "./components/ResultsView.vue";
 import FavoritesSummary from "./components/FavoritesSummary.vue";
 
-// Estados Globales
 const step = ref(0);
 const lang = ref("es");
 const loading = ref(true);
@@ -22,6 +21,7 @@ const myItinerary = ref([]);
 const qrCodeUrl = ref("");
 const showToast = ref(false);
 const toastMessage = ref("");
+const shareLink = ref(""); // --- NUEVO ---
 
 const formData = ref({
   group: "",
@@ -73,7 +73,6 @@ const toggleFavorite = (item) => {
   }
 };
 
-// API - Función corregida para manejar Partners como objetos
 const fetchOptions = async () => {
   generating.value = true;
   error.value = null;
@@ -83,7 +82,6 @@ const fetchOptions = async () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        // Enviamos el .value del ref
         hotel: hotelData.value, 
         user: formData.value,
         lang: lang.value,
@@ -99,10 +97,44 @@ const fetchOptions = async () => {
   } catch (e) {
     console.error("Error detallado:", e);
     error.value = e.message;
-    // Si hay error, regresamos al paso anterior para que el usuario pueda reintentar
     step.value = 6; 
   } finally {
     generating.value = false;
+  }
+};
+
+// --- NUEVO: Función para Generar Link Compartible ---
+const generateShareLink = async () => {
+  // Evitamos guardar si no hay favoritos
+  if (myItinerary.value.length === 0) {
+    triggerToast("Añade favoritos antes de compartir");
+    return;
+  }
+
+  triggerToast("Generando enlace único...");
+  
+  try {
+    // 1. Guardamos en Firebase
+    const docRef = await addDoc(collection(db, "shared_itineraries"), {
+      hotelId: hotelData.value.id || new URLSearchParams(window.location.search).get("hotel"),
+      formData: formData.value,
+      myItinerary: myItinerary.value,
+      lang: lang.value,
+      createdAt: serverTimestamp()
+    });
+
+    // 2. Creamos la URL
+    const url = new URL(window.location.origin);
+    url.searchParams.set("itinerary", docRef.id);
+    shareLink.value = url.toString();
+    
+    // 3. Copiamos al portapapeles
+    await navigator.clipboard.writeText(shareLink.value);
+    triggerToast("¡Enlace copiado! Envíalo a tus amigos.");
+    
+  } catch (e) {
+    console.error("Error sharing:", e);
+    triggerToast("Error al generar enlace");
   }
 };
 
@@ -115,11 +147,46 @@ const prepareSummary = async () => {
   step.value = 8;
 };
 
-// 1. Corregir el Setup Inicial (onMounted)
+// --- NUEVO: OnMounted Inteligente (Carga Hotel o Itinerario Compartido) ---
 onMounted(async () => {
   const params = new URLSearchParams(window.location.search);
-  const hotelId = params.get("hotel");
+  const itineraryId = params.get("itinerary"); // ¿Viene de un link compartido?
+  const hotelId = params.get("hotel");         // ¿O es un flujo normal?
 
+  // CASO A: Cargar Itinerario Compartido
+  if (itineraryId) {
+    loading.value = true;
+    try {
+      const itSnap = await getDoc(doc(db, "shared_itineraries", itineraryId));
+      if (itSnap.exists()) {
+        const data = itSnap.data();
+        
+        // Restauramos el estado
+        formData.value = data.formData;
+        myItinerary.value = data.myItinerary;
+        lang.value = data.lang;
+
+        // Cargamos el hotel asociado a ese itinerario
+        const hotelSnap = await getDoc(doc(db, "hotels", data.hotelId));
+        if (hotelSnap.exists()) {
+          hotelData.value = { ...hotelSnap.data(), id: hotelSnap.id };
+          step.value = 8; // Saltamos directo al resumen
+        } else {
+          error.value = "El hotel de este itinerario ya no existe.";
+        }
+      } else {
+        error.value = "El enlace compartido ha expirado o no existe.";
+      }
+    } catch (e) {
+      console.error(e);
+      error.value = "Error al recuperar el viaje compartido.";
+    } finally {
+      loading.value = false;
+    }
+    return; // Terminamos aquí si es compartido
+  }
+
+  // CASO B: Flujo Normal (Cargar Hotel)
   if (!hotelId) {
     error.value = "ID de hotel no encontrado en la URL";
     loading.value = false;
@@ -129,8 +196,8 @@ onMounted(async () => {
   try {
     const docSnap = await getDoc(doc(db, "hotels", hotelId));
     if (docSnap.exists()) {
-      // CORRECCIÓN: Usar .value para asignar el objeto de Firebase
-      hotelData.value = docSnap.data(); 
+      // Guardamos ID también por si acaso
+      hotelData.value = { ...docSnap.data(), id: docSnap.id }; 
     } else {
       error.value = "Este hotel no existe en nuestra base de datos";
     }
@@ -155,6 +222,8 @@ const resetApp = () => {
   };
   step.value = 0; 
   localStorage.removeItem("my_itinerary_backup");
+  // Limpiamos la URL al resetear para que no recargue el itinerario compartido
+  window.history.pushState({}, document.title, window.location.pathname + "?hotel=" + (hotelData.value.id || ""));
 };
 </script>
 
