@@ -1,0 +1,44 @@
+{
+  "welcome": {
+    "title": "欢迎来到",
+    "subtitle": "您的人工智能礼宾。",
+    "start": "开始规划",
+    "load_shared": "正在加载您的行程..."
+  },
+  "questionnaire": {
+    "step1": "您和谁一起旅行？",
+    "step2": "您要待几天？",
+    "step3": "您的旅行风格是什么？（最多3个）",
+    "step4": "您喜欢什么类型的食物？（最多3个）",
+    "step5": "您的理想预算是多少？",
+    "step6": "您将如何出行？",
+    "next": "下一步",
+    "back": "后退",
+    "generate": "生成我的行程",
+    "error_select": "请选择一个选项"
+  },
+  "results": {
+    "generating": "为您设计完美的旅行...",
+    "wait_msg": "我们的 AI 正在收集最佳本地推荐。",
+    "tabs": {
+      "activities": "活动",
+      "food": "餐饮",
+      "transport": "交通"
+    },
+    "add_favorite": "加入收藏",
+    "view_summary": "查看完整行程",
+    "reset": "重新开始"
+  },
+  "summary": {
+    "title": "我的行程",
+    "subtitle": "您的专属精选",
+    "back": "返回",
+    "remove": "移除",
+    "share": "发送魔法链接",
+    "qr_desc": "扫描以在手机上查看"
+  },
+  "common": {
+    "error": "错误",
+    "loading": "加载中..."
+  }
+}

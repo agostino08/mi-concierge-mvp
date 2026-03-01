@@ -1,306 +1,86 @@
+```html
 <script setup>
-import { ref, onMounted } from "vue";
-import { db } from "./firebase";
-import { doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
-import QRCode from "qrcode";
+import { onMounted } from "vue";
+import { useRoute } from "vue-router";
+import LanguageSelector from './components/LanguageSelector.vue';
+import HotelChatbot from './components/HotelChatbot.vue';
+import { useUIStore } from "./stores/useUIStore";
+import { useHotelStore } from "./stores/useHotelStore";
+import { useItineraryStore } from "./stores/useItineraryStore";
 
-import WelcomeScreen from "./components/WelcomeScreen.vue";
-import QuestionnaireForm from "./components/QuestionnaireForm.vue";
-import ResultsView from "./components/ResultsView.vue";
-import FavoritesSummary from "./components/FavoritesSummary.vue";
-
-const step = ref(0);
-const lang = ref("es");
-const loading = ref(true);
-const generating = ref(false);
-const hotelData = ref(null);
-const error = ref(null);
-const recommendations = ref({ activities: [], food: [], transport: [] });
-const myItinerary = ref([]);
-const qrCodeUrl = ref("");
-const showToast = ref(false);
-const toastMessage = ref("");
-const shareLink = ref("");
-
-const formData = ref({
-  group: "",
-  days: 3,
-  style: [],
-  food: [],
-  budget: "Balanceado",
-  transport: [], 
-});
-
-const options = {
-  group: ["Solo", "Pareja", "Familia", "Amigos", "Negocios"],
-  style: [
-    "Vida nocturna", "Naturaleza", "Montaña", "Playa", 
-    "Terrazas & Rooftops", "Parques", "Música en vivo", 
-    "Teatro & Espectáculos", "Tours Guiados", "Museos & Cultura", 
-    "Experiencias Locales", "Shopping de Lujo", "Artesanía", 
-    "Arquitectura", "Wellness & Spa", "Deportes", 
-    "Historia", "Relax", "Gastronomía"
-  ],
-  food: [
-    "Local / Tradicional", "Fusión", "Italiana", "Asiática", 
-    "Mexicana", "Peruana", "Mediterránea", "Steakhouse", 
-    "Panadería & Repostería", "De Autor / Michelin", 
-    "Saludable / Sostenible", "Street Food", "Veggie / Vegano", 
-    "Sea Food", "Brunch", "Vinos & Tapas"
-  ],
-  budget: ["Económico", "Balanceado", "Lujo"],
-  transport: [
-    "Transporte público", "Uber / Taxi", "Alquiler de Auto", 
-    "Tren", "Barca / Ferry", "Bicicleta", "Caminando", "Scooter Eléctrico"
-  ],
-};
-
-const triggerToast = (msg) => {
-  toastMessage.value = msg;
-  showToast.value = true;
-  setTimeout(() => (showToast.value = false), 3000);
-};
-
-const toggleFavorite = (item) => {
-  const index = myItinerary.value.findIndex((i) => i.title === item.title);
-  if (index > -1) {
-    myItinerary.value.splice(index, 1);
-    triggerToast("Eliminado de favoritos");
-  } else {
-    myItinerary.value.push(item);
-    triggerToast("Añadido a favoritos");
-  }
-};
-
-const fetchOptions = async () => {
-  generating.value = true;
-  error.value = null;
-  step.value = 7;
-  try {
-    const response = await fetch("/api/generate-itinerary", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        hotel: hotelData.value, 
-        user: formData.value,
-        lang: lang.value,
-      }),
-    });
-    
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.details || "Hubo un error al diseñar tu guía");
-    }
-    
-    recommendations.value = await response.json();
-  } catch (e) {
-    console.error("Error detallado:", e);
-    error.value = e.message;
-    step.value = 6; 
-  } finally {
-    generating.value = false;
-  }
-};
-
-const generateShareLink = async () => {
-  if (myItinerary.value.length === 0) {
-    triggerToast("Añade favoritos antes de compartir");
-    return;
-  }
-
-  triggerToast("Generando enlace mágico...");
-  
-  try {
-    // 1. Guardar itinerario en Firebase
-    // ACTUALIZACIÓN: Ahora guardamos también 'recommendations'
-    const docRef = await addDoc(collection(db, "shared_itineraries"), {
-      hotelId: hotelData.value.id || new URLSearchParams(window.location.search).get("hotel"),
-      formData: formData.value,
-      myItinerary: myItinerary.value,
-      recommendations: recommendations.value, // <--- GUARDAMOS TODO EL RESULTADO
-      lang: lang.value,
-      createdAt: serverTimestamp()
-    });
-
-    const url = new URL(window.location.origin);
-    url.searchParams.set("itinerary", docRef.id);
-    const finalLink = url.toString();
-    shareLink.value = finalLink;
-
-    if (navigator.share) {
-      await navigator.share({
-        title: `Mi Guía en ${hotelData.value.name}`,
-        text: 'He creado esta guía personalizada. ¡Mira mis favoritos!',
-        url: finalLink
-      });
-    } else {
-      window.open(`https://wa.me/?text=${encodeURIComponent("Mira mi itinerario: " + finalLink)}`, "_blank");
-    }
-    
-  } catch (e) {
-    console.error("Error sharing:", e);
-    if (e.name !== 'AbortError') {
-      triggerToast("No se pudo compartir");
-    }
-  }
-};
-
-const prepareSummary = async () => {
-  if (myItinerary.value.length === 0) {
-    triggerToast("Selecciona al menos un favorito");
-    return;
-  }
-  qrCodeUrl.value = await QRCode.toDataURL(window.location.href);
-  step.value = 8;
-};
+const route = useRoute();
+const uiStore = useUIStore();
+const hotelStore = useHotelStore();
+const itineraryStore = useItineraryStore();
 
 onMounted(async () => {
   const params = new URLSearchParams(window.location.search);
   const itineraryId = params.get("itinerary");
   const hotelId = params.get("hotel");
 
-  // CASO A: Link Compartido
   if (itineraryId) {
-    loading.value = true;
-    try {
-      const itSnap = await getDoc(doc(db, "shared_itineraries", itineraryId));
-      if (itSnap.exists()) {
-        const data = itSnap.data();
-        formData.value = data.formData;
-        myItinerary.value = data.myItinerary;
-        lang.value = data.lang;
-        
-        // ACTUALIZACIÓN: Recuperamos las recomendaciones completas
-        // Si es un link viejo que no las tenía, usamos un objeto vacío para que no rompa
-        recommendations.value = data.recommendations || { activities: [], food: [], transport: [] };
-
-        const hotelSnap = await getDoc(doc(db, "hotels", data.hotelId));
-        if (hotelSnap.exists()) {
-          hotelData.value = { ...hotelSnap.data(), id: hotelSnap.id };
-          step.value = 8; 
-        } else {
-          error.value = "El hotel de este itinerario ya no existe.";
-        }
-      } else {
-        error.value = "El enlace compartido ha expirado.";
-      }
-    } catch (e) {
-      console.error(e);
-      error.value = "Error al recuperar el viaje compartido.";
-    } finally {
-      loading.value = false;
-    }
+    await itineraryStore.loadSharedItinerary(itineraryId);
     return;
   }
 
-  // CASO B: Flujo Normal
-  if (!hotelId) {
-    error.value = "ID de hotel no encontrado en la URL";
-    loading.value = false;
-    return;
-  }
-
-  try {
-    const docSnap = await getDoc(doc(db, "hotels", hotelId));
-    if (docSnap.exists()) {
-      hotelData.value = { ...docSnap.data(), id: docSnap.id }; 
-    } else {
-      error.value = "Este hotel no existe en nuestra base de datos";
-    }
-  } catch (e) {
-    console.error(e);
-    error.value = "Error de conexión con la base de datos";
-  } finally {
-    loading.value = false;
+  if (hotelId) {
+    await hotelStore.fetchHotel(hotelId);
+  } else {
+    uiStore.setLoading(false);
+    uiStore.setError("ID de hotel no encontrado en la URL");
   }
 });
 
 const resetApp = () => {
-  recommendations.value = { activities: [], food: [], transport: [] };
-  myItinerary.value = [];
-  formData.value = {
-    group: "",
-    days: 3,
-    style: [],
-    food: [],
-    budget: "Balanceado",
-    transport: [],
-  };
-  step.value = 0; 
-  localStorage.removeItem("my_itinerary_backup");
-  window.history.pushState({}, document.title, window.location.pathname + "?hotel=" + (hotelData.value.id || ""));
+  itineraryStore.resetApp();
 };
 </script>
 
 <template>
-    <div class="min-h-screen cosy-gradient text-stone-800 selection:bg-stone-200 font-sans">
+  <div class="min-h-screen cosy-gradient text-stone-800 selection:bg-stone-200 font-sans">
     
-    <div v-if="loading" class="flex flex-col items-center justify-center h-screen space-y-4">
+    <div v-if="uiStore.loading" class="flex flex-col items-center justify-center h-screen space-y-4">
       <div class="elegant-loader"></div>
       <p class="tracking-widest text-xs uppercase text-stone-400">Iniciando Experiencia</p>
     </div>
 
     <template v-else>
-      <header v-if="hotelData" class="p-8 flex flex-col items-center sticky top-0 z-50 backdrop-blur-md bg-white/30">
-        <img :src="hotelData.logo_url" class="h-10 mb-4 opacity-90 object-contain" alt="Logo Hotel" />
+      <header v-if="hotelStore.hotelData" class="p-8 flex flex-col items-center sticky top-0 z-50 backdrop-blur-md bg-white/30">
+        <div class="max-w-md mx-auto flex items-center justify-between w-full">
+          <div class="w-24">
+            <img v-if="hotelStore.hotelData?.logo_url" :src="hotelStore.hotelData.logo_url" alt="Logo del Hotel" class="w-full h-auto object-contain drop-shadow-sm" />
+            <h1 v-else class="text-xl font-serif text-stone-800 tracking-tight">{{ hotelStore.hotelData?.name || '' }}</h1>
+          </div>
+          
+          <LanguageSelector v-if="route.path !== '/summary'" />
+        </div>
         
-        <div v-if="step > 0 && step < 7" class="h-[2px] w-32 bg-stone-200 rounded-full overflow-hidden">
-          <div class="h-full bg-stone-500 transition-all duration-700" :style="{ width: (step / 6) * 100 + '%' }"></div>
+        <div v-if="$route.path.startsWith('/questionnaire/') && $route.params.step" class="h-[2px] w-32 bg-stone-200 rounded-full overflow-hidden mt-4">
+          <div class="h-full bg-stone-500 transition-all duration-700" :style="{ width: ($route.params.step / 6) * 100 + '%' }"></div>
         </div>
       </header>
 
       <main class="max-w-xl mx-auto px-6 py-8 pb-24">
-        <div v-if="error" class="bg-rose-50 border border-rose-100 text-rose-700 p-8 rounded-[2rem] text-center mb-6">
-          <p class="font-medium">{{ error }}</p>
+        <div v-if="uiStore.error" class="bg-rose-50 border border-rose-100 text-rose-700 p-8 rounded-[2rem] text-center mb-6">
+          <p class="font-medium">{{ uiStore.error }}</p>
           <button @click="resetApp" class="mt-4 underline font-bold uppercase text-xs tracking-widest">Volver al inicio</button>
         </div>
 
-        <transition name="page" mode="out-in">
-          <WelcomeScreen
-            v-if="step === 0"
-            :hotelData="hotelData"
-            @start="(l) => { lang = l; step++; }"
-          />
-
-          <QuestionnaireForm
-            v-else-if="step >= 1 && step <= 6"
-            :step="step"
-            :lang="lang"
-            :formData="formData"
-            :options="options"
-            @next="step++"
-            @prev="step--"
-            @submit="fetchOptions"
-          />
-
-          <ResultsView
-            v-else-if="step === 7"
-            :recommendations="recommendations"
-            :myItinerary="myItinerary"
-            :generating="generating"
-            :hotelData="hotelData"
-            @toggleFavorite="toggleFavorite"
-            @goToSummary="prepareSummary"
-            @reset="resetApp" 
-          />
-
-         <FavoritesSummary
-            v-else-if="step === 8"
-            :myItinerary="myItinerary"
-            :hotelData="hotelData"
-            @back="step = 7"
-            @remove="(idx) => myItinerary.splice(idx, 1)"
-            @copy-link="generateShareLink"
-          />
-        </transition>
+        <router-view v-slot="{ Component }">
+          <transition name="page" mode="out-in">
+            <component :is="Component" />
+          </transition>
+        </router-view>
       </main>
 
       <transition name="toast">
-        <div v-if="showToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100] whitespace-nowrap">
-          {{ toastMessage }}
+        <div v-if="uiStore.showToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100] whitespace-nowrap">
+          {{ uiStore.toastMessage }}
         </div>
       </transition>
     </template>
+
+    <HotelChatbot />
   </div>
 </template>
 

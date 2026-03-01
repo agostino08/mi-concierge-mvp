@@ -1,0 +1,44 @@
+{
+  "welcome": {
+    "title": "ようこそ",
+    "subtitle": "あなたのAIコンシェルジュ。",
+    "start": "計画を始める",
+    "load_shared": "旅程を読み込んでいます..."
+  },
+  "questionnaire": {
+    "step1": "誰と旅行しますか？",
+    "step2": "何日間滞在しますか？",
+    "step3": "あなたの旅行スタイルは？（最大3つ）",
+    "step4": "どのような食事が好きですか？（最大3つ）",
+    "step5": "理想的な予算は？",
+    "step6": "どのように移動しますか？",
+    "next": "次へ",
+    "back": "戻る",
+    "generate": "旅程を作成する",
+    "error_select": "オプションを選択してください"
+  },
+  "results": {
+    "generating": "完璧な旅行をデザインしています...",
+    "wait_msg": "AIが最高のおすすめを集めています。",
+    "tabs": {
+      "activities": "アクティビティ",
+      "food": "食事と飲み物",
+      "transport": "交通機関"
+    },
+    "add_favorite": "お気に入りに追加",
+    "view_summary": "完全な旅程を見る",
+    "reset": "最初からやり直す"
+  },
+  "summary": {
+    "title": "私の旅程",
+    "subtitle": "カスタマイズされた選択",
+    "back": "戻る",
+    "remove": "削除",
+    "share": "マジックリンクを送信",
+    "qr_desc": "スキャンして携帯で見る"
+  },
+  "common": {
+    "error": "エラー",
+    "loading": "読み込み中..."
+  }
+}

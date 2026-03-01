@@ -1,41 +1,43 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useItineraryStore } from "../stores/useItineraryStore";
+import { useHotelStore } from "../stores/useHotelStore";
 
-const props = defineProps([
-  "recommendations",
-  "myItinerary",
-  "generating",
-  "hotelData",
-]);
-const emit = defineEmits(["toggleFavorite", "goToSummary", "reset"]);
+const itineraryStore = useItineraryStore();
+const hotelStore = useHotelStore();
+
+const recommendations = computed(() => itineraryStore.recommendations);
+const myItinerary = computed(() => itineraryStore.myItinerary);
+const generating = computed(() => itineraryStore.generating);
+const hotelData = computed(() => hotelStore.hotelData);
 
 const activeTab = ref("activities");
 
 const isFavorite = (item) =>
-  props.myItinerary.some((i) => i.title === item.title);
+  myItinerary.value.some((i) => i.title === item.title);
 
 // --- LÓGICA DE LA PANTALLA DE ESPERA ---
 const currentFactIndex = ref(0);
 const facts = [
   {
-    title: "Tradición",
-    text: "Barcelona tiene 9 monumentos declarados Patrimonio de la Humanidad por la UNESCO.",
+    title: "Tradition",
+    text: "Barcelona has 9 UNESCO World Heritage sites.",
   },
   {
-    title: "Gastronomía",
-    text: "La hora punta para cenar en la ciudad suele ser a partir de las 21:00h.",
+    title: "Gastronomy",
+    text: "Peak dinner time in the city usually starts around 9:00 PM.",
   },
   {
-    title: "Curiosidad",
-    text: "El Parque Güell fue originalmente diseñado para ser una urbanización de lujo, no un parque.",
+    title: "Curiosity",
+    text: "Park Güell was originally designed as a luxury housing estate, not a park.",
   },
   {
-    title: "Transporte",
-    text: "La red de metro de la ciudad es una de las más accesibles y rápidas de Europa.",
+    title: "Transport",
+    text: "The city's metro network is one of the most accessible and fastest in Europe.",
   },
   {
-    title: "Cultura",
-    text: "Sant Jordi (23 de abril) es el día más romántico: la ciudad se llena de libros y rosas.",
+    title: "Culture",
+    text: "Sant Jordi (April 23) is the most romantic day: the city is filled with books and roses.",
   },
 ];
 
@@ -72,7 +74,7 @@ const addToCalendar = (item) => {
 
 const getGoogleMapsUrl = (title) =>
   `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    title + " " + props.hotelData.city
+    title + " " + hotelData.value?.city
   )}`;
 </script>
 
@@ -116,7 +118,7 @@ const getGoogleMapsUrl = (title) =>
               <p
                 class="text-amber-400 text-[10px] font-bold uppercase tracking-[0.4em]"
               >
-                ¿Sabía que...?
+                {{ $t('results.reset') }}
               </p>
               <h4
                 class="text-white font-serif text-2xl italic px-4 leading-snug"
@@ -129,7 +131,7 @@ const getGoogleMapsUrl = (title) =>
 
         <div class="pt-10">
           <p class="text-white/40 text-[10px] uppercase tracking-[0.2em]">
-            Personalizando su estancia en {{ hotelData?.city }}
+            {{ $t('results.customizing', { city: hotelData?.city }) }}
           </p>
         </div>
       </div>
@@ -148,7 +150,7 @@ const getGoogleMapsUrl = (title) =>
         >
           <span
             class="text-white/80 text-[10px] uppercase tracking-[0.4em] mb-2"
-            >Descubra</span
+            >{{ $t('results.discover') }}</span
           >
           <h2 class="text-white text-4xl font-serif italic">
             {{ hotelData?.city }}
@@ -160,17 +162,18 @@ const getGoogleMapsUrl = (title) =>
         class="bg-stone-900 text-stone-50 p-8 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row justify-between items-center gap-6 border border-white/10"
       >
         <div class="text-center md:text-left">
-          <h3 class="font-serif text-2xl mb-1">Su Selección</h3>
+          <h4 class="text-xl font-serif text-stone-800">{{ $t('results.generating') }}</h4>
+          <p class="text-stone-500 text-sm">{{ $t('results.wait_msg') }}</p>
           <p class="text-stone-400 text-[10px] uppercase tracking-widest">
-            {{ myItinerary.length }} lugares guardados
+            {{ myItinerary.length }} {{ $t('results.saved_places') }}
           </p>
         </div>
         <button
           v-if="myItinerary.length > 0"
-          @click="$emit('goToSummary')"
+          @click="itineraryStore.prepareSummary()"
           class="bg-white text-stone-900 px-8 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-stone-200 transition-all active:scale-95 shadow-lg"
         >
-          Ver Itinerario Completo
+          {{ $t('results.view_summary') }}
         </button>
       </div>
 
@@ -190,10 +193,10 @@ const getGoogleMapsUrl = (title) =>
         >
           {{
             tab === "activities"
-              ? "Experiencias"
+              ? $t('results.tabs.activities')
               : tab === "food"
-              ? "Gastronomía"
-              : "Logística"
+              ? $t('results.tabs.food')
+              : $t('results.tabs.transport')
           }}
         </button>
       </div>
@@ -209,13 +212,13 @@ const getGoogleMapsUrl = (title) =>
             class="absolute -top-1 -left-1 bg-amber-400 text-amber-900 px-4 py-1.5 rounded-br-2xl shadow-sm z-10 border-b border-r border-white"
           >
             <span class="text-[8px] font-black uppercase tracking-tighter"
-              >Sugerencia Local</span
+              >{{ $t('results.local_suggestion') }}</span
             >
           </div>
 
           <button
             v-if="activeTab !== 'transport'"
-            @click="$emit('toggleFavorite', item)"
+            @click="itineraryStore.toggleFavorite(item)"
             class="absolute top-8 right-8 p-3 rounded-full transition-all duration-300 z-10"
             :class="
               isFavorite(item)
@@ -265,7 +268,7 @@ const getGoogleMapsUrl = (title) =>
                   d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                 />
               </svg>
-              Agendar
+              {{ $t('results.add_to_calendar') }}
             </button>
             <a
               :href="getGoogleMapsUrl(item.title)"
@@ -292,7 +295,7 @@ const getGoogleMapsUrl = (title) =>
 
       <div class="pt-12 pb-8 text-center border-t border-stone-100">
         <button
-          @click="$emit('reset')"
+          @click="itineraryStore.resetApp()"
           class="text-stone-400 hover:text-stone-800 text-[10px] font-bold uppercase tracking-[0.3em] transition-all flex items-center justify-center gap-3 mx-auto"
         >
           <svg
@@ -308,7 +311,7 @@ const getGoogleMapsUrl = (title) =>
               d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
             />
           </svg>
-          Nueva Planificación
+          {{ $t('results.reset') }}
         </button>
       </div>
     </div>

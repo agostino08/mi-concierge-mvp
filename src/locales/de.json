@@ -1,0 +1,44 @@
+{
+  "welcome": {
+    "title": "Willkommen bei",
+    "subtitle": "Ihr KI-gestützter Concierge.",
+    "start": "Planung beginnen",
+    "load_shared": "Ihr Reiseplan wird geladen..."
+  },
+  "questionnaire": {
+    "step1": "Mit wem reisen Sie?",
+    "step2": "Wie viele Tage bleiben Sie?",
+    "step3": "Was ist Ihr Reisestil? (Max. 3)",
+    "step4": "Welches Essen bevorzugen Sie? (Max. 3)",
+    "step5": "Was ist Ihr ideales Budget?",
+    "step6": "Wie werden Sie sich fortbewegen?",
+    "next": "Weiter",
+    "back": "Zurück",
+    "generate": "Meinen Reiseplan erstellen",
+    "error_select": "Bitte wählen Sie eine Option"
+  },
+  "results": {
+    "generating": "Entwerfe Ihre perfekte Reise...",
+    "wait_msg": "Unsere KI sammelt die besten lokalen Empfehlungen.",
+    "tabs": {
+      "activities": "Aktivitäten",
+      "food": "Essen & Trinken",
+      "transport": "Transport"
+    },
+    "add_favorite": "Zu Favoriten hinzufügen",
+    "view_summary": "Vollständigen Reiseplan anzeigen",
+    "reset": "Von vorne anfangen"
+  },
+  "summary": {
+    "title": "Mein Reiseplan",
+    "subtitle": "Ihre persönliche Auswahl",
+    "back": "Zurück",
+    "remove": "Entfernen",
+    "share": "Magic Link senden",
+    "qr_desc": "Scannen für Ansicht auf dem Smartphone"
+  },
+  "common": {
+    "error": "Fehler",
+    "loading": "Wird geladen..."
+  }
+}

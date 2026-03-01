@@ -1,20 +1,71 @@
 <script setup>
-const props = defineProps(["step", "lang", "formData", "options"]);
-const emit = defineEmits(["next", "prev", "submit", "update:formData"]);
+import { computed } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useUIStore } from "../stores/useUIStore";
+import { useItineraryStore } from "../stores/useItineraryStore";
+
+const route = useRoute();
+const router = useRouter();
+const uiStore = useUIStore();
+const itineraryStore = useItineraryStore();
+
+// Convert route param to integer
+const step = computed(() => parseInt(route.params.step) || 1);
+const lang = computed(() => uiStore.lang);
+const formData = computed(() => itineraryStore.formData);
+
+const options = {
+  group: ["Solo", "Couple", "Family", "Friends", "Business"],
+  style: [
+    "Nightlife", "Nature", "Mountains", "Beach", 
+    "Rooftops", "Parks", "Live Music", 
+    "Theater & Shows", "Guided Tours", "Museums & Culture", 
+    "Local Experiences", "Luxury Shopping", "Handicrafts", 
+    "Architecture", "Wellness & Spa", "Sports", 
+    "History", "Relax", "Gastronomy"
+  ],
+  food: [
+    "Local / Traditional", "Fusion", "Italian", "Asian", 
+    "Mexican", "Peruvian", "Mediterranean", "Steakhouse", 
+    "Bakery & Pastry", "Michelin Star", 
+    "Healthy / Sustainable", "Street Food", "Vegan / Vegetarian", 
+    "Seafood", "Brunch", "Wine & Tapas"
+  ],
+  budget: ["Budget", "Balanced", "Luxury"],
+  transport: [
+    "Public Transport", "Uber / Taxi", "Car Rental", 
+    "Train", "Ferry", "Bicycle", "Walking", "Electric Scooter"
+  ],
+};
 
 const toggleSelection = (field, value) => {
-  const arr = props.formData[field];
+  const arr = formData.value[field];
   const index = arr.indexOf(value);
   if (index > -1) arr.splice(index, 1);
   else arr.push(value);
 };
 
-// Funciones para el selector de días
 const adjustDays = (amount) => {
-  const newVal = props.formData.days + amount;
+  const newVal = formData.value.days + amount;
   if (newVal >= 1 && newVal <= 14) {
-    props.formData.days = newVal;
+    formData.value.days = newVal;
   }
+};
+
+const next = () => {
+    router.push(`/questionnaire/${step.value + 1}`);
+};
+
+const prev = () => {
+    if (step.value === 1) {
+        router.push('/welcome');
+    } else {
+        router.push(`/questionnaire/${step.value - 1}`);
+    }
+};
+
+const submit = () => {
+    itineraryStore.generateItinerary();
 };
 </script>
 
@@ -22,7 +73,7 @@ const adjustDays = (amount) => {
   <div class="space-y-12">
     <div v-if="step === 1">
       <h2 class="text-3xl font-serif text-stone-900 mb-8">
-        {{ lang === "es" ? "¿Con quién viajas?" : "Who are you with?" }}
+        {{ $t('questionnaire.step1') }}
       </h2>
       <div class="grid gap-4">
         <button
@@ -30,20 +81,18 @@ const adjustDays = (amount) => {
           :key="o"
           @click="
             formData.group = o;
-            $emit('next');
+            next();
           "
           :class="formData.group === o ? 'active-selection' : 'base-selection'"
           class="selection-card"
         >
-          {{ o }}
+          {{ $t(`options.${o}`) }}
         </button>
       </div>
     </div>
 
     <div v-if="step === 2" class="text-center">
-      <h2 class="text-3xl font-serif text-stone-900 mb-12 text-left">
-        {{ lang === "es" ? "Estancia" : "Stay" }}
-      </h2>
+      <h3 class="text-2xl font-serif text-stone-800 text-center tracking-tight">{{ $t(`questionnaire.step${step}`) }}</h3>
 
       <div
         class="relative flex items-center justify-between bg-stone-50 rounded-[2.5rem] p-4 border border-stone-100 shadow-inner max-w-xs mx-auto mb-12"
@@ -80,15 +129,7 @@ const adjustDays = (amount) => {
           <span
             class="text-[10px] uppercase tracking-[0.2em] text-stone-400 font-bold"
           >
-            {{
-              lang === "es"
-                ? formData.days === 1
-                  ? "Día"
-                  : "Días"
-                : formData.days === 1
-                ? "Day"
-                : "Days"
-            }}
+            {{ formData.days === 1 ? $t('questionnaire.day') : $t('questionnaire.days') }}
           </span>
         </div>
 
@@ -119,22 +160,14 @@ const adjustDays = (amount) => {
         </div>
       </div>
 
-      <button @click="$emit('next')" class="btn-dark w-full shadow-xl">
-        Continuar
+      <button @click="next()" class="btn-dark w-full shadow-xl">
+        {{ $t('common.continue') }}
       </button>
     </div>
 
     <div v-if="step === 3 || step === 4">
       <h2 class="text-3xl font-serif text-stone-900 mb-8">
-        {{
-          step === 3
-            ? lang === "es"
-              ? "Intereses"
-              : "Interests"
-            : lang === "es"
-            ? "Gastronomía"
-            : "Dining"
-        }}
+        {{ $t(`questionnaire.step${step}`) }}
       </h2>
       <div class="flex flex-wrap gap-3">
         <button
@@ -148,23 +181,23 @@ const adjustDays = (amount) => {
           "
           class="pill-card"
         >
-          {{ o }}
+          {{ $t(`options.${o}`) }}
         </button>
       </div>
       <button
-        @click="$emit('next')"
+        @click="next()"
         class="btn-dark w-full mt-12 shadow-xl"
         :disabled="
           step === 3 ? formData.style.length === 0 : formData.food.length === 0
         "
       >
-        {{ lang === "es" ? "Siguiente" : "Next" }}
+        {{ $t('questionnaire.next') }}
       </button>
     </div>
 
     <div v-if="step === 5">
       <h2 class="text-3xl font-serif text-stone-900 mb-8">
-        {{ lang === "es" ? "Presupuesto" : "Budget" }}
+        {{ $t(`questionnaire.step${step}`) }}
       </h2>
       <div class="grid gap-4">
         <button
@@ -172,22 +205,22 @@ const adjustDays = (amount) => {
           :key="o"
           @click="
             formData.budget = o;
-            $emit('next');
+            next();
           "
           :class="formData.budget === o ? 'active-selection' : 'base-selection'"
           class="selection-card"
         >
-          {{ o }}
+          {{ $t(`options.${o}`) }}
         </button>
       </div>
     </div>
 
     <div v-if="step === 6">
       <h2 class="text-3xl font-serif text-stone-900 mb-8">
-        {{ lang === "es" ? "Movilidad" : "Transport" }}
+        {{ $t('questionnaire.step6') }}
       </h2>
       <p class="text-stone-400 text-xs mb-6 uppercase tracking-widest">
-        {{ lang === "es" ? "Selecciona uno o varios" : "Select one or more" }}
+        {{ $t('questionnaire.select_multiple') }}
       </p>
 
       <div class="grid grid-cols-2 gap-4">
@@ -202,24 +235,24 @@ const adjustDays = (amount) => {
           "
           class="selection-card text-center text-[11px] font-bold uppercase tracking-widest flex items-center justify-center min-h-[80px]"
         >
-          {{ o }}
+          {{ $t(`options.${o}`) }}
         </button>
       </div>
 
       <button
-        @click="$emit('submit')"
+        @click="submit()"
         class="btn-dark w-full mt-12 animate-in slide-in-from-bottom-2 shadow-2xl"
         :disabled="formData.transport.length === 0"
       >
-        {{ lang === "es" ? "Diseñar mi Experiencia" : "Design my Experience" }}
+        {{ $t('questionnaire.generate') }}
       </button>
     </div>
 
     <button
-      @click="$emit('prev')"
+      @click="prev()"
       class="text-stone-400 text-xs font-bold uppercase tracking-widest block mx-auto hover:text-stone-800 transition-colors mt-8"
     >
-      {{ lang === "es" ? "← Volver" : "← Back" }}
+      ← {{ $t('questionnaire.back') }}
     </button>
   </div>
 </template>

@@ -1,0 +1,44 @@
+{
+  "welcome": {
+    "title": "Benvenuto a",
+    "subtitle": "Il tuo concierge basato su IA.",
+    "start": "Inizia a pianificare",
+    "load_shared": "Caricamento itinerario..."
+  },
+  "questionnaire": {
+    "step1": "Con chi viaggi?",
+    "step2": "Quanti giorni ti fermi?",
+    "step3": "Qual è il tuo stile di viaggio? (Max 3)",
+    "step4": "Che tipo di cibo preferisci? (Max 3)",
+    "step5": "Qual è il tuo budget ideale?",
+    "step6": "Come ti sposterai?",
+    "next": "Avanti",
+    "back": "Indietro",
+    "generate": "Crea il mio Itinerario",
+    "error_select": "Seleziona un'opzione"
+  },
+  "results": {
+    "generating": "Progettando il tuo viaggio perfetto...",
+    "wait_msg": "La nostra IA sta cercando i migliori consigli locali.",
+    "tabs": {
+      "activities": "Attività",
+      "food": "Cibo e Bevande",
+      "transport": "Trasporto"
+    },
+    "add_favorite": "Aggiungi ai preferiti",
+    "view_summary": "Vedi Itinerario Completo",
+    "reset": "Ricomincia"
+  },
+  "summary": {
+    "title": "Il mio Itinerario",
+    "subtitle": "La tua selezione personalizzata",
+    "back": "Indietro",
+    "remove": "Rimuovi",
+    "share": "Invia Link Magico",
+    "qr_desc": "Scansiona per visualizzare sul telefono"
+  },
+  "common": {
+    "error": "Errore",
+    "loading": "Caricamento..."
+  }
+}
