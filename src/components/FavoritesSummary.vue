@@ -1,9 +1,11 @@
 <script setup>
 import { computed } from "vue";
 import { useRouter } from "vue-router";
+import { useI18n } from "vue-i18n";
 import { useItineraryStore } from "../stores/useItineraryStore";
 import { useHotelStore } from "../stores/useHotelStore";
 
+const { t: $t } = useI18n();
 const router = useRouter();
 const itineraryStore = useItineraryStore();
 const hotelStore = useHotelStore();
@@ -36,9 +38,7 @@ const handleShare = async () => {
   } else {
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank");
   }
-import { useI18n } from "vue-i18n";
-
-const { t: $t } = useI18n();
+};
 </script>
 
 <template>
