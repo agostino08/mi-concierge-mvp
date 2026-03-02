@@ -14,14 +14,16 @@ export const useHotelStore = defineStore('hotel', () => {
       hotelData.value = await getHotelById(hotelId);
     } catch (e) {
       console.error(e);
-      uiStore.setError(e.message || "Error al cargar la información del hotel.");
+      uiStore.setError(e.message || 'Error loading hotel information.');
     } finally {
       uiStore.setLoading(false);
     }
   }
 
-  return {
-    hotelData,
-    fetchHotel
-  };
+  // Explicit setter to replace direct external mutation (e.g., from loadSharedItinerary)
+  function setHotelData(data) {
+    hotelData.value = data;
+  }
+
+  return { hotelData, fetchHotel, setHotelData };
 });

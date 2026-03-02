@@ -7,13 +7,15 @@ const openai = new OpenAI({
 });
 
 if (!admin.apps.length) {
-  // Use env var or default config for admin
   try {
-     admin.initializeApp({
-        credential: admin.credential.cert(require("../serviceAccountKey.json.json"))
-     });
-  } catch(e) {
-      console.warn("Could not load serviceAccountKey for Firebase Admin. Caching will be disabled if writing fails.");
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+
+  } catch (e) {
+    console.warn("Firebase Admin not initialized. Caching disabled:", e.message);
   }
 }
 

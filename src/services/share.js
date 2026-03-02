@@ -1,8 +1,12 @@
 import { saveSharedItinerary } from './firebase';
 
-export async function generateShareLink(hotel, formData, myItinerary, recommendations, lang) {
+/**
+ * Saves an itinerary to Firebase and returns the shareable URL.
+ * UI side-effects (navigator.share, WhatsApp) are handled by the calling component.
+ */
+export async function saveAndGetShareLink(hotel, formData, myItinerary, recommendations, lang) {
   const payload = {
-    hotelId: hotel.id || new URLSearchParams(window.location.search).get("hotel"),
+    hotelId: hotel.id || new URLSearchParams(window.location.search).get('hotel'),
     formData,
     myItinerary,
     recommendations,
@@ -12,18 +16,6 @@ export async function generateShareLink(hotel, formData, myItinerary, recommenda
   const itineraryId = await saveSharedItinerary(payload);
 
   const url = new URL(window.location.origin);
-  url.searchParams.set("itinerary", itineraryId);
-  const finalLink = url.toString();
-
-  if (navigator.share) {
-    await navigator.share({
-      title: `Mi Guía en ${hotel?.name || ''}`,
-      text: 'He creado esta guía personalizada. ¡Mira mis favoritos!',
-      url: finalLink
-    });
-  } else {
-    window.open(`https://wa.me/?text=${encodeURIComponent("Mira mi itinerario: " + finalLink)}`, "_blank");
-  }
-
-  return finalLink;
+  url.searchParams.set('itinerary', itineraryId);
+  return url.toString();
 }

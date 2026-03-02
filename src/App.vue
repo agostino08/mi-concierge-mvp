@@ -1,69 +1,70 @@
-```html
 <script setup>
-import { onMounted } from "vue";
-import { useRoute } from "vue-router";
+import { onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import LanguageSelector from './components/LanguageSelector.vue';
 import HotelChatbot from './components/HotelChatbot.vue';
-import { useUIStore } from "./stores/useUIStore";
-import { useHotelStore } from "./stores/useHotelStore";
-import { useItineraryStore } from "./stores/useItineraryStore";
+import { useUIStore } from './stores/useUIStore';
+import { useHotelStore } from './stores/useHotelStore';
+import { useItineraryStore } from './stores/useItineraryStore';
+import { useAppInit } from './composables/useAppInit';
 
 const route = useRoute();
+const router = useRouter();
 const uiStore = useUIStore();
 const hotelStore = useHotelStore();
 const itineraryStore = useItineraryStore();
 
-onMounted(async () => {
-  const params = new URLSearchParams(window.location.search);
-  const itineraryId = params.get("itinerary");
-  const hotelId = params.get("hotel");
+const { init } = useAppInit();
+onMounted(init);
 
-  if (itineraryId) {
-    await itineraryStore.loadSharedItinerary(itineraryId);
-    return;
-  }
-
-  if (hotelId) {
-    await hotelStore.fetchHotel(hotelId);
-  } else {
-    uiStore.setLoading(false);
-    uiStore.setError("ID de hotel no encontrado en la URL");
-  }
-});
-
-const resetApp = () => {
-  itineraryStore.resetApp();
-};
+function resetApp() {
+  const hotelId = itineraryStore.resetApp();
+  router.push({ path: '/welcome', query: { hotel: hotelId } });
+}
 </script>
 
 <template>
   <div class="min-h-screen cosy-gradient text-stone-800 selection:bg-stone-200 font-sans">
-    
+
     <div v-if="uiStore.loading" class="flex flex-col items-center justify-center h-screen space-y-4">
       <div class="elegant-loader"></div>
-      <p class="tracking-widest text-xs uppercase text-stone-400">Iniciando Experiencia</p>
+      <p class="tracking-widest text-xs uppercase text-stone-400">{{ $t('common.loading') }}</p>
     </div>
 
     <template v-else>
       <header v-if="hotelStore.hotelData" class="p-8 flex flex-col items-center sticky top-0 z-50 backdrop-blur-md bg-white/30">
         <div class="max-w-md mx-auto flex items-center justify-between w-full">
           <div class="w-24">
-            <img v-if="hotelStore.hotelData?.logo_url" :src="hotelStore.hotelData.logo_url" alt="Logo del Hotel" class="w-full h-auto object-contain drop-shadow-sm" />
-            <h1 v-else class="text-xl font-serif text-stone-800 tracking-tight">{{ hotelStore.hotelData?.name || '' }}</h1>
+            <img
+              v-if="hotelStore.hotelData?.logo_url"
+              :src="hotelStore.hotelData.logo_url"
+              alt="Hotel logo"
+              class="w-full h-auto object-contain drop-shadow-sm"
+            />
+            <h1 v-else class="text-xl font-serif text-stone-800 tracking-tight">
+              {{ hotelStore.hotelData?.name || '' }}
+            </h1>
           </div>
-          
           <LanguageSelector v-if="route.path !== '/summary'" />
         </div>
-        
-        <div v-if="$route.path.startsWith('/questionnaire/') && $route.params.step" class="h-[2px] w-32 bg-stone-200 rounded-full overflow-hidden mt-4">
-          <div class="h-full bg-stone-500 transition-all duration-700" :style="{ width: ($route.params.step / 6) * 100 + '%' }"></div>
+
+        <div
+          v-if="$route.path.startsWith('/questionnaire/') && $route.params.step"
+          class="h-[2px] w-32 bg-stone-200 rounded-full overflow-hidden mt-4"
+        >
+          <div
+            class="h-full bg-stone-500 transition-all duration-700"
+            :style="{ width: ($route.params.step / 6) * 100 + '%' }"
+          ></div>
         </div>
       </header>
 
       <main class="max-w-xl mx-auto px-6 py-8 pb-24">
         <div v-if="uiStore.error" class="bg-rose-50 border border-rose-100 text-rose-700 p-8 rounded-[2rem] text-center mb-6">
           <p class="font-medium">{{ uiStore.error }}</p>
-          <button @click="resetApp" class="mt-4 underline font-bold uppercase text-xs tracking-widest">Volver al inicio</button>
+          <button @click="resetApp" class="mt-4 underline font-bold uppercase text-xs tracking-widest">
+            {{ $t('results.reset') }}
+          </button>
         </div>
 
         <router-view v-slot="{ Component }">
@@ -74,7 +75,10 @@ const resetApp = () => {
       </main>
 
       <transition name="toast">
-        <div v-if="uiStore.showToast" class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100] whitespace-nowrap">
+        <div
+          v-if="uiStore.showToast"
+          class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100] whitespace-nowrap"
+        >
           {{ uiStore.toastMessage }}
         </div>
       </transition>
@@ -108,12 +112,12 @@ body {
 
 /* UI Elements */
 .btn-elegant {
-  @apply px-8 py-5 bg-white/60 backdrop-blur-md border border-white rounded-3xl text-sm font-bold uppercase tracking-widest text-stone-700 
+  @apply px-8 py-5 bg-white/60 backdrop-blur-md border border-white rounded-3xl text-sm font-bold uppercase tracking-widest text-stone-700
          hover:bg-white hover:shadow-xl transition-all active:scale-95;
 }
 
 .btn-dark {
-  @apply px-8 py-5 bg-stone-700 text-white rounded-3xl text-lg font-bold uppercase tracking-widest 
+  @apply px-8 py-5 bg-stone-700 text-white rounded-3xl text-lg font-bold uppercase tracking-widest
          hover:bg-stone-800 shadow-lg transition-all active:scale-95;
 }
 
@@ -148,7 +152,7 @@ body {
   @apply w-10 h-10 border-[2px] border-stone-200 border-t-stone-800 rounded-full animate-spin;
 }
 
-/* Transiciones */
+/* Route transitions */
 .page-enter-active,
 .page-leave-active {
   transition: all 0.5s ease;
@@ -173,9 +177,8 @@ body {
 }
 
 @media print {
-  .no-pdf {
-    display: none !important;
-  }
+  .no-pdf { display: none !important; }
+  .no-print { display: none !important; }
 }
 .no-scrollbar::-webkit-scrollbar {
   display: none;

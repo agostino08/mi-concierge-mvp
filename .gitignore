@@ -23,8 +23,12 @@ dist-ssr
 *.sln
 *.sw?
 
-# Firebase Admin SDK (Archivo sensible)
+# Firebase Admin SDK — never commit private keys
 serviceAccountKey.json
+serviceAccountKey.json.json
+*.serviceAccountKey.*
+.env
+.env.*
 
 # Datos locales
 datos.json
