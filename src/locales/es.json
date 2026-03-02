@@ -2,7 +2,7 @@
   "welcome": {
     "title": "Bienvenido a",
     "subtitle": "Tu conserje potenciado por IA.",
-    "start": "Comenzar a planear",
+    "start": "Selecciona tu idioma para comenzar",
     "load_shared": "Cargando tu itinerario..."
   },
   "questionnaire": {
@@ -35,7 +35,17 @@
     "discover": "Descubrir",
     "saved_places": "lugares guardados",
     "local_suggestion": "Sugerencia Local",
-    "add_to_calendar": "Añadir al Calendario"
+    "add_to_calendar": "Añadir al Calendario",
+    "tip0_title": "Vida Local",
+    "tip0_text": "Pregunta al conserje por sus lugares secretos favoritos — siempre saben más que nadie.",
+    "tip1_title": "Transporte",
+    "tip1_text": "El transporte público suele ser la forma más rápida de explorar una ciudad nueva como un local.",
+    "tip2_title": "Gastronomía",
+    "tip2_text": "Las mejores comidas se encuentran lejos de los lugares turísticos — explora las calles secundarias.",
+    "tip3_title": "Planificación",
+    "tip3_text": "Reservar con antelación las atracciones más populares puede ahorrarte horas de espera.",
+    "tip4_title": "Cultura",
+    "tip4_text": "Aprender unas pocas palabras en el idioma local siempre abre puertas inesperadas."
   },
   "summary": {
     "title": "Mi Itinerario",
@@ -43,18 +53,38 @@
     "back": "Atrás",
     "remove": "Eliminar",
     "share": "Enviar Enlace Único",
-    "qr_desc": "Escanea para ver en tu móvil"
+    "qr_desc": "Escanea para ver en tu móvil",
+    "share_title": "📍 MIS FAVORITOS EN {hotel}\n\n",
+    "share_map": "📍 Mapa: {url}",
+    "share_guide": "Guía en {city}",
+    "personal_selection": "Selección Personal",
+    "calendar": "Calendario",
+    "prepared_for_you": "Preparado especialmente para tu estancia.",
+    "send_whatsapp": "Enviar por Texto / WhatsApp"
   },
   "chatbot": {
     "title": "Asistente Concierge",
-    "placeholder": "Pregunta por wifi, reserva...",
-    "welcome": "¡Hola! Soy tu asistente virtual. ¿En qué te puedo ayudar respecto a tu estancia?",
-    "fallback": "Lo siento, no tengo esa información. Puedes contactar a recepción.",
-    "checkout": "Nuestro horario de salida (checkout) es a las",
+    "placeholder": "Escribe tu pregunta...",
+    "welcome": "¡Hola! Soy tu conserje virtual. ¿En qué puedo ayudarte hoy?",
+    "fallback": "Lo siento, no dispongo de esa información. Por favor, contacta directamente con recepción.",
+    "checkout": "Nuestro horario de salida es a las",
     "breakfast": "El desayuno se sirve de",
-    "wifi": "La contraseña del wifi es",
-    "reception": "Puedes contactar a recepción en",
-    "gym": "Información del gimnasio/piscina:"
+    "wifi": "La contraseña del WiFi es",
+    "reception": "Puedes contactar con recepción en",
+    "gym": "Información del gimnasio y piscina:",
+    "quick_checkout": "Hora de salida",
+    "quick_breakfast": "Horario desayuno",
+    "quick_wifi": "Contraseña WiFi",
+    "quick_reception": "Recepción",
+    "quick_gym": "Gimnasio y Piscina"
+  },
+  "toast": {
+    "added": "Añadido a favoritos",
+    "removed": "Eliminado de favoritos",
+    "select": "Selecciona al menos un favorito",
+    "add_before_share": "Añade favoritos antes de compartir",
+    "generating": "Generando enlace único...",
+    "link_error": "No se pudo generar el enlace"
   },
   "options": {
     "Solo": "Solo",
@@ -94,7 +124,7 @@
     "Healthy / Sustainable": "Saludable / Sostenible",
     "Street Food": "Street Food",
     "Vegan / Vegetarian": "Veggie / Vegano",
-    "Seafood": "Sea Food",
+    "Seafood": "Mariscos",
     "Brunch": "Brunch",
     "Wine & Tapas": "Vinos & Tapas",
     "Budget": "Económico",

@@ -2,7 +2,15 @@
   "permissions": {
     "allow": [
       "Bash(npm install vitest --save-dev)",
-      "Bash(npm run test)"
+      "Bash(npm run test)",
+      "Bash(/c/Users/Administrator/mi-concierge-mvp/src/locales/en.json:*)",
+      "Bash(/c/Users/Administrator/mi-concierge-mvp/src/locales/es.json:*)",
+      "Bash(/c/Users/Administrator/mi-concierge-mvp/src/locales/fr.json:*)",
+      "Bash(/c/Users/Administrator/mi-concierge-mvp/src/locales/de.json:*)",
+      "Bash(/c/Users/Administrator/mi-concierge-mvp/src/locales/it.json:*)",
+      "Bash(/c/Users/Administrator/mi-concierge-mvp/src/locales/ru.json:*)",
+      "Bash(python3:*)",
+      "Bash(npm test)"
     ]
   }
 }

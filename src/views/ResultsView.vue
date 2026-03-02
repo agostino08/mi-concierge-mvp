@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useRecommendationsStore } from '../stores/useRecommendationsStore';
 import { useItineraryStore } from '../stores/useItineraryStore';
 import { useHotelStore } from '../stores/useHotelStore';
 import { useExternalLinks } from '../composables/useExternalLinks';
 
+const { t } = useI18n();
 const router = useRouter();
 const recommendationsStore = useRecommendationsStore();
 const itineraryStore = useItineraryStore();
@@ -21,15 +23,12 @@ const activeTab = ref('activities');
 
 const isFavorite = (item) => myItinerary.value.some((i) => i.title === item.title);
 
-// --- Loading screen carousel ---
+// Loading screen carousel - facts come from i18n, reactive to language changes
 const currentFactIndex = ref(0);
-const facts = [
-  { title: 'Local Life', text: 'Ask the concierge for their personal favourite hidden gems — they always know best.' },
-  { title: 'Transport', text: 'Public transport is usually the fastest way to explore a new city like a local.' },
-  { title: 'Gastronomy', text: 'The best meals are often found away from tourist hotspots — explore side streets.' },
-  { title: 'Planning', text: 'Booking popular attractions in advance can save hours of waiting in line.' },
-  { title: 'Culture', text: 'Learning a few words in the local language always opens unexpected doors.' },
-];
+const facts = computed(() => [0, 1, 2, 3, 4].map(i => ({
+  title: t(`results.tip${i}_title`),
+  text: t(`results.tip${i}_text`),
+})));
 const loadingImages = [
   'https://images.pexels.com/photos/1388030/pexels-photo-1388030.jpeg',
   'https://images.pexels.com/photos/2111249/pexels-photo-2111249.jpeg',
@@ -41,12 +40,11 @@ const currentImgIndex = ref(0);
 let timer;
 onMounted(() => {
   timer = setInterval(() => {
-    currentFactIndex.value = (currentFactIndex.value + 1) % facts.length;
+    currentFactIndex.value = (currentFactIndex.value + 1) % 5;
     currentImgIndex.value = (currentImgIndex.value + 1) % loadingImages.length;
   }, 6500);
 });
 onUnmounted(() => clearInterval(timer));
-// --- End loading screen ---
 
 const heroImage = computed(() =>
   hotelData.value?.cover_url || 'https://images.pexels.com/photos/1458457/pexels-photo-1458457.jpeg'
@@ -77,6 +75,7 @@ function handleReset() {
             :key="img"
             v-show="currentImgIndex === idx"
             :src="img"
+            alt=""
             class="absolute inset-0 w-full h-full object-cover brightness-[0.4] scale-110 transition-all duration-[2000ms]"
           />
         </transition-group>
@@ -115,7 +114,7 @@ function handleReset() {
     <!-- Results -->
     <div v-else class="space-y-8 animate-in fade-in duration-700 py-6">
       <div class="relative h-64 rounded-[2.5rem] overflow-hidden shadow-2xl mb-12">
-        <img :src="heroImage" class="absolute inset-0 w-full h-full object-cover" />
+        <img :src="heroImage" alt="" class="absolute inset-0 w-full h-full object-cover" />
         <div class="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center p-6">
           <span class="text-white/80 text-[10px] uppercase tracking-[0.4em] mb-2">
             {{ $t('results.discover') }}
@@ -128,14 +127,14 @@ function handleReset() {
         <div class="text-center md:text-left">
           <h4 class="text-xl font-serif">{{ $t('results.generating') }}</h4>
           <p class="text-stone-400 text-sm">{{ $t('results.wait_msg') }}</p>
-          <p class="text-stone-500 text-[10px] uppercase tracking-widest">
+          <p class="text-stone-500 text-[10px] uppercase tracking-widest mt-1">
             {{ myItinerary.length }} {{ $t('results.saved_places') }}
           </p>
         </div>
         <button
           v-if="myItinerary.length > 0"
           @click="handlePrepareSummary()"
-          class="bg-white text-stone-900 px-8 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-stone-200 transition-all active:scale-95 shadow-lg"
+          class="bg-white text-stone-900 px-8 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-[0.2em] hover:bg-stone-200 transition-all active:scale-95 shadow-lg whitespace-nowrap"
         >
           {{ $t('results.view_summary') }}
         </button>
@@ -152,6 +151,15 @@ function handleReset() {
         >
           {{ tab === 'activities' ? $t('results.tabs.activities') : tab === 'food' ? $t('results.tabs.food') : $t('results.tabs.transport') }}
         </button>
+      </div>
+
+      <!-- Empty state while streaming -->
+      <div
+        v-if="recommendations[activeTab].length === 0"
+        class="flex flex-col items-center justify-center py-24 text-center gap-4"
+      >
+        <div class="w-12 h-12 border-2 border-stone-200 border-t-amber-400 rounded-full animate-spin"></div>
+        <p class="text-stone-400 text-sm tracking-wide">{{ $t('results.generating') }}</p>
       </div>
 
       <!-- Cards -->
@@ -173,6 +181,7 @@ function handleReset() {
             @click="itineraryStore.toggleFavorite(item)"
             class="absolute top-8 right-8 p-3 rounded-full transition-all duration-300 z-10"
             :class="isFavorite(item) ? 'bg-rose-50 text-rose-500' : 'bg-stone-50 text-stone-300 hover:text-rose-300'"
+            :aria-label="$t('results.add_favorite')"
           >
             <svg class="w-6 h-6" :fill="isFavorite(item) ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -197,10 +206,12 @@ function handleReset() {
             <a
               :href="getGoogleMapsUrl(item.title)"
               target="_blank"
+              rel="noopener noreferrer"
               class="px-6 py-4 bg-stone-800 text-white rounded-2xl hover:bg-black transition-all shadow-lg flex items-center justify-center"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
             </a>
           </div>

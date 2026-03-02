@@ -7,6 +7,7 @@ import { useFormStore } from './useFormStore';
 import { useRecommendationsStore } from './useRecommendationsStore';
 import { getSharedItinerary, getHotelById } from '../services/firebase';
 import { saveAndGetShareLink } from '../services/share';
+import i18n from '../i18n';
 
 export const useItineraryStore = defineStore('itinerary', () => {
   const uiStore = useUIStore();
@@ -18,14 +19,16 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const qrCodeUrl = ref('');
   const shareLink = ref('');
 
+  const t = () => i18n.global.t;
+
   function toggleFavorite(item) {
     const index = myItinerary.value.findIndex((i) => i.title === item.title);
     if (index > -1) {
       myItinerary.value.splice(index, 1);
-      uiStore.triggerToast('Removed from favorites');
+      uiStore.triggerToast(i18n.global.t('toast.removed'));
     } else {
       myItinerary.value.push(item);
-      uiStore.triggerToast('Added to favorites');
+      uiStore.triggerToast(i18n.global.t('toast.added'));
     }
   }
 
@@ -36,7 +39,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
   // Returns true if ready to navigate to /summary, false otherwise
   async function prepareSummary() {
     if (myItinerary.value.length === 0) {
-      uiStore.triggerToast('Select at least one favorite');
+      uiStore.triggerToast(i18n.global.t('toast.select'));
       return false;
     }
     qrCodeUrl.value = await QRCode.toDataURL(window.location.href);
@@ -47,10 +50,10 @@ export const useItineraryStore = defineStore('itinerary', () => {
   // Navigation (native share / WhatsApp) is handled by the calling component.
   async function generateShareLink() {
     if (myItinerary.value.length === 0) {
-      uiStore.triggerToast('Add favorites before sharing');
+      uiStore.triggerToast(i18n.global.t('toast.add_before_share'));
       return null;
     }
-    uiStore.triggerToast('Generating magic link...');
+    uiStore.triggerToast(i18n.global.t('toast.generating'));
     try {
       shareLink.value = await saveAndGetShareLink(
         hotelStore.hotelData,
@@ -62,7 +65,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
       return shareLink.value;
     } catch (e) {
       console.error('Error generating share link:', e);
-      if (e.name !== 'AbortError') uiStore.triggerToast('Could not generate link');
+      if (e.name !== 'AbortError') uiStore.triggerToast(i18n.global.t('toast.link_error'));
       return null;
     }
   }

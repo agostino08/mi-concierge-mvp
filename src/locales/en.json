@@ -2,7 +2,7 @@
   "welcome": {
     "title": "Welcome to",
     "subtitle": "Your AI-powered concierge.",
-    "start": "Let's plan your stay",
+    "start": "Select your language to begin",
     "load_shared": "Loading your itinerary..."
   },
   "questionnaire": {
@@ -28,14 +28,24 @@
       "food": "Food & Drink",
       "transport": "Transport"
     },
-    "add_favorite": "Add to favorites",
+    "add_favorite": "Add to favourites",
     "view_summary": "View Full Itinerary",
     "reset": "Start over",
     "customizing": "Customizing your stay in {city}",
     "discover": "Discover",
     "saved_places": "saved places",
     "local_suggestion": "Local Suggestion",
-    "add_to_calendar": "Add to Calendar"
+    "add_to_calendar": "Add to Calendar",
+    "tip0_title": "Local Life",
+    "tip0_text": "Ask the concierge for their personal favourite hidden gems — they always know best.",
+    "tip1_title": "Transport",
+    "tip1_text": "Public transport is usually the fastest way to explore a new city like a local.",
+    "tip2_title": "Gastronomy",
+    "tip2_text": "The best meals are often found away from tourist hotspots — explore side streets.",
+    "tip3_title": "Planning",
+    "tip3_text": "Booking popular attractions in advance can save hours of waiting in line.",
+    "tip4_title": "Culture",
+    "tip4_text": "Learning a few words in the local language always opens unexpected doors."
   },
   "summary": {
     "title": "My Itinerary",
@@ -54,14 +64,27 @@
   },
   "chatbot": {
     "title": "Concierge Assist",
-    "placeholder": "Ask about wifi, checkout...",
-    "welcome": "Hello! I am your virtual assistant. How can I help you regarding your stay?",
-    "fallback": "I'm sorry, I don't have that information. You can reach the front desk directly.",
+    "placeholder": "Type your question...",
+    "welcome": "Hello! I am your virtual concierge. How can I help you today?",
+    "fallback": "I'm sorry, I don't have that information available. Please contact the front desk directly.",
     "checkout": "Our checkout time is at",
     "breakfast": "Breakfast is served from",
-    "wifi": "The wifi password is",
-    "reception": "You can contact reception at",
-    "gym": "Gym & Pool info:"
+    "wifi": "The WiFi password is",
+    "reception": "You can reach reception at",
+    "gym": "Gym & Pool info:",
+    "quick_checkout": "Checkout time",
+    "quick_breakfast": "Breakfast hours",
+    "quick_wifi": "WiFi password",
+    "quick_reception": "Reception",
+    "quick_gym": "Gym & Pool"
+  },
+  "toast": {
+    "added": "Added to favourites",
+    "removed": "Removed from favourites",
+    "select": "Select at least one favourite",
+    "add_before_share": "Add favourites before sharing",
+    "generating": "Generating magic link...",
+    "link_error": "Could not generate link"
   },
   "options": {
     "Solo": "Solo",
