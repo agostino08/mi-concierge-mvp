@@ -3,7 +3,8 @@
     "title": "Benvingut a",
     "subtitle": "El teu conserge impulsat per IA.",
     "start": "Selecciona el teu idioma per començar",
-    "load_shared": "Carregant el teu itinerari..."
+    "load_shared": "Carregant el teu itinerari...",
+    "continue": "Continuar"
   },
   "questionnaire": {
     "step1": "Amb qui viatges?",

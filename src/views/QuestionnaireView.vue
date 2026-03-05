@@ -16,12 +16,12 @@ const progress = computed(() => (step.value / STEPS.length) * 100);
 </script>
 
 <template>
-  <div class="space-y-8 pt-8">
+  <div class="flex flex-col pt-6 pb-24">
     <!-- Inline progress bar -->
-    <div class="space-y-1">
-      <div class="flex justify-between items-center mb-1">
+    <div class="mb-6">
+      <div class="flex justify-between items-center mb-2">
         <span class="text-[10px] font-bold uppercase tracking-widest text-stone-400">
-          {{ step }} / {{ 6 }}
+          {{ step }} / 6
         </span>
       </div>
       <div class="h-[3px] w-full bg-stone-200 rounded-full overflow-hidden">
@@ -37,7 +37,7 @@ const progress = computed(() => (step.value / STEPS.length) * 100);
     <button
       v-if="step > 1"
       @click="prev()"
-      class="text-stone-400 text-xs font-bold uppercase tracking-widest block mx-auto hover:text-stone-800 transition-colors"
+      class="text-stone-400 text-xs font-bold uppercase tracking-widest block mx-auto hover:text-stone-800 transition-colors mt-6"
     >
       &larr; {{ $t('questionnaire.back') }}
     </button>

@@ -3,7 +3,8 @@
     "title": "Bienvenue à",
     "subtitle": "Votre concierge propulsé par l'IA.",
     "start": "Sélectionnez votre langue pour commencer",
-    "load_shared": "Chargement de votre itinéraire..."
+    "load_shared": "Chargement de votre itinéraire...",
+    "continue": "Continuer"
   },
   "questionnaire": {
     "step1": "Avec qui voyagez-vous ?",

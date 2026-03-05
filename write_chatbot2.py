@@ -1,4 +1,4 @@
-<script setup>
+content = r"""<script setup>
 import { ref, onMounted, nextTick, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useHotelStore } from '../stores/useHotelStore';
@@ -309,3 +309,8 @@ function sendMessage() {
   transform: scale(0.7) rotate(45deg);
 }
 </style>
+"""
+
+with open('src/components/HotelChatbot.vue', 'w', encoding='utf-8') as f:
+    f.write(content.lstrip('\n'))
+print('HotelChatbot.vue written')

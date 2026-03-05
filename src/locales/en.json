@@ -3,7 +3,8 @@
     "title": "Welcome to",
     "subtitle": "Your AI-powered concierge.",
     "start": "Select your language to begin",
-    "load_shared": "Loading your itinerary..."
+    "load_shared": "Loading your itinerary...",
+    "continue": "Continue"
   },
   "questionnaire": {
     "step1": "Who are you traveling with?",

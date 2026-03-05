@@ -3,7 +3,8 @@
     "title": "Willkommen bei",
     "subtitle": "Ihr KI-gestützter Concierge.",
     "start": "Sprache auswählen und loslegen",
-    "load_shared": "Ihr Reiseplan wird geladen..."
+    "load_shared": "Ihr Reiseplan wird geladen...",
+    "continue": "Weiter"
   },
   "questionnaire": {
     "step1": "Mit wem reisen Sie?",

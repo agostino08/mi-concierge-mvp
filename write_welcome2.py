@@ -1,4 +1,4 @@
-<script setup>
+content = r"""<script setup>
 import { ref, computed } from 'vue';
 import { useHotelStore } from '../stores/useHotelStore';
 import { useRouter } from 'vue-router';
@@ -134,3 +134,8 @@ function handleClickOutside(event) {
     </div>
   </section>
 </template>
+"""
+
+with open('src/views/WelcomeView.vue', 'w', encoding='utf-8') as f:
+    f.write(content.lstrip('\n'))
+print('WelcomeView.vue written')
