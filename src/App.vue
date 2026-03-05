@@ -1,12 +1,13 @@
 <script setup>
 import { onMounted } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRouter, useRoute } from 'vue-router';
 import HotelChatbot from './components/HotelChatbot.vue';
 import { useUIStore } from './stores/useUIStore';
 import { useItineraryStore } from './stores/useItineraryStore';
 import { useAppInit } from './composables/useAppInit';
 
 const router = useRouter();
+const route = useRoute();
 const uiStore = useUIStore();
 const itineraryStore = useItineraryStore();
 
@@ -17,6 +18,8 @@ function resetApp() {
   const hotelId = itineraryStore.resetApp();
   router.push({ path: '/welcome', query: { hotel: hotelId } });
 }
+
+const FULL_SCREEN_ROUTES = ['Welcome', 'Admin'];
 </script>
 
 <template>
@@ -37,7 +40,7 @@ function resetApp() {
         </div>
       </div>
 
-      <main class="max-w-xl mx-auto px-6 py-8 pb-28">
+      <main :class="FULL_SCREEN_ROUTES.includes(route.name) ? '' : 'max-w-xl mx-auto px-6 py-8 pb-28'">
         <router-view v-slot="{ Component }">
           <transition name="page" mode="out-in">
             <component :is="Component" />
@@ -55,7 +58,7 @@ function resetApp() {
       </div>
     </transition>
 
-    <HotelChatbot />
+    <HotelChatbot v-if="route.name !== 'Admin'" />
   </div>
 </template>
 

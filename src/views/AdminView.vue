@@ -37,6 +37,17 @@ const listLoading = ref(false);
 const saveSuccess = ref(false);
 const qrDataUrl = ref('');
 
+const PARTNER_CATEGORIES = [
+  'Restaurant / Café',
+  'Bar / Nightlife',
+  'Shop / Boutique',
+  'Tour / Experience',
+  'Spa / Wellness',
+  'Transport / Transfer',
+  'Museum / Culture',
+  'Other',
+];
+
 const emptyForm = () => ({
   name: '',
   city: '',
@@ -60,6 +71,7 @@ const emptyForm = () => ({
   room_service: '',
   facilities: '',
   faqs: [],
+  partners: [],
 });
 
 const form = ref(emptyForm());
@@ -127,6 +139,7 @@ async function selectHotel(hotel) {
     room_service: hotel.room_service || '',
     facilities: hotel.facilities || '',
     faqs: hotel.faqs ? JSON.parse(JSON.stringify(hotel.faqs)) : [],
+    partners: hotel.partners ? JSON.parse(JSON.stringify(hotel.partners)) : [],
   };
   qrDataUrl.value = '';
   if (hotel.id) {
@@ -194,53 +207,68 @@ function copyLink() {
 function addFaq() {
   form.value.faqs.push({ id: Date.now().toString(), question: '', answer: '' });
 }
-
 function removeFaq(idx) {
   form.value.faqs.splice(idx, 1);
 }
 
-// ─── Form field groups ────────────────────────────────────────────────────────
+// ─── Partners Builder ─────────────────────────────────────────────────────────
+function addPartner() {
+  form.value.partners.push({
+    id: Date.now().toString(),
+    name: '',
+    category: 'Restaurant / Café',
+    description: '',
+    discount: '',
+    maps_url: '',
+    website: '',
+  });
+}
+function removePartner(idx) {
+  form.value.partners.splice(idx, 1);
+}
+
+// ─── Field groups ─────────────────────────────────────────────────────────────
 const fieldGroups = [
   {
     title: 'Identity',
     fields: [
-      { key: 'name', label: 'Hotel Name', type: 'text', placeholder: 'Grand Hotel Barcelona' },
+      { key: 'name', label: 'Hotel Name', type: 'text', placeholder: 'Grand Hotel Barcelona', required: true },
       { key: 'city', label: 'City', type: 'text', placeholder: 'Barcelona' },
-      { key: 'description', label: 'Description', type: 'textarea', placeholder: 'A luxury boutique hotel in the heart of...' },
+      { key: 'description', label: 'Description', type: 'textarea', placeholder: 'A luxury boutique hotel in the heart of the city...' },
       { key: 'address', label: 'Address', type: 'text', placeholder: 'Carrer de Provença 123, Barcelona' },
       { key: 'maps_url', label: 'Google Maps URL', type: 'text', placeholder: 'https://maps.google.com/?q=...' },
-    ]
+    ],
   },
   {
     title: 'Branding',
     fields: [
-      { key: 'logo_url', label: 'Logo URL', type: 'text', placeholder: 'https://example.com/logo.png' },
-      { key: 'cover_url', label: 'Cover Image URL', type: 'text', placeholder: 'https://example.com/cover.jpg' },
+      { key: 'logo_url', label: 'Logo URL', type: 'text', placeholder: 'https://cdn.example.com/logo.png' },
+      { key: 'cover_url', label: 'Cover Image URL', type: 'text', placeholder: 'https://cdn.example.com/cover.jpg' },
       { key: 'slug', label: 'URL Slug', type: 'text', placeholder: 'grand-hotel-barcelona', slugGen: true },
-    ]
+    ],
   },
   {
     title: 'Guest Information',
     fields: [
       { key: 'reception', label: 'Reception Phone', type: 'text', placeholder: '+34 93 000 0000' },
-      { key: 'checkin', label: 'Check-in Time', type: 'text', placeholder: '15:00' },
-      { key: 'checkout', label: 'Check-out Time', type: 'text', placeholder: '12:00' },
+      { key: 'checkin', label: 'Check-in Time', type: 'time', hint: 'Select check-in time' },
+      { key: 'checkout', label: 'Check-out Time', type: 'time', hint: 'Select check-out time' },
       { key: 'wifi_name', label: 'WiFi Network Name', type: 'text', placeholder: 'GrandHotel_Guest' },
       { key: 'wifi_pass', label: 'WiFi Password', type: 'text', placeholder: 'welcome2024' },
-      { key: 'breakfast', label: 'Breakfast Hours', type: 'text', placeholder: '07:00 – 10:30' },
-    ]
+      { key: 'breakfast', label: 'Breakfast Hours & Location', type: 'text', placeholder: '07:30 – 10:30 · Main restaurant, 2nd floor' },
+    ],
   },
   {
-    title: 'Facilities',
+    title: 'Facilities & Services',
     fields: [
-      { key: 'pool', label: 'Pool Info', type: 'text', placeholder: 'Open 08:00–22:00, heated outdoor pool' },
-      { key: 'gym', label: 'Gym Info', type: 'text', placeholder: 'Open 06:00–23:00, 4th floor' },
-      { key: 'spa', label: 'Spa Info', type: 'text', placeholder: 'Spa & wellness center, appointments required' },
-      { key: 'parking', label: 'Parking Info', type: 'text', placeholder: 'Underground parking, €25/night, 24h access' },
-      { key: 'restaurant', label: 'Restaurant Info', type: 'text', placeholder: 'La Terraza – open for lunch & dinner' },
-      { key: 'room_service', label: 'Room Service', type: 'text', placeholder: 'Available 07:00–23:00, dial extension 0' },
-      { key: 'facilities', label: 'Other Facilities', type: 'textarea', placeholder: 'Business centre, concierge desk, laundry service...' },
-    ]
+      { key: 'pool', label: 'Pool', type: 'text', placeholder: 'Open daily 08:00–22:00 · Heated outdoor pool on rooftop' },
+      { key: 'gym', label: 'Gym / Fitness', type: 'text', placeholder: 'Open 06:00–23:00 · 4th floor, free for guests' },
+      { key: 'spa', label: 'Spa & Wellness', type: 'text', placeholder: 'Treatments 10:00–20:00 · Advance booking required' },
+      { key: 'parking', label: 'Parking', type: 'text', placeholder: 'Underground parking, €25/night, 24h access, dial ext. 8' },
+      { key: 'restaurant', label: 'Restaurant', type: 'text', placeholder: 'La Terraza · Lunch 13:00–15:30 · Dinner 19:00–23:00' },
+      { key: 'room_service', label: 'Room Service', type: 'text', placeholder: 'Available 07:00–23:00 · Call extension 0' },
+      { key: 'facilities', label: 'Other Facilities', type: 'textarea', placeholder: 'Business centre 24h · Concierge desk · Luggage storage · Laundry service...' },
+    ],
   },
 ];
 </script>
@@ -249,11 +277,11 @@ const fieldGroups = [
   <div class="min-h-screen bg-stone-50 font-sans text-stone-800">
 
     <!-- ─── Login screen ───────────────────────────────────────────────── -->
-    <div v-if="!isLoggedIn" class="flex items-center justify-center min-h-screen">
+    <div v-if="!isLoggedIn" class="flex items-center justify-center min-h-screen px-4">
       <div class="bg-white rounded-3xl shadow-xl p-10 w-full max-w-sm space-y-6">
         <div class="text-center">
-          <div class="w-12 h-12 bg-stone-900 rounded-2xl flex items-center justify-center mx-auto mb-4">
-            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-14 h-14 bg-stone-900 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
@@ -267,12 +295,12 @@ const fieldGroups = [
             type="password"
             placeholder="Enter passcode"
             @keyup.enter="login"
-            class="w-full px-4 py-3 bg-stone-100 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+            class="w-full px-4 py-3.5 bg-stone-100 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-stone-300"
           />
-          <p v-if="loginError" class="text-rose-600 text-xs font-medium">{{ loginError }}</p>
+          <p v-if="loginError" class="text-rose-600 text-sm font-medium">{{ loginError }}</p>
           <button
             @click="login"
-            class="w-full py-3 bg-stone-900 text-white rounded-xl font-semibold hover:bg-stone-700 transition-all active:scale-95"
+            class="w-full py-3.5 bg-stone-900 text-white rounded-xl font-semibold text-base hover:bg-stone-700 transition-all active:scale-95"
           >
             Sign In
           </button>
@@ -290,21 +318,28 @@ const fieldGroups = [
       <!-- Top nav -->
       <header class="bg-white border-b border-stone-200 px-6 py-4 flex items-center justify-between sticky top-0 z-40">
         <div class="flex items-center gap-3">
-          <div class="w-8 h-8 bg-stone-900 rounded-xl flex items-center justify-center">
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-9 h-9 bg-stone-900 rounded-xl flex items-center justify-center">
+            <svg class="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:18px;height:18px">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
             </svg>
           </div>
           <div>
-            <h1 class="font-bold text-sm text-stone-800 leading-none">Mi Concierge</h1>
-            <p class="text-[10px] text-stone-400 uppercase tracking-widest">Admin Panel</p>
+            <div class="flex items-center gap-2">
+              <h1 class="font-bold text-sm text-stone-800 leading-none">Mi Concierge</h1>
+              <span class="text-stone-300 text-sm leading-none">/</span>
+              <span class="text-xs text-stone-500 font-medium leading-none">Admin</span>
+              <span v-if="screen === 'form'" class="text-stone-300 text-sm leading-none">/</span>
+              <span v-if="screen === 'form'" class="text-xs text-stone-500 font-medium leading-none truncate max-w-[120px]">
+                {{ form.name || 'New Hotel' }}
+              </span>
+            </div>
           </div>
         </div>
         <div class="flex items-center gap-3">
           <button
             v-if="screen === 'form'"
             @click="goList"
-            class="text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5"
+            class="text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-stone-100"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -313,21 +348,22 @@ const fieldGroups = [
           </button>
           <button
             @click="logout"
-            class="text-xs font-semibold text-stone-400 hover:text-stone-800 transition-colors"
+            class="text-xs font-semibold text-stone-400 hover:text-stone-800 transition-colors px-3 py-1.5 rounded-lg hover:bg-stone-100"
           >
             Sign out
           </button>
         </div>
       </header>
 
-      <div class="max-w-3xl mx-auto px-6 py-8">
+      <div class="max-w-3xl mx-auto px-4 sm:px-6 py-8">
 
         <!-- ── Hotel list ──────────────────────────────────────────────── -->
         <div v-if="screen === 'list'" class="space-y-6">
           <div class="flex items-center justify-between">
-            <h2 class="text-xl font-bold text-stone-800">Hotels
-              <span class="text-stone-400 font-normal text-base ml-2">({{ hotels.length }})</span>
-            </h2>
+            <div>
+              <h2 class="text-xl font-bold text-stone-800">Hotels</h2>
+              <p class="text-sm text-stone-400 mt-0.5">{{ hotels.length }} hotel{{ hotels.length !== 1 ? 's' : '' }} configured</p>
+            </div>
             <button
               @click="createNew"
               class="flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white rounded-xl text-sm font-semibold hover:bg-stone-700 transition-all active:scale-95"
@@ -339,20 +375,25 @@ const fieldGroups = [
             </button>
           </div>
 
-          <div v-if="listLoading" class="flex justify-center py-12">
+          <div v-if="listLoading" class="flex justify-center py-16">
             <div class="w-8 h-8 border-2 border-stone-200 border-t-stone-600 rounded-full animate-spin"></div>
           </div>
 
-          <div v-else-if="hotels.length === 0" class="text-center py-16 text-stone-400">
-            <p class="text-lg font-medium mb-1">No hotels yet</p>
-            <p class="text-sm">Create your first hotel profile to get started.</p>
+          <div v-else-if="hotels.length === 0" class="text-center py-20 bg-white rounded-2xl border border-stone-200">
+            <div class="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center mx-auto mb-3">
+              <svg class="w-6 h-6 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            </div>
+            <p class="font-semibold text-stone-600 mb-1">No hotels yet</p>
+            <p class="text-sm text-stone-400">Create your first hotel profile to get started.</p>
           </div>
 
-          <div v-else class="space-y-3">
+          <div v-else class="space-y-2">
             <div
               v-for="hotel in hotels"
               :key="hotel.id"
-              class="bg-white rounded-2xl border border-stone-200 p-5 flex items-center justify-between hover:border-stone-300 transition-all cursor-pointer group"
+              class="bg-white rounded-2xl border border-stone-200 p-4 flex items-center justify-between hover:border-stone-300 hover:shadow-sm transition-all cursor-pointer group"
               @click="selectHotel(hotel)"
             >
               <div class="flex items-center gap-4">
@@ -364,29 +405,34 @@ const fieldGroups = [
                 />
                 <div
                   v-else
-                  class="w-12 h-12 rounded-xl bg-stone-100 border border-stone-200 flex items-center justify-center text-stone-400 text-xl font-serif"
+                  class="w-12 h-12 rounded-xl bg-gradient-to-br from-stone-100 to-stone-200 border border-stone-200 flex items-center justify-center text-stone-500 text-xl font-serif font-bold"
                 >
                   {{ (hotel.name || 'H')[0] }}
                 </div>
                 <div>
-                  <p class="font-semibold text-stone-800 group-hover:text-stone-900">{{ hotel.name }}</p>
+                  <p class="font-semibold text-stone-800">{{ hotel.name }}</p>
                   <p class="text-xs text-stone-400 mt-0.5">{{ hotel.city }}</p>
                 </div>
               </div>
-              <svg class="w-4 h-4 text-stone-300 group-hover:text-stone-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
+              <div class="flex items-center gap-3">
+                <span class="hidden sm:block text-[10px] font-mono text-stone-300">{{ hotel.id?.slice(0, 8) }}…</span>
+                <svg class="w-4 h-4 text-stone-300 group-hover:text-stone-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- ── Hotel form ──────────────────────────────────────────────── -->
-        <div v-if="screen === 'form'" class="space-y-6">
+        <div v-if="screen === 'form'" class="space-y-5">
+
+          <!-- Form header with actions -->
           <div class="flex items-center justify-between">
             <h2 class="text-xl font-bold text-stone-800">
               {{ isEditing ? 'Edit Hotel' : 'New Hotel' }}
             </h2>
-            <div class="flex gap-3">
+            <div class="flex gap-2">
               <button
                 v-if="isEditing"
                 @click="confirmDelete"
@@ -417,13 +463,14 @@ const fieldGroups = [
             :key="group.title"
             class="bg-white rounded-2xl border border-stone-200 overflow-hidden"
           >
-            <div class="px-5 py-3 border-b border-stone-100 bg-stone-50">
+            <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80">
               <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">{{ group.title }}</h3>
             </div>
-            <div class="p-5 space-y-4">
+            <div class="p-5 space-y-5">
               <div v-for="field in group.fields" :key="field.key">
-                <label class="block text-xs font-semibold text-stone-500 mb-1.5 uppercase tracking-wide">
+                <label class="block text-xs font-semibold text-stone-500 mb-2 uppercase tracking-wide">
                   {{ field.label }}
+                  <span v-if="field.required" class="text-rose-400 ml-0.5">*</span>
                 </label>
                 <div class="relative">
                   <textarea
@@ -431,14 +478,15 @@ const fieldGroups = [
                     v-model="form[field.key]"
                     :placeholder="field.placeholder"
                     rows="2"
-                    class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
+                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none transition-all"
                   ></textarea>
                   <input
                     v-else
                     v-model="form[field.key]"
                     :type="field.type"
-                    :placeholder="field.placeholder"
-                    class="w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                    :placeholder="field.placeholder || ''"
+                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all"
+                    :class="{ 'pr-16': field.slugGen }"
                   />
                   <button
                     v-if="field.slugGen"
@@ -448,32 +496,36 @@ const fieldGroups = [
                     Auto
                   </button>
                 </div>
+                <p v-if="field.hint" class="text-[11px] text-stone-400 mt-1.5">{{ field.hint }}</p>
               </div>
             </div>
           </div>
 
-          <!-- FAQ Builder -->
+          <!-- ── FAQ Builder ──────────────────────────────────────────── -->
           <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-            <div class="px-5 py-3 border-b border-stone-100 bg-stone-50 flex items-center justify-between">
-              <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Custom FAQ / Chatbot Pills</h3>
+            <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Custom FAQs</h3>
+                <p class="text-[11px] text-stone-400 mt-0.5">Each FAQ becomes a quick-action pill in the chatbot</p>
+              </div>
               <button
                 @click="addFaq"
-                class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-stone-500 hover:text-stone-800 transition-colors"
+                class="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded-lg transition-all"
               >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
                 </svg>
-                Add
+                Add FAQ
               </button>
             </div>
             <div class="p-5 space-y-4">
-              <p v-if="!form.faqs.length" class="text-sm text-stone-400 text-center py-4">
-                No custom FAQs yet. Add one to create chatbot quick-action pills.
+              <p v-if="!form.faqs.length" class="text-sm text-stone-400 text-center py-6">
+                No FAQs yet. Add questions guests frequently ask (pool hours, airport shuttle, parking instructions...).
               </p>
               <div
                 v-for="(faq, idx) in form.faqs"
                 :key="faq.id"
-                class="border border-stone-200 rounded-xl p-4 space-y-3 relative"
+                class="border border-stone-200 rounded-xl p-4 space-y-3 relative group"
               >
                 <button
                   @click="removeFaq(idx)"
@@ -485,56 +537,148 @@ const fieldGroups = [
                 </button>
                 <input
                   v-model="faq.question"
-                  placeholder="Question (shown as pill button)"
-                  class="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 pr-8"
+                  placeholder="Question (shown as pill button in chat)"
+                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 pr-8"
                 />
                 <textarea
                   v-model="faq.answer"
-                  placeholder="Answer shown in chat"
+                  placeholder="Answer shown in chat when guest taps the pill"
                   rows="2"
-                  class="w-full px-3 py-2 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
+                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
                 ></textarea>
               </div>
             </div>
           </div>
 
-          <!-- Hotel Link & QR Code -->
+          <!-- ── Partners Builder ─────────────────────────────────────── -->
+          <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Partners & Affiliates</h3>
+                <p class="text-[11px] text-stone-400 mt-0.5">Local businesses to recommend to guests (restaurants, tours, shops...)</p>
+              </div>
+              <button
+                @click="addPartner"
+                class="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200 rounded-lg transition-all"
+              >
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                </svg>
+                Add Partner
+              </button>
+            </div>
+            <div class="p-5 space-y-4">
+              <p v-if="!form.partners.length" class="text-sm text-stone-400 text-center py-6">
+                No partners yet. Add local restaurants, tours, or shops to recommend to your guests.
+              </p>
+              <div
+                v-for="(partner, idx) in form.partners"
+                :key="partner.id"
+                class="border border-stone-200 rounded-xl p-4 space-y-3 relative"
+              >
+                <button
+                  @click="removePartner(idx)"
+                  class="absolute right-3 top-3 text-stone-300 hover:text-rose-500 transition-colors"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                <div class="grid grid-cols-2 gap-3 pr-6">
+                  <input
+                    v-model="partner.name"
+                    placeholder="Partner name"
+                    class="col-span-2 sm:col-span-1 px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                  />
+                  <select
+                    v-model="partner.category"
+                    class="col-span-2 sm:col-span-1 px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                  >
+                    <option v-for="cat in PARTNER_CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
+                  </select>
+                </div>
+                <textarea
+                  v-model="partner.description"
+                  placeholder="Short description (e.g. Rooftop terrace with city views, 10 min walk)"
+                  rows="2"
+                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
+                ></textarea>
+                <input
+                  v-model="partner.discount"
+                  placeholder="Guest perk (e.g. 10% off with hotel key card)"
+                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                />
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <input
+                    v-model="partner.maps_url"
+                    placeholder="Google Maps URL (optional)"
+                    class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                  />
+                  <input
+                    v-model="partner.website"
+                    placeholder="Website URL (optional)"
+                    class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Hotel Link & QR Code ─────────────────────────────────── -->
           <div v-if="isEditing" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
-            <div class="px-5 py-3 border-b border-stone-100 bg-stone-50">
-              <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Hotel Guest Link</h3>
+            <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80">
+              <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Guest Link & QR Code</h3>
             </div>
             <div class="p-5 flex flex-col sm:flex-row items-start gap-6">
-              <!-- QR Code -->
-              <div v-if="qrDataUrl" class="flex-shrink-0">
+              <div v-if="qrDataUrl" class="flex-shrink-0 text-center">
                 <img :src="qrDataUrl" alt="QR Code" class="w-36 h-36 rounded-xl border border-stone-200" />
-                <p class="text-[10px] text-stone-400 text-center mt-1">Scan to test</p>
+                <p class="text-[10px] text-stone-400 mt-1.5">Scan to test</p>
               </div>
-
-              <!-- Link + copy -->
-              <div class="flex-1 space-y-3">
-                <p class="text-xs text-stone-500 font-medium">Share this URL with your guests (QR code, NFC, or via staff):</p>
+              <div class="flex-1 space-y-3 min-w-0">
+                <p class="text-xs text-stone-500 font-medium">Share this link with guests via QR code, NFC, or staff:</p>
                 <div class="flex gap-2">
                   <input
                     :value="hotelLink"
                     readonly
-                    class="flex-1 px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-600 focus:outline-none cursor-text select-all"
+                    class="flex-1 min-w-0 px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-xl text-xs text-stone-600 focus:outline-none cursor-text select-all"
                   />
                   <button
                     @click="copyLink"
-                    class="px-4 py-2 bg-stone-100 text-stone-700 rounded-xl text-xs font-bold hover:bg-stone-200 transition-all active:scale-95"
+                    class="px-4 py-2 bg-stone-100 text-stone-700 rounded-xl text-xs font-bold hover:bg-stone-200 transition-all active:scale-95 whitespace-nowrap"
                   >
                     Copy
                   </button>
                 </div>
-                <p class="text-[11px] text-stone-400">Hotel ID: <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-600">{{ selectedId }}</code></p>
-
-                <!-- Logo preview -->
-                <div v-if="form.logo_url" class="pt-2">
+                <p class="text-[11px] text-stone-400">
+                  Hotel ID: <code class="bg-stone-100 px-1.5 py-0.5 rounded text-stone-600 font-mono">{{ selectedId }}</code>
+                </p>
+                <div v-if="form.logo_url" class="pt-1">
                   <p class="text-xs text-stone-400 mb-2">Logo preview:</p>
                   <img :src="form.logo_url" :alt="form.name" class="h-10 object-contain" />
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Bottom save bar (sticky on scroll) -->
+          <div class="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-stone-50/90 backdrop-blur border-t border-stone-200 flex items-center justify-between">
+            <p v-if="saveSuccess" class="text-sm text-emerald-600 font-semibold flex items-center gap-1.5">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+              Changes saved successfully
+            </p>
+            <p v-else class="text-xs text-stone-400">Remember to save your changes</p>
+            <button
+              @click="save"
+              :disabled="saving || !form.name"
+              class="px-8 py-2.5 bg-stone-900 text-white text-sm font-semibold rounded-xl hover:bg-stone-700 transition-all disabled:opacity-40 active:scale-95 flex items-center gap-2"
+            >
+              <svg v-if="saving" class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {{ saving ? 'Saving…' : 'Save Hotel' }}
+            </button>
           </div>
 
         </div>

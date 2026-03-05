@@ -4,7 +4,8 @@
     "subtitle": "您的人工智能礼宾服务。",
     "start": "选择您的语言开始",
     "load_shared": "正在加载您的行程...",
-    "continue": "继续"
+    "continue": "继续",
+    "selectLanguage": "请选择语言"
   },
   "questionnaire": {
     "step1": "您和谁一起旅行？",

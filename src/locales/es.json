@@ -4,7 +4,8 @@
     "subtitle": "Tu conserje potenciado por IA.",
     "start": "Selecciona tu idioma para comenzar",
     "load_shared": "Cargando tu itinerario...",
-    "continue": "Continuar"
+    "continue": "Continuar",
+    "selectLanguage": "Selecciona tu idioma"
   },
   "questionnaire": {
     "step1": "¿Con quién viajas?",

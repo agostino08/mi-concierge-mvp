@@ -16,12 +16,10 @@ const messages = ref([]);
 const isTyping = ref(false);
 const messagesContainer = ref(null);
 
-// Initialise with welcome in current language
 onMounted(() => {
   messages.value = [{ role: 'bot', text: t('chatbot.welcome') }];
 });
 
-// When locale changes and conversation hasn't started, update the welcome message
 watch(locale, () => {
   if (messages.value.length <= 1) {
     messages.value = [{ role: 'bot', text: t('chatbot.welcome') }];
@@ -35,7 +33,7 @@ async function scrollToBottom() {
   }
 }
 
-// ─── Dynamic quick actions (only shown when hotel has data) ───────────────────
+// ─── Dynamic quick actions ────────────────────────────────────────────────────
 const TOPIC_FIELDS = {
   checkout:     'checkout',
   breakfast:    'breakfast',
@@ -95,17 +93,17 @@ function localFallback(text) {
   const lower = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const info = hotelInfo.value;
   const replies = {
-    checkout:     info.checkout    ? `${t('chatbot.checkout')} ${info.checkout}`       : null,
-    breakfast:    info.breakfast   ? `${t('chatbot.breakfast')} ${info.breakfast}`     : null,
-    wifi:         info.wifi_pass   ? `${t('chatbot.wifi')} ${info.wifi_pass}`          : null,
-    reception:    info.reception   ? `${t('chatbot.reception')} ${info.reception}`     : null,
-    gym:          info.gym         ? `${t('chatbot.gym')} ${info.gym}`                 : null,
-    pool:         info.pool        ? `${t('chatbot.pool')} ${info.pool}`               : null,
-    spa:          info.spa         ? `${t('chatbot.spa')} ${info.spa}`                 : null,
-    parking:      info.parking     ? `${t('chatbot.parking')} ${info.parking}`         : null,
-    restaurant:   info.restaurant  ? `${t('chatbot.restaurant')} ${info.restaurant}`   : null,
+    checkout:     info.checkout    ? `${t('chatbot.checkout')} ${info.checkout}`        : null,
+    breakfast:    info.breakfast   ? `${t('chatbot.breakfast')} ${info.breakfast}`      : null,
+    wifi:         info.wifi_pass   ? `${t('chatbot.wifi')} ${info.wifi_pass}`           : null,
+    reception:    info.reception   ? `${t('chatbot.reception')} ${info.reception}`      : null,
+    gym:          info.gym         ? `${t('chatbot.gym')} ${info.gym}`                  : null,
+    pool:         info.pool        ? `${t('chatbot.pool')} ${info.pool}`                : null,
+    spa:          info.spa         ? `${t('chatbot.spa')} ${info.spa}`                  : null,
+    parking:      info.parking     ? `${t('chatbot.parking')} ${info.parking}`          : null,
+    restaurant:   info.restaurant  ? `${t('chatbot.restaurant')} ${info.restaurant}`    : null,
     room_service: info.room_service? `${t('chatbot.room_service')} ${info.room_service}`: null,
-    facilities:   info.facilities  ? `${t('chatbot.facilities')} ${info.facilities}`   : null,
+    facilities:   info.facilities  ? `${t('chatbot.facilities')} ${info.facilities}`    : null,
   };
   for (const [topic, kws] of Object.entries(KEYWORDS)) {
     if (kws.some(kw => lower.includes(kw)) && replies[topic]) return replies[topic];
@@ -157,38 +155,48 @@ function sendMessage() {
 </script>
 
 <template>
-  <div class="fixed bottom-6 right-6 z-50 no-print flex flex-col items-end">
+  <!-- Desktop semi-transparent backdrop (prevents content bleeding through) -->
+  <div
+    v-if="isOpen"
+    class="hidden sm:block fixed inset-0 z-40 bg-black/10 backdrop-blur-[1px]"
+    @click="isOpen = false"
+  />
 
+  <!-- Main container: full-screen on mobile, corner popup on desktop -->
+  <div
+    class="fixed z-50 no-print flex flex-col"
+    :class="isOpen
+      ? 'top-2 left-2 right-2 bottom-2 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:items-end'
+      : 'bottom-6 right-6 items-end'"
+  >
     <!-- Chat window -->
     <transition name="chat-slide">
       <div
         v-if="isOpen"
-        class="w-[22rem] bg-white rounded-3xl shadow-2xl mb-4 border border-stone-200/80 overflow-hidden flex flex-col"
-        style="max-height: min(560px, calc(100dvh - 110px))"
+        class="chat-window sm:w-[32rem] bg-white rounded-2xl sm:rounded-3xl shadow-2xl sm:mb-4 border border-stone-200/80 overflow-hidden flex flex-col"
       >
         <!-- ── Header ── -->
-        <div class="bg-stone-900 text-white px-5 py-3.5 flex items-center justify-between flex-shrink-0">
+        <div class="bg-stone-900 text-white px-5 py-4 flex items-center justify-between flex-shrink-0">
           <div class="flex items-center gap-3">
-            <!-- Avatar with pulse dot -->
             <div class="relative">
-              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400/30 to-amber-600/20 border border-amber-400/30 flex items-center justify-center">
-                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div class="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400/30 to-amber-600/20 border border-amber-400/30 flex items-center justify-center">
+                <svg class="w-5 h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                 </svg>
               </div>
-              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-stone-900"></span>
+              <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-400 rounded-full border-2 border-stone-900"></span>
             </div>
             <div>
-              <h4 class="font-semibold text-[13px] leading-tight">{{ $t('chatbot.title') }}</h4>
-              <p class="text-[10px] text-stone-400 leading-none mt-0.5">{{ hotelInfo.name || '' }}</p>
+              <h4 class="font-semibold text-[15px] leading-tight">{{ $t('chatbot.title') }}</h4>
+              <p class="text-[12px] text-stone-400 leading-none mt-0.5">{{ hotelInfo.name || '' }}</p>
             </div>
           </div>
           <button
             @click="isOpen = false"
-            class="text-stone-500 hover:text-white transition-colors p-1.5 rounded-xl hover:bg-white/10 -mr-1"
+            class="text-stone-500 hover:text-white transition-colors p-2 rounded-xl hover:bg-white/10 -mr-1"
             aria-label="Close"
           >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -197,7 +205,7 @@ function sendMessage() {
         <!-- ── Messages ── -->
         <div
           ref="messagesContainer"
-          class="flex-1 px-4 py-4 overflow-y-auto space-y-2.5 bg-stone-50 min-h-0"
+          class="flex-1 px-4 py-5 overflow-y-auto space-y-3 bg-stone-50 min-h-0"
         >
           <div
             v-for="(m, i) in messages"
@@ -206,7 +214,7 @@ function sendMessage() {
             :class="m.role === 'user' ? 'justify-end' : 'justify-start'"
           >
             <div
-              class="px-4 py-2.5 max-w-[86%] text-[13.5px] leading-[1.55]"
+              class="px-4 py-3 max-w-[88%] text-[15px] leading-[1.65]"
               :class="m.role === 'user'
                 ? 'bg-stone-800 text-white rounded-3xl rounded-br-md'
                 : 'bg-white border border-stone-200 text-stone-700 rounded-3xl rounded-bl-md shadow-sm'"
@@ -216,11 +224,11 @@ function sendMessage() {
 
           <!-- Typing indicator -->
           <div v-if="isTyping" class="flex justify-start">
-            <div class="bg-white border border-stone-200 rounded-3xl rounded-bl-md px-4 py-3.5 shadow-sm">
-              <div class="flex gap-[5px] items-center">
-                <span class="w-[7px] h-[7px] bg-stone-300 rounded-full animate-bounce" style="animation-delay:0ms"></span>
-                <span class="w-[7px] h-[7px] bg-stone-300 rounded-full animate-bounce" style="animation-delay:160ms"></span>
-                <span class="w-[7px] h-[7px] bg-stone-300 rounded-full animate-bounce" style="animation-delay:320ms"></span>
+            <div class="bg-white border border-stone-200 rounded-3xl rounded-bl-md px-4 py-4 shadow-sm">
+              <div class="flex gap-1.5 items-center">
+                <span class="w-2 h-2 bg-stone-300 rounded-full animate-bounce" style="animation-delay:0ms"></span>
+                <span class="w-2 h-2 bg-stone-300 rounded-full animate-bounce" style="animation-delay:160ms"></span>
+                <span class="w-2 h-2 bg-stone-300 rounded-full animate-bounce" style="animation-delay:320ms"></span>
               </div>
             </div>
           </div>
@@ -228,30 +236,28 @@ function sendMessage() {
 
         <!-- ── Quick actions ── -->
         <div v-if="hasAnyAction" class="bg-white border-t border-stone-100 flex-shrink-0">
-          <div class="px-3.5 pt-2.5 pb-0.5">
-            <p class="text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2">
+          <div class="px-4 pt-3 pb-1">
+            <p class="text-[10px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2.5">
               {{ $t('chatbot.title') }}
             </p>
-            <!-- Standard hotel info pills -->
-            <div v-if="standardActions.length" class="flex flex-wrap gap-1.5 mb-2">
+            <div v-if="standardActions.length" class="flex flex-wrap gap-2 mb-2">
               <button
                 v-for="topic in standardActions"
                 :key="topic"
                 @click="quickAction(topic)"
                 :disabled="isTyping"
-                class="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full text-[11px] font-semibold hover:bg-stone-800 hover:text-white transition-all active:scale-95 disabled:opacity-40"
+                class="px-4 py-2 bg-stone-100 text-stone-600 rounded-full text-[13px] font-semibold hover:bg-stone-800 hover:text-white transition-all active:scale-95 disabled:opacity-40"
               >
                 {{ $t(`chatbot.quick_${topic}`) }}
               </button>
             </div>
-            <!-- FAQ pills — amber accent, distinct from standard pills -->
-            <div v-if="faqActions.length" class="flex flex-wrap gap-1.5 mb-2">
+            <div v-if="faqActions.length" class="flex flex-wrap gap-2 mb-2">
               <button
                 v-for="faq in faqActions"
                 :key="faq.id"
                 @click="faqAction(faq)"
                 :disabled="isTyping"
-                class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full text-[11px] font-semibold hover:bg-amber-400 hover:text-white hover:border-amber-400 transition-all active:scale-95 disabled:opacity-40"
+                class="px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full text-[13px] font-semibold hover:bg-amber-400 hover:text-white hover:border-amber-400 transition-all active:scale-95 disabled:opacity-40"
               >
                 {{ faq.question }}
               </button>
@@ -260,22 +266,22 @@ function sendMessage() {
         </div>
 
         <!-- ── Input ── -->
-        <div class="px-3 py-3 bg-white flex gap-2 flex-shrink-0 border-t border-stone-100">
+        <div class="px-4 py-4 bg-white flex gap-2.5 flex-shrink-0 border-t border-stone-100">
           <input
             v-model="userMessage"
             @keyup.enter="sendMessage"
             type="text"
             :placeholder="$t('chatbot.placeholder')"
             :disabled="isTyping"
-            class="flex-1 bg-stone-100 rounded-full px-4 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all placeholder:text-stone-400 disabled:opacity-60"
+            class="flex-1 bg-stone-100 rounded-full px-5 py-3 text-[15px] focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all placeholder:text-stone-400 disabled:opacity-60"
           />
           <button
             @click="sendMessage"
             :disabled="!userMessage.trim() || isTyping"
-            class="w-9 h-9 bg-stone-900 text-white rounded-full flex items-center justify-center hover:bg-stone-700 active:scale-90 transition-all shadow-md disabled:opacity-40 disabled:scale-100 flex-shrink-0"
+            class="w-12 h-12 bg-stone-900 text-white rounded-full flex items-center justify-center hover:bg-stone-700 active:scale-90 transition-all shadow-md disabled:opacity-40 disabled:scale-100 flex-shrink-0"
             aria-label="Send"
           >
-            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
             </svg>
           </button>
@@ -283,10 +289,11 @@ function sendMessage() {
       </div>
     </transition>
 
-    <!-- ── FAB ── -->
+    <!-- ── FAB: hidden on mobile when chat is open (header close button suffices) ── -->
     <button
       @click="isOpen = !isOpen"
-      class="w-14 h-14 bg-stone-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all ring-4 ring-white"
+      class="w-14 h-14 bg-stone-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all ring-4 ring-white flex-shrink-0 self-end mt-3 sm:mt-0"
+      :class="{ 'hidden sm:flex': isOpen }"
       :aria-label="$t('chatbot.title')"
     >
       <transition name="icon-switch" mode="out-in">
@@ -302,6 +309,19 @@ function sendMessage() {
 </template>
 
 <style scoped>
+/* Mobile: chat fills the fixed container (top-2 left-2 right-2 bottom-2) */
+.chat-window {
+  flex: 1;
+}
+
+/* Desktop: constrained height, not flex-growing */
+@media (min-width: 640px) {
+  .chat-window {
+    flex: none;
+    max-height: min(720px, calc(100dvh - 100px));
+  }
+}
+
 .chat-slide-enter-active, .chat-slide-leave-active {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }

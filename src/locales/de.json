@@ -4,7 +4,8 @@
     "subtitle": "Ihr KI-gestützter Concierge.",
     "start": "Sprache auswählen und loslegen",
     "load_shared": "Ihr Reiseplan wird geladen...",
-    "continue": "Weiter"
+    "continue": "Weiter",
+    "selectLanguage": "Sprache wählen"
   },
   "questionnaire": {
     "step1": "Mit wem reisen Sie?",

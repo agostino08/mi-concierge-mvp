@@ -49,12 +49,12 @@ function handleClickOutside(event) {
     @click="handleClickOutside"
   >
     <!-- Hotel identity -->
-    <div class="mb-8 space-y-3">
+    <div class="mb-10 space-y-3">
       <div v-if="hotelStore.hotelData?.logo_url" class="flex justify-center mb-4">
         <img
           :src="hotelStore.hotelData.logo_url"
           :alt="hotelStore.hotelData.name"
-          class="h-14 object-contain drop-shadow-sm"
+          class="h-16 object-contain drop-shadow-sm"
         />
       </div>
       <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-stone-400">
@@ -67,9 +67,14 @@ function handleClickOutside(event) {
     </div>
 
     <!-- Language selector + Continue -->
-    <div class="w-full max-w-[280px] space-y-3 lang-selector">
+    <div class="w-full max-w-[300px] space-y-4 lang-selector">
 
-      <!-- Trigger -->
+      <!-- Select language label -->
+      <p class="text-[11px] font-bold uppercase tracking-[0.2em] text-stone-400">
+        {{ $t('welcome.selectLanguage') }}
+      </p>
+
+      <!-- Dropdown -->
       <div class="relative">
         <button
           @click.stop="isOpen = !isOpen"
@@ -85,7 +90,7 @@ function handleClickOutside(event) {
           </svg>
         </button>
 
-        <!-- Dropdown: 2.5 items visible (130px) + gradient fade signals more below -->
+        <!-- Dropdown: 4 items visible + gradient hints more below -->
         <transition
           enter-active-class="transition-all duration-200 ease-out"
           enter-from-class="opacity-0 translate-y-1 scale-[0.98]"
@@ -99,9 +104,9 @@ function handleClickOutside(event) {
             class="absolute bottom-full mb-2 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-stone-100 z-50 overflow-hidden"
             @click.stop
           >
-            <!-- Scroll area: 2.5 items visible = 130px (each item ~52px) -->
             <div class="relative">
-              <div class="overflow-y-auto" style="max-height: 130px">
+              <!-- 4.5 items × 52px ≈ 234px — half of item 5 cut off signals scroll -->
+              <div class="overflow-y-auto" style="max-height: 234px">
                 <button
                   v-for="lang in languages"
                   :key="lang.code"
@@ -119,14 +124,14 @@ function handleClickOutside(event) {
                   </svg>
                 </button>
               </div>
-              <!-- Gradient fade = visual cue that more languages exist below -->
-              <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
+              <!-- Gradient cue: more languages below -->
+              <div class="absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
             </div>
           </div>
         </transition>
       </div>
 
-      <!-- Continue button — text switches instantly on language select -->
+      <!-- Continue button -->
       <button
         @click="begin"
         class="w-full py-4 bg-stone-800 text-white rounded-2xl text-base font-semibold tracking-wide shadow-xl hover:bg-stone-700 active:scale-95 transition-all"

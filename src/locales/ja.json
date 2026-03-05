@@ -4,7 +4,8 @@
     "subtitle": "あなたのAIコンシェルジュ。",
     "start": "言語を選択して始めましょう",
     "load_shared": "旅程を読み込んでいます...",
-    "continue": "続ける"
+    "continue": "続ける",
+    "selectLanguage": "言語を選択してください"
   },
   "questionnaire": {
     "step1": "誰と旅行しますか？",

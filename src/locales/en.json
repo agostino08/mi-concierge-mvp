@@ -4,7 +4,8 @@
     "subtitle": "Your AI-powered concierge.",
     "start": "Select your language to begin",
     "load_shared": "Loading your itinerary...",
-    "continue": "Continue"
+    "continue": "Continue",
+    "selectLanguage": "Select your language"
   },
   "questionnaire": {
     "step1": "Who are you traveling with?",

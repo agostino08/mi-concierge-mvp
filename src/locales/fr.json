@@ -4,7 +4,8 @@
     "subtitle": "Votre concierge propulsé par l'IA.",
     "start": "Sélectionnez votre langue pour commencer",
     "load_shared": "Chargement de votre itinéraire...",
-    "continue": "Continuer"
+    "continue": "Continuer",
+    "selectLanguage": "Choisissez votre langue"
   },
   "questionnaire": {
     "step1": "Avec qui voyagez-vous ?",

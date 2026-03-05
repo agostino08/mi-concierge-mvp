@@ -4,7 +4,8 @@
     "subtitle": "Il tuo concierge basato su IA.",
     "start": "Seleziona la tua lingua per iniziare",
     "load_shared": "Caricamento itinerario...",
-    "continue": "Continua"
+    "continue": "Continua",
+    "selectLanguage": "Scegli la tua lingua"
   },
   "questionnaire": {
     "step1": "Con chi viaggi?",
