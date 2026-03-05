@@ -8,8 +8,8 @@
   "questionnaire": {
     "step1": "Who are you traveling with?",
     "step2": "How many days are you staying?",
-    "step3": "What is your travel style? (Select up to 3)",
-    "step4": "What kind of food do you like? (Select up to 3)",
+    "step3": "What is your travel style?",
+    "step4": "What kind of food do you like?",
     "step5": "What is your ideal budget?",
     "step6": "How will you get around?",
     "next": "Next",
@@ -76,7 +76,19 @@
     "quick_breakfast": "Breakfast hours",
     "quick_wifi": "WiFi password",
     "quick_reception": "Reception",
-    "quick_gym": "Gym & Pool"
+    "quick_gym": "Gym & Pool",
+    "parking": "Parking information:",
+    "pool": "Pool & Spa:",
+    "spa": "Spa & Wellness:",
+    "restaurant": "Restaurant:",
+    "room_service": "Room service:",
+    "facilities": "Hotel facilities:",
+    "quick_parking": "Parking",
+    "quick_pool": "Pool & Spa",
+    "quick_spa": "Spa & Wellness",
+    "quick_restaurant": "Restaurant",
+    "quick_room_service": "Room Service",
+    "quick_facilities": "Facilities"
   },
   "toast": {
     "added": "Added to favourites",

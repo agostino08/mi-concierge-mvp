@@ -8,8 +8,8 @@
   "questionnaire": {
     "step1": "誰と旅行しますか？",
     "step2": "何日間滞在しますか？",
-    "step3": "旅行スタイルを教えてください（最大3つ）",
-    "step4": "どのような料理が好きですか？（最大3つ）",
+    "step3": "あなたの旅行スタイルは何ですか？",
+    "step4": "どんな食べ物が好きですか？",
     "step5": "理想的な予算は？",
     "step6": "どのように移動しますか？",
     "next": "次へ",
@@ -76,7 +76,19 @@
     "quick_breakfast": "朝食時間",
     "quick_wifi": "WiFiパスワード",
     "quick_reception": "フロント",
-    "quick_gym": "ジム & プール"
+    "quick_gym": "ジム & プール",
+    "parking": "駐車場情報：",
+    "pool": "プール＆スパ：",
+    "spa": "スパ＆ウェルネス：",
+    "restaurant": "レストラン：",
+    "room_service": "ルームサービス：",
+    "facilities": "ホテル施設：",
+    "quick_parking": "駐車場",
+    "quick_pool": "プール",
+    "quick_spa": "スパ",
+    "quick_restaurant": "レストラン",
+    "quick_room_service": "ルームサービス",
+    "quick_facilities": "施設"
   },
   "toast": {
     "added": "お気に入りに追加しました",

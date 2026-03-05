@@ -27,12 +27,43 @@ async function scrollToBottom() {
 
 // Multi-language keyword detection
 const KEYWORDS = {
-  checkout: ['checkout', 'check-out', 'leave', 'late', 'salida', 'uscita', 'abreise', 'saida', 'sortie', 'depart', 'wyezd', 'tuifang', 'chekku', 'выезд', '退房', 'チェックアウト', 'partir'],
+  checkout: ['checkout', 'check-out', 'leave', 'late check', 'salida', 'uscita', 'abreise', 'saida', 'sortie', 'depart', 'wyezd', 'tuifang', 'chekku', 'выезд', '退房', 'チェックアウト', 'partir'],
   breakfast: ['breakfast', 'desayuno', 'colazione', 'fruhstuck', 'cafe', 'manha', 'dejeuner', 'esmorzar', 'zavtrak', 'zaofan', 'choshoku', 'завтрак', '早餐', '朝食', 'petit-dejeuner'],
   wifi: ['wifi', 'wi-fi', 'internet', 'password', 'contraseña', 'contrasenya', 'parola', 'passwort', 'senha', 'mot de passe', 'parol', 'mima', 'pasuwado', 'пароль', '密码', 'パスワード'],
   reception: ['reception', 'recepcion', 'recepció', 'rezeption', 'recepcao', 'accueil', 'phone', 'telefono', 'telephone', 'contact', 'stojka', 'qiantai', 'furonto', 'ресепшен', '前台', 'フロント'],
-  gym: ['gym', 'pool', 'fitness', 'gimnasio', 'piscina', 'palestra', 'fitnessstudio', 'schwimmbad', 'academia', 'salle de sport', 'piscine', 'gimnas', 'sport', 'spa', 'jianshenfang', 'jimu', '健身房', 'ジム'],
+  gym: ['gym', 'fitness', 'gimnasio', 'palestra', 'fitnessstudio', 'academia', 'salle de sport', 'gimnas', 'sport', 'jianshenfang', 'jimu', '健身房', 'ジム'],
+  pool: ['pool', 'swim', 'piscina', 'schwimmbad', 'piscine', 'kolam', 'бассейн', '游泳池', 'プール', 'natacion'],
+  spa: ['spa', 'wellness', 'massage', 'masaje', 'massaggio', 'massagem', 'massagem', 'релакс', 'массаж', '按摩', 'マッサージ', 'beauty', 'sauna'],
+  parking: ['parking', 'car park', 'aparcamiento', 'parcheggio', 'parkplatz', 'estacionamento', 'parkering', 'стоянка', 'parken', '停车', '駐車', 'garage', 'valet'],
+  restaurant: ['restaurant', 'restaurante', 'ristorante', 'dine', 'dining', 'dinner', 'lunch', 'food', 'eat', 'ресторан', '餐厅', 'レストラン', 'tavern', 'bistro'],
+  room_service: ['room service', 'room-service', 'roomservice', 'habitaciones', 'zimmerservice', 'servizio in camera', 'serviço de quarto', 'обслуживание номеров', '客房服务', 'ルームサービス'],
+  facilities: ['facilities', 'amenities', 'instalaciones', 'einrichtungen', 'strutture', 'instalações', 'удобства', '设施', '施設', 'services', 'feature'],
 };
+
+// Topics that map to hotel data fields
+const TOPIC_FIELDS = {
+  checkout: 'checkout',
+  breakfast: 'breakfast',
+  wifi: 'wifi_pass',
+  reception: 'reception',
+  gym: 'gym',
+  pool: 'pool',
+  spa: 'spa',
+  parking: 'parking',
+  restaurant: 'restaurant',
+  room_service: 'room_service',
+  facilities: 'facilities',
+};
+
+// Dynamic quick actions: only show if the hotel has data for that field
+const standardActions = computed(() =>
+  Object.entries(TOPIC_FIELDS)
+    .filter(([, field]) => !!hotelInfo.value[field])
+    .map(([key]) => key)
+);
+
+// Custom FAQ pills from hotel data
+const faqActions = computed(() => hotelInfo.value.faqs || []);
 
 function detectTopic(msg) {
   const lower = msg.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -45,11 +76,17 @@ function detectTopic(msg) {
 function getReply(topic) {
   const info = hotelInfo.value;
   const replies = {
-    checkout: info.checkout ? `${t('chatbot.checkout')} ${info.checkout}` : t('chatbot.fallback'),
-    breakfast: info.breakfast ? `${t('chatbot.breakfast')} ${info.breakfast}` : t('chatbot.fallback'),
-    wifi: info.wifi_pass ? `${t('chatbot.wifi')} ${info.wifi_pass}` : t('chatbot.fallback'),
-    reception: info.reception ? `${t('chatbot.reception')} ${info.reception}` : t('chatbot.fallback'),
-    gym: info.gym ? `${t('chatbot.gym')} ${info.gym}` : t('chatbot.fallback'),
+    checkout:     info.checkout    ? `${t('chatbot.checkout')} ${info.checkout}`       : t('chatbot.fallback'),
+    breakfast:    info.breakfast   ? `${t('chatbot.breakfast')} ${info.breakfast}`     : t('chatbot.fallback'),
+    wifi:         info.wifi_pass   ? `${t('chatbot.wifi')} ${info.wifi_pass}`          : t('chatbot.fallback'),
+    reception:    info.reception   ? `${t('chatbot.reception')} ${info.reception}`     : t('chatbot.fallback'),
+    gym:          info.gym         ? `${t('chatbot.gym')} ${info.gym}`                 : t('chatbot.fallback'),
+    pool:         info.pool        ? `${t('chatbot.pool')} ${info.pool}`               : t('chatbot.fallback'),
+    spa:          info.spa         ? `${t('chatbot.spa')} ${info.spa}`                 : t('chatbot.fallback'),
+    parking:      info.parking     ? `${t('chatbot.parking')} ${info.parking}`         : t('chatbot.fallback'),
+    restaurant:   info.restaurant  ? `${t('chatbot.restaurant')} ${info.restaurant}`   : t('chatbot.fallback'),
+    room_service: info.room_service? `${t('chatbot.room_service')} ${info.room_service}`: t('chatbot.fallback'),
+    facilities:   info.facilities  ? `${t('chatbot.facilities')} ${info.facilities}`   : t('chatbot.fallback'),
   };
   return replies[topic] || t('chatbot.fallback');
 }
@@ -70,19 +107,22 @@ function quickAction(topic) {
   showBotReply(getReply(topic));
 }
 
+function faqAction(faq) {
+  messages.value.push({ role: 'user', text: faq.question });
+  showBotReply(faq.answer);
+}
+
 function sendMessage() {
   const msg = userMessage.value.trim();
   if (!msg) return;
-
   messages.value.push({ role: 'user', text: msg });
   userMessage.value = '';
   scrollToBottom();
-
   const topic = detectTopic(msg);
   showBotReply(getReply(topic));
 }
 
-const quickActions = ['checkout', 'breakfast', 'wifi', 'reception', 'gym'];
+const hasAnyAction = computed(() => standardActions.value.length > 0 || faqActions.value.length > 0);
 </script>
 
 <template>
@@ -92,8 +132,8 @@ const quickActions = ['checkout', 'breakfast', 'wifi', 'reception', 'gym'];
     <transition name="chat-slide">
       <div
         v-if="isOpen"
-        class="w-80 bg-white rounded-3xl shadow-2xl mb-4 border border-stone-200 overflow-hidden flex flex-col animate-in"
-        style="max-height: min(480px, calc(100vh - 120px))"
+        class="w-80 bg-white rounded-3xl shadow-2xl mb-4 border border-stone-200 overflow-hidden flex flex-col"
+        style="max-height: min(520px, calc(100vh - 120px))"
       >
         <!-- Header -->
         <div class="bg-stone-900 text-white px-5 py-4 flex justify-between items-center flex-shrink-0">
@@ -131,7 +171,7 @@ const quickActions = ['checkout', 'breakfast', 'wifi', 'reception', 'gym'];
               :class="m.role === 'user'
                 ? 'bg-stone-800 text-white rounded-3xl rounded-br-lg'
                 : 'bg-white border border-stone-200 text-stone-700 rounded-3xl rounded-bl-lg shadow-sm'"
-              class="px-4 py-2.5 max-w-[82%] leading-relaxed text-[13px]"
+              class="px-4 py-2.5 max-w-[85%] leading-relaxed text-[13px]"
             >
               {{ m.text }}
             </div>
@@ -141,24 +181,38 @@ const quickActions = ['checkout', 'breakfast', 'wifi', 'reception', 'gym'];
           <div v-if="isTyping" class="flex justify-start">
             <div class="bg-white border border-stone-200 rounded-3xl rounded-bl-lg px-4 py-3 shadow-sm">
               <div class="flex gap-1 items-center">
-                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay: 0ms"></span>
-                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay: 150ms"></span>
-                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay: 300ms"></span>
+                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
+                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay:150ms"></span>
+                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- Quick action chips -->
-        <div class="px-3 pt-3 pb-1 bg-white border-t border-stone-100 flex flex-wrap gap-1.5 flex-shrink-0">
-          <button
-            v-for="topic in quickActions"
-            :key="topic"
-            @click="quickAction(topic)"
-            class="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-bold uppercase tracking-wide hover:bg-stone-200 hover:text-stone-800 transition-all active:scale-95"
-          >
-            {{ $t(`chatbot.quick_${topic}`) }}
-          </button>
+        <div v-if="hasAnyAction" class="px-3 pt-3 pb-1 bg-white border-t border-stone-100 flex-shrink-0">
+          <!-- Standard hotel info pills -->
+          <div v-if="standardActions.length" class="flex flex-wrap gap-1.5 mb-1.5">
+            <button
+              v-for="topic in standardActions"
+              :key="topic"
+              @click="quickAction(topic)"
+              class="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-bold uppercase tracking-wide hover:bg-stone-200 hover:text-stone-800 transition-all active:scale-95"
+            >
+              {{ $t(`chatbot.quick_${topic}`) }}
+            </button>
+          </div>
+          <!-- Custom FAQ pills -->
+          <div v-if="faqActions.length" class="flex flex-wrap gap-1.5">
+            <button
+              v-for="faq in faqActions"
+              :key="faq.id"
+              @click="faqAction(faq)"
+              class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-bold tracking-wide hover:bg-amber-100 transition-all active:scale-95"
+            >
+              {{ faq.question }}
+            </button>
+          </div>
         </div>
 
         <!-- Input -->
@@ -187,7 +241,7 @@ const quickActions = ['checkout', 'breakfast', 'wifi', 'reception', 'gym'];
     <!-- FAB button -->
     <button
       @click="isOpen = !isOpen"
-      class="w-14 h-14 bg-stone-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all outline-none group ring-4 ring-white"
+      class="w-14 h-14 bg-stone-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all outline-none ring-4 ring-white"
       :aria-label="$t('chatbot.title')"
     >
       <transition name="icon-switch" mode="out-in">

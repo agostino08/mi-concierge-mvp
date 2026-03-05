@@ -8,8 +8,8 @@
   "questionnaire": {
     "step1": "您和谁一起旅行？",
     "step2": "您要待几天？",
-    "step3": "您的旅行风格是什么？（最多3个）",
-    "step4": "您喜欢什么类型的餐饮？（最多3个）",
+    "step3": "您的旅行风格是什么？",
+    "step4": "您喜欢什么类型的食物？",
     "step5": "您的理想预算是多少？",
     "step6": "您将如何出行？",
     "next": "下一步",
@@ -76,7 +76,19 @@
     "quick_breakfast": "早餐时间",
     "quick_wifi": "WiFi 密码",
     "quick_reception": "前台",
-    "quick_gym": "健身房 & 泳池"
+    "quick_gym": "健身房 & 泳池",
+    "parking": "停车信息：",
+    "pool": "游泳池与SPA：",
+    "spa": "SPA与健康：",
+    "restaurant": "餐厅：",
+    "room_service": "客房服务：",
+    "facilities": "酒店设施：",
+    "quick_parking": "停车场",
+    "quick_pool": "游泳池",
+    "quick_spa": "SPA",
+    "quick_restaurant": "餐厅",
+    "quick_room_service": "客房服务",
+    "quick_facilities": "设施"
   },
   "toast": {
     "added": "已加入收藏",

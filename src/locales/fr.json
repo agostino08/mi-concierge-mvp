@@ -8,8 +8,8 @@
   "questionnaire": {
     "step1": "Avec qui voyagez-vous ?",
     "step2": "Combien de jours restez-vous ?",
-    "step3": "Quel est votre style de voyage ? (Max 3)",
-    "step4": "Quel type de cuisine préférez-vous ? (Max 3)",
+    "step3": "Quel est votre style de voyage?",
+    "step4": "Quel type de cuisine aimez-vous?",
     "step5": "Quel est votre budget idéal ?",
     "step6": "Comment allez-vous vous déplacer ?",
     "next": "Suivant",
@@ -76,7 +76,19 @@
     "quick_breakfast": "Horaires petit-déj.",
     "quick_wifi": "Mot de passe WiFi",
     "quick_reception": "Réception",
-    "quick_gym": "Sport & Piscine"
+    "quick_gym": "Sport & Piscine",
+    "parking": "Informations parking:",
+    "pool": "Piscine et Spa:",
+    "spa": "Spa et bien-être:",
+    "restaurant": "Restaurant:",
+    "room_service": "Service en chambre:",
+    "facilities": "Équipements de l'hôtel:",
+    "quick_parking": "Parking",
+    "quick_pool": "Piscine",
+    "quick_spa": "Spa",
+    "quick_restaurant": "Restaurant",
+    "quick_room_service": "Room Service",
+    "quick_facilities": "Équipements"
   },
   "toast": {
     "added": "Ajouté aux favoris",

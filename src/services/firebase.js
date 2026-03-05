@@ -1,5 +1,8 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, getDoc, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import {
+  getFirestore, doc, getDoc, collection, addDoc, getDocs,
+  setDoc, deleteDoc, serverTimestamp
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -14,21 +17,18 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
-// Data Services
+// ─── Guest-facing data services ───────────────────────────────────────────────
+
 export async function getHotelById(hotelId) {
-  if (!hotelId) throw new Error("ID de hotel no proporcionado");
+  if (!hotelId) throw new Error("Hotel ID not provided");
   const docSnap = await getDoc(doc(db, "hotels", hotelId));
-  if (!docSnap.exists()) {
-    throw new Error("Este hotel no existe en nuestra base de datos");
-  }
+  if (!docSnap.exists()) throw new Error("Hotel not found in database");
   return { ...docSnap.data(), id: docSnap.id };
 }
 
 export async function getSharedItinerary(itineraryId) {
   const itSnap = await getDoc(doc(db, "shared_itineraries", itineraryId));
-  if (!itSnap.exists()) {
-    throw new Error("El enlace compartido ha expirado.");
-  }
+  if (!itSnap.exists()) throw new Error("Shared link has expired.");
   return itSnap.data();
 }
 
@@ -38,4 +38,31 @@ export async function saveSharedItinerary(payload) {
     createdAt: serverTimestamp()
   });
   return docRef.id;
+}
+
+// ─── Admin CRUD ────────────────────────────────────────────────────────────────
+
+export async function getAllHotels() {
+  const snap = await getDocs(collection(db, "hotels"));
+  return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+}
+
+export async function createHotel(data) {
+  const docRef = await addDoc(collection(db, "hotels"), {
+    ...data,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function updateHotel(id, data) {
+  await setDoc(doc(db, "hotels", id), {
+    ...data,
+    updatedAt: serverTimestamp(),
+  }, { merge: true });
+}
+
+export async function deleteHotel(id) {
+  await deleteDoc(doc(db, "hotels", id));
 }

@@ -3,6 +3,7 @@ import WelcomeView from '../views/WelcomeView.vue';
 import QuestionnaireView from '../views/QuestionnaireView.vue';
 import ResultsView from '../views/ResultsView.vue';
 import SummaryView from '../views/SummaryView.vue';
+import AdminView from '../views/AdminView.vue';
 import { useHotelStore } from '../stores/useHotelStore';
 
 const routes = [
@@ -34,6 +35,11 @@ const routes = [
     component: SummaryView,
     meta: { requiresHotel: true },
   },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: AdminView,
+  },
 ];
 
 const router = createRouter({
@@ -41,8 +47,6 @@ const router = createRouter({
   routes,
 });
 
-// Guard: redirect to /welcome if a protected route is accessed without hotel data loaded.
-// This prevents blank/broken views when users bookmark or share deep links directly.
 router.beforeEach((to) => {
   if (!to.meta.requiresHotel) return true;
   const hotelStore = useHotelStore();
