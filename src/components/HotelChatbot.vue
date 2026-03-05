@@ -1,10 +1,10 @@
 <script setup>
-import { ref, onMounted, nextTick, computed } from 'vue';
+import { ref, onMounted, nextTick, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useHotelStore } from '../stores/useHotelStore';
 import { useUIStore } from '../stores/useUIStore';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const hotelStore = useHotelStore();
 const uiStore = useUIStore();
 
@@ -16,8 +16,16 @@ const messages = ref([]);
 const isTyping = ref(false);
 const messagesContainer = ref(null);
 
+// Initialise with welcome in current language
 onMounted(() => {
-  messages.value.push({ role: 'bot', text: t('chatbot.welcome') });
+  messages.value = [{ role: 'bot', text: t('chatbot.welcome') }];
+});
+
+// When locale changes and conversation hasn't started, update the welcome message
+watch(locale, () => {
+  if (messages.value.length <= 1) {
+    messages.value = [{ role: 'bot', text: t('chatbot.welcome') }];
+  }
 });
 
 async function scrollToBottom() {
@@ -27,7 +35,7 @@ async function scrollToBottom() {
   }
 }
 
-// ─── Topics that map to hotel data fields ─────────────────────────────────────
+// ─── Dynamic quick actions (only shown when hotel has data) ───────────────────
 const TOPIC_FIELDS = {
   checkout:     'checkout',
   breakfast:    'breakfast',
@@ -42,60 +50,51 @@ const TOPIC_FIELDS = {
   facilities:   'facilities',
 };
 
-// Show pills only for topics where hotel has data
 const standardActions = computed(() =>
   Object.entries(TOPIC_FIELDS)
     .filter(([, field]) => !!hotelInfo.value[field])
     .map(([key]) => key)
 );
 
-// Custom FAQ pills from hotel data
 const faqActions = computed(() => hotelInfo.value.faqs || []);
-
 const hasAnyAction = computed(() => standardActions.value.length > 0 || faqActions.value.length > 0);
 
 // ─── AI call ──────────────────────────────────────────────────────────────────
 async function callChatAI(text) {
-  // Include the new user message in the history we send
-  const historyForApi = [
-    ...messages.value,
-    { role: 'user', text },
-  ];
-
+  const historyForApi = [...messages.value, { role: 'user', text }];
   const response = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       hotel: hotelInfo.value,
       messages: historyForApi,
-      lang: uiStore.lang || 'en',
+      lang: uiStore.lang || locale.value || 'en',
     }),
   });
-
-  if (!response.ok) throw new Error(`API error ${response.status}`);
+  if (!response.ok) throw new Error(`API ${response.status}`);
   const data = await response.json();
   return data.reply || t('chatbot.fallback');
 }
 
-// ─── Local keyword fallback (used only when API fails) ────────────────────────
+// ─── Local fallback ────────────────────────────────────────────────────────────
 const KEYWORDS = {
   checkout:     ['checkout', 'salida', 'uscita', 'depart', 'выезд', '退房', 'チェックアウト'],
   breakfast:    ['breakfast', 'desayuno', 'colazione', 'завтрак', '早餐', '朝食'],
-  wifi:         ['wifi', 'wi-fi', 'internet', 'password', 'пароль', '密码', 'パスワード'],
+  wifi:         ['wifi', 'wi-fi', 'password', 'пароль', '密码', 'パスワード'],
   reception:    ['reception', 'recepcion', 'rezeption', 'phone', 'telefono', 'ресепшен', '前台', 'フロント'],
   gym:          ['gym', 'fitness', 'gimnasio', 'palestra', '健身房', 'ジム'],
-  pool:         ['pool', 'swim', 'piscina', 'schwimmbad', 'бассейн', '游泳池', 'プール'],
+  pool:         ['pool', 'swim', 'piscina', 'бассейн', '游泳池', 'プール'],
   spa:          ['spa', 'wellness', 'massage', 'массаж', '按摩', 'マッサージ'],
-  parking:      ['parking', 'car park', 'aparcamiento', 'parkplatz', 'стоянка', '停车', '駐車'],
+  parking:      ['parking', 'aparcamiento', 'parkplatz', 'стоянка', '停车', '駐車'],
   restaurant:   ['restaurant', 'restaurante', 'dinner', 'ресторан', '餐厅', 'レストラン'],
-  room_service: ['room service', 'zimmerservice', 'servizio in camera', '客房服务', 'ルームサービス'],
+  room_service: ['room service', 'zimmerservice', '客房服务', 'ルームサービス'],
   facilities:   ['facilities', 'amenities', 'instalaciones', 'удобства', '设施', '施設'],
 };
 
 function localFallback(text) {
   const lower = text.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
   const info = hotelInfo.value;
-  const topicReplies = {
+  const replies = {
     checkout:     info.checkout    ? `${t('chatbot.checkout')} ${info.checkout}`       : null,
     breakfast:    info.breakfast   ? `${t('chatbot.breakfast')} ${info.breakfast}`     : null,
     wifi:         info.wifi_pass   ? `${t('chatbot.wifi')} ${info.wifi_pass}`          : null,
@@ -108,10 +107,8 @@ function localFallback(text) {
     room_service: info.room_service? `${t('chatbot.room_service')} ${info.room_service}`: null,
     facilities:   info.facilities  ? `${t('chatbot.facilities')} ${info.facilities}`   : null,
   };
-  for (const [topic, keywords] of Object.entries(KEYWORDS)) {
-    if (keywords.some(kw => lower.includes(kw)) && topicReplies[topic]) {
-      return topicReplies[topic];
-    }
+  for (const [topic, kws] of Object.entries(KEYWORDS)) {
+    if (kws.some(kw => lower.includes(kw)) && replies[topic]) return replies[topic];
   }
   return t('chatbot.fallback');
 }
@@ -140,15 +137,13 @@ function quickAction(topic) {
 
 function faqAction(faq) {
   messages.value.push({ role: 'user', text: faq.question });
-  // FAQs don't need AI — show the answer directly
-  const delay = 600;
   isTyping.value = true;
   scrollToBottom();
   setTimeout(() => {
     isTyping.value = false;
     messages.value.push({ role: 'bot', text: faq.answer });
     scrollToBottom();
-  }, delay);
+  }, 500);
 }
 
 function sendMessage() {
@@ -168,26 +163,30 @@ function sendMessage() {
     <transition name="chat-slide">
       <div
         v-if="isOpen"
-        class="w-80 bg-white rounded-3xl shadow-2xl mb-4 border border-stone-200 overflow-hidden flex flex-col"
-        style="max-height: min(520px, calc(100dvh - 120px))"
+        class="w-[22rem] bg-white rounded-3xl shadow-2xl mb-4 border border-stone-200/80 overflow-hidden flex flex-col"
+        style="max-height: min(560px, calc(100dvh - 110px))"
       >
-        <!-- Header -->
-        <div class="bg-stone-900 text-white px-5 py-4 flex justify-between items-center flex-shrink-0">
+        <!-- ── Header ── -->
+        <div class="bg-stone-900 text-white px-5 py-3.5 flex items-center justify-between flex-shrink-0">
           <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-full bg-amber-400/20 border border-amber-400/30 flex items-center justify-center">
-              <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-              </svg>
+            <!-- Avatar with pulse dot -->
+            <div class="relative">
+              <div class="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400/30 to-amber-600/20 border border-amber-400/30 flex items-center justify-center">
+                <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-stone-900"></span>
             </div>
             <div>
-              <h4 class="font-serif font-bold text-sm leading-none">{{ $t('chatbot.title') }}</h4>
-              <p class="text-[10px] text-stone-400 mt-0.5">{{ hotelInfo.name || '' }}</p>
+              <h4 class="font-semibold text-[13px] leading-tight">{{ $t('chatbot.title') }}</h4>
+              <p class="text-[10px] text-stone-400 leading-none mt-0.5">{{ hotelInfo.name || '' }}</p>
             </div>
           </div>
           <button
             @click="isOpen = false"
-            class="text-stone-400 hover:text-white transition p-1 rounded-lg hover:bg-white/10"
-            aria-label="Close chat"
+            class="text-stone-500 hover:text-white transition-colors p-1.5 rounded-xl hover:bg-white/10 -mr-1"
+            aria-label="Close"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -195,8 +194,11 @@ function sendMessage() {
           </button>
         </div>
 
-        <!-- Messages -->
-        <div ref="messagesContainer" class="flex-1 p-4 overflow-y-auto space-y-3 bg-stone-50 text-sm min-h-0">
+        <!-- ── Messages ── -->
+        <div
+          ref="messagesContainer"
+          class="flex-1 px-4 py-4 overflow-y-auto space-y-2.5 bg-stone-50 min-h-0"
+        >
           <div
             v-for="(m, i) in messages"
             :key="i"
@@ -204,81 +206,87 @@ function sendMessage() {
             :class="m.role === 'user' ? 'justify-end' : 'justify-start'"
           >
             <div
+              class="px-4 py-2.5 max-w-[86%] text-[13.5px] leading-[1.55]"
               :class="m.role === 'user'
-                ? 'bg-stone-800 text-white rounded-3xl rounded-br-lg'
-                : 'bg-white border border-stone-200 text-stone-700 rounded-3xl rounded-bl-lg shadow-sm'"
-              class="px-4 py-2.5 max-w-[85%] leading-relaxed text-[13px]"
-            >
-              {{ m.text }}
-            </div>
+                ? 'bg-stone-800 text-white rounded-3xl rounded-br-md'
+                : 'bg-white border border-stone-200 text-stone-700 rounded-3xl rounded-bl-md shadow-sm'"
+              style="white-space: pre-line"
+            >{{ m.text }}</div>
           </div>
 
           <!-- Typing indicator -->
           <div v-if="isTyping" class="flex justify-start">
-            <div class="bg-white border border-stone-200 rounded-3xl rounded-bl-lg px-4 py-3 shadow-sm">
-              <div class="flex gap-1 items-center">
-                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
-                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay:150ms"></span>
-                <span class="w-1.5 h-1.5 bg-stone-400 rounded-full animate-bounce" style="animation-delay:300ms"></span>
+            <div class="bg-white border border-stone-200 rounded-3xl rounded-bl-md px-4 py-3.5 shadow-sm">
+              <div class="flex gap-[5px] items-center">
+                <span class="w-[7px] h-[7px] bg-stone-300 rounded-full animate-bounce" style="animation-delay:0ms"></span>
+                <span class="w-[7px] h-[7px] bg-stone-300 rounded-full animate-bounce" style="animation-delay:160ms"></span>
+                <span class="w-[7px] h-[7px] bg-stone-300 rounded-full animate-bounce" style="animation-delay:320ms"></span>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Quick action chips -->
-        <div v-if="hasAnyAction" class="px-3 pt-3 pb-1 bg-white border-t border-stone-100 flex-shrink-0">
-          <div v-if="standardActions.length" class="flex flex-wrap gap-1.5 mb-1.5">
-            <button
-              v-for="topic in standardActions"
-              :key="topic"
-              @click="quickAction(topic)"
-              :disabled="isTyping"
-              class="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full text-[10px] font-bold uppercase tracking-wide hover:bg-stone-200 hover:text-stone-800 transition-all active:scale-95 disabled:opacity-40"
-            >
-              {{ $t(`chatbot.quick_${topic}`) }}
-            </button>
-          </div>
-          <div v-if="faqActions.length" class="flex flex-wrap gap-1.5">
-            <button
-              v-for="faq in faqActions"
-              :key="faq.id"
-              @click="faqAction(faq)"
-              :disabled="isTyping"
-              class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded-full text-[10px] font-bold tracking-wide hover:bg-amber-100 transition-all active:scale-95 disabled:opacity-40"
-            >
-              {{ faq.question }}
-            </button>
+        <!-- ── Quick actions ── -->
+        <div v-if="hasAnyAction" class="bg-white border-t border-stone-100 flex-shrink-0">
+          <div class="px-3.5 pt-2.5 pb-0.5">
+            <p class="text-[9px] font-bold uppercase tracking-[0.18em] text-stone-400 mb-2">
+              {{ $t('chatbot.title') }}
+            </p>
+            <!-- Standard hotel info pills -->
+            <div v-if="standardActions.length" class="flex flex-wrap gap-1.5 mb-2">
+              <button
+                v-for="topic in standardActions"
+                :key="topic"
+                @click="quickAction(topic)"
+                :disabled="isTyping"
+                class="px-3 py-1.5 bg-stone-100 text-stone-600 rounded-full text-[11px] font-semibold hover:bg-stone-800 hover:text-white transition-all active:scale-95 disabled:opacity-40"
+              >
+                {{ $t(`chatbot.quick_${topic}`) }}
+              </button>
+            </div>
+            <!-- FAQ pills — amber accent, distinct from standard pills -->
+            <div v-if="faqActions.length" class="flex flex-wrap gap-1.5 mb-2">
+              <button
+                v-for="faq in faqActions"
+                :key="faq.id"
+                @click="faqAction(faq)"
+                :disabled="isTyping"
+                class="px-3 py-1.5 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full text-[11px] font-semibold hover:bg-amber-400 hover:text-white hover:border-amber-400 transition-all active:scale-95 disabled:opacity-40"
+              >
+                {{ faq.question }}
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Input -->
-        <div class="p-3 bg-white flex gap-2 flex-shrink-0">
+        <!-- ── Input ── -->
+        <div class="px-3 py-3 bg-white flex gap-2 flex-shrink-0 border-t border-stone-100">
           <input
             v-model="userMessage"
             @keyup.enter="sendMessage"
             type="text"
             :placeholder="$t('chatbot.placeholder')"
             :disabled="isTyping"
-            class="flex-1 bg-stone-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all disabled:opacity-60"
+            class="flex-1 bg-stone-100 rounded-full px-4 py-2.5 text-[13px] focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all placeholder:text-stone-400 disabled:opacity-60"
           />
           <button
             @click="sendMessage"
             :disabled="!userMessage.trim() || isTyping"
-            class="bg-stone-900 text-white p-2.5 rounded-full hover:scale-105 transition-transform active:scale-95 shadow-md disabled:opacity-40 disabled:scale-100"
+            class="w-9 h-9 bg-stone-900 text-white rounded-full flex items-center justify-center hover:bg-stone-700 active:scale-90 transition-all shadow-md disabled:opacity-40 disabled:scale-100 flex-shrink-0"
             aria-label="Send"
           >
-            <svg class="w-4 h-4 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
             </svg>
           </button>
         </div>
       </div>
     </transition>
 
-    <!-- FAB button -->
+    <!-- ── FAB ── -->
     <button
       @click="isOpen = !isOpen"
-      class="w-14 h-14 bg-stone-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all outline-none ring-4 ring-white"
+      class="w-14 h-14 bg-stone-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all ring-4 ring-white"
       :aria-label="$t('chatbot.title')"
     >
       <transition name="icon-switch" mode="out-in">
@@ -306,6 +314,6 @@ function sendMessage() {
 }
 .icon-switch-enter-from, .icon-switch-leave-to {
   opacity: 0;
-  transform: scale(0.7) rotate(45deg);
+  transform: scale(0.6) rotate(30deg);
 }
 </style>

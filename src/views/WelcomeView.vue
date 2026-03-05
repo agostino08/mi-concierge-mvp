@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 import { useHotelStore } from '../stores/useHotelStore';
 import { useRouter } from 'vue-router';
 import { useLang } from '../composables/useLang';
@@ -28,7 +28,7 @@ const languages = [
 
 function selectLang(lang) {
   current.value = lang;
-  setLang(lang.code);   // Updates i18n reactive → $t('welcome.continue') auto-switches
+  setLang(lang.code);
   isOpen.value = false;
 }
 
@@ -36,7 +36,6 @@ function begin() {
   router.push('/questionnaire/1');
 }
 
-// Close dropdown when clicking outside
 function handleClickOutside(event) {
   if (!event.target.closest('.lang-selector')) {
     isOpen.value = false;
@@ -70,15 +69,15 @@ function handleClickOutside(event) {
     <!-- Language selector + Continue -->
     <div class="w-full max-w-[280px] space-y-3 lang-selector">
 
-      <!-- Trigger button -->
+      <!-- Trigger -->
       <div class="relative">
         <button
           @click.stop="isOpen = !isOpen"
-          class="w-full flex items-center justify-between px-5 py-3.5 bg-white/70 backdrop-blur-md border border-stone-200 rounded-2xl hover:bg-white hover:shadow-md transition-all active:scale-[0.98]"
+          class="w-full flex items-center justify-between px-5 py-4 bg-white/80 backdrop-blur-md border border-stone-200/80 rounded-2xl hover:bg-white hover:shadow-md hover:border-stone-300 transition-all active:scale-[0.98] shadow-sm"
         >
-          <span class="text-base font-semibold text-stone-800">{{ current.label }}</span>
+          <span class="text-base font-semibold text-stone-800 tracking-tight">{{ current.label }}</span>
           <svg
-            class="w-4 h-4 text-stone-400 transition-transform duration-200 flex-shrink-0"
+            class="w-4 h-4 text-stone-400 transition-transform duration-300 flex-shrink-0"
             :class="{ 'rotate-180': isOpen }"
             fill="none" stroke="currentColor" viewBox="0 0 24 24"
           >
@@ -86,7 +85,7 @@ function handleClickOutside(event) {
           </svg>
         </button>
 
-        <!-- Dropdown — fixed-height window, 3 items visible, then scroll -->
+        <!-- Dropdown: 2.5 items visible (130px) + gradient fade signals more below -->
         <transition
           enter-active-class="transition-all duration-200 ease-out"
           enter-from-class="opacity-0 translate-y-1 scale-[0.98]"
@@ -97,33 +96,37 @@ function handleClickOutside(event) {
         >
           <div
             v-if="isOpen"
-            class="absolute bottom-full mb-2 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-stone-100 overflow-hidden z-50"
+            class="absolute bottom-full mb-2 left-0 right-0 bg-white rounded-2xl shadow-2xl border border-stone-100 z-50 overflow-hidden"
             @click.stop
           >
-            <!-- Fixed height: exactly 3 items (~52px each = 156px), then scrollable -->
-            <div class="overflow-y-auto" style="max-height: 156px">
-              <button
-                v-for="lang in languages"
-                :key="lang.code"
-                @click="selectLang(lang)"
-                class="w-full px-5 py-3.5 text-left text-base font-medium text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors flex items-center justify-between"
-                :class="{ 'bg-stone-50 font-semibold text-stone-900': current.code === lang.code }"
-              >
-                {{ lang.label }}
-                <svg
-                  v-if="current.code === lang.code"
-                  class="w-4 h-4 text-stone-700 flex-shrink-0"
-                  fill="none" stroke="currentColor" viewBox="0 0 24 24"
+            <!-- Scroll area: 2.5 items visible = 130px (each item ~52px) -->
+            <div class="relative">
+              <div class="overflow-y-auto" style="max-height: 130px">
+                <button
+                  v-for="lang in languages"
+                  :key="lang.code"
+                  @click="selectLang(lang)"
+                  class="w-full px-5 py-3.5 text-left text-base font-medium text-stone-700 hover:bg-stone-50 active:bg-stone-100 transition-colors flex items-center justify-between"
+                  :class="{ 'bg-stone-50 font-semibold text-stone-900': current.code === lang.code }"
                 >
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
-                </svg>
-              </button>
+                  {{ lang.label }}
+                  <svg
+                    v-if="current.code === lang.code"
+                    class="w-4 h-4 text-stone-700 flex-shrink-0"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              </div>
+              <!-- Gradient fade = visual cue that more languages exist below -->
+              <div class="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none"></div>
             </div>
           </div>
         </transition>
       </div>
 
-      <!-- Continue button — text reacts to selected language immediately -->
+      <!-- Continue button — text switches instantly on language select -->
       <button
         @click="begin"
         class="w-full py-4 bg-stone-800 text-white rounded-2xl text-base font-semibold tracking-wide shadow-xl hover:bg-stone-700 active:scale-95 transition-all"
