@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useRecommendationsStore } from '../stores/useRecommendationsStore';
 import { useItineraryStore } from '../stores/useItineraryStore';
 import { useHotelStore } from '../stores/useHotelStore';
+import { useFormStore } from '../stores/useFormStore';
 import { useExternalLinks } from '../composables/useExternalLinks';
 import { logEvent } from '../services/analytics';
 
@@ -13,6 +14,7 @@ const router = useRouter();
 const recommendationsStore = useRecommendationsStore();
 const itineraryStore = useItineraryStore();
 const hotelStore = useHotelStore();
+const formStore = useFormStore();
 const { addToCalendar, getGoogleMapsUrl } = useExternalLinks();
 
 const recommendations = computed(() => recommendationsStore.recommendations);
@@ -26,7 +28,14 @@ const activeTab = ref('activities');
 watch(generating, (isGen, wasGen) => {
   const hotelId = hotelData.value?.id;
   if (isGen && !wasGen) {
-    logEvent(hotelId, 'questionnaire_completed');
+    logEvent(hotelId, 'questionnaire_completed', {
+      group:     formStore.formData.group,
+      days:      formStore.formData.days,
+      style:     formStore.formData.style,
+      food:      formStore.formData.food,
+      budget:    formStore.formData.budget,
+      transport: formStore.formData.transport,
+    });
   } else if (!isGen && wasGen) {
     const total = recommendations.value.activities.length + recommendations.value.food.length;
     if (total > 0) logEvent(hotelId, 'itinerary_generated', {
