@@ -681,6 +681,82 @@ const fieldGroups = [
               </div>
             </div>
           </div>
+          <!-- ── Insights (Analytics) ──────────────────────────────── -->
+          <div v-if="isEditing" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
+              <div>
+                <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Insights</h3>
+                <p class="text-[11px] text-stone-400 mt-0.5">Guest activity — last 30 days</p>
+              </div>
+              <span v-if="analyticsLoading" class="flex items-center gap-1.5 text-[11px] text-stone-400">
+                <svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Loading…
+              </span>
+            </div>
+            <div class="p-5">
+              <div v-if="analyticsLoading && !analytics" class="grid grid-cols-3 gap-3">
+                <div v-for="i in 3" :key="i" class="bg-stone-50 rounded-xl h-16 animate-pulse"></div>
+              </div>
+              <div v-else-if="!analytics || (analytics.sessions === 0 && analytics.generated === 0)" class="text-center py-8">
+                <p class="text-stone-400 text-sm">No guest activity yet.</p>
+                <p class="text-stone-300 text-[11px] mt-1">Data appears once guests start using the concierge.</p>
+              </div>
+              <div v-else class="space-y-5">
+                <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
+                  <div class="bg-stone-50 rounded-xl p-3.5 text-center">
+                    <p class="text-2xl font-bold text-stone-800">{{ analytics.sessions }}</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Sessions</p>
+                  </div>
+                  <div class="bg-stone-50 rounded-xl p-3.5 text-center">
+                    <p class="text-2xl font-bold text-stone-800">{{ analytics.generated }}</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Itineraries</p>
+                  </div>
+                  <div class="bg-stone-50 rounded-xl p-3.5 text-center">
+                    <p class="text-2xl font-bold text-stone-800">{{ analytics.chatOpens }}</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Chat opens</p>
+                  </div>
+                  <div class="bg-stone-50 rounded-xl p-3.5 text-center">
+                    <p class="text-2xl font-bold text-stone-800">{{ analytics.favorites }}</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Favorites</p>
+                  </div>
+                  <div class="bg-stone-50 rounded-xl p-3.5 text-center">
+                    <p class="text-2xl font-bold text-stone-800">{{ analytics.shares }}</p>
+                    <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Shares</p>
+                  </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div v-if="analytics.topTopics.length">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Top chatbot topics</p>
+                    <div class="space-y-1.5">
+                      <div v-for="(topic, idx) in analytics.topTopics" :key="topic.label" class="flex items-center justify-between text-sm">
+                        <div class="flex items-center gap-2 min-w-0">
+                          <span class="text-[10px] font-bold text-stone-300 w-4 shrink-0">{{ idx + 1 }}</span>
+                          <span class="text-stone-600 truncate">{{ topic.label }}</span>
+                        </div>
+                        <span class="text-[11px] font-semibold text-stone-400 shrink-0 ml-2">{{ topic.count }}x</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div v-if="analytics.langs.length">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-2">Languages</p>
+                    <div class="space-y-2">
+                      <div v-for="lang in analytics.langs" :key="lang.lang" class="flex items-center gap-2">
+                        <span class="text-[11px] font-bold uppercase text-stone-500 w-8 shrink-0">{{ lang.lang }}</span>
+                        <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden">
+                          <div class="h-full bg-stone-600 rounded-full transition-all" :style="{ width: lang.pct + '%' }"></div>
+                        </div>
+                        <span class="text-[11px] text-stone-400 w-8 text-right shrink-0">{{ lang.pct }}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          
 
           <!-- ── Hotel Link & QR Code ─────────────────────────────────── -->
           <div v-if="isEditing" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
