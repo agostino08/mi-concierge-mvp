@@ -1,14 +1,19 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useHotelStore } from '../stores/useHotelStore';
 import { useRouter } from 'vue-router';
 import { useLang } from '../composables/useLang';
 import { useI18n } from 'vue-i18n';
+import { logEvent } from '../services/analytics';
 
 const { t } = useI18n();
 const hotelStore = useHotelStore();
 const router = useRouter();
 const { setLang } = useLang();
+
+onMounted(() => {
+  if (hotelStore.hotelData?.id) logEvent(hotelStore.hotelData.id, 'session_start');
+});
 
 const isOpen = ref(false);
 const current = ref({ code: 'en', label: 'English' });
@@ -30,6 +35,7 @@ function selectLang(lang) {
   current.value = lang;
   setLang(lang.code);
   isOpen.value = false;
+  if (hotelStore.hotelData?.id) logEvent(hotelStore.hotelData.id, 'language_selected', { lang: lang.code });
 }
 
 function begin() {

@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useRecommendationsStore } from '../stores/useRecommendationsStore';
 import { useItineraryStore } from '../stores/useItineraryStore';
 import { useHotelStore } from '../stores/useHotelStore';
 import { useExternalLinks } from '../composables/useExternalLinks';
+import { logEvent } from '../services/analytics';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -20,6 +21,20 @@ const generating = computed(() => recommendationsStore.generating);
 const hotelData = computed(() => hotelStore.hotelData);
 
 const activeTab = ref('activities');
+
+// Analytics: track questionnaire completion + itinerary generation
+watch(generating, (isGen, wasGen) => {
+  const hotelId = hotelData.value?.id;
+  if (isGen && !wasGen) {
+    logEvent(hotelId, 'questionnaire_completed');
+  } else if (!isGen && wasGen) {
+    const total = recommendations.value.activities.length + recommendations.value.food.length;
+    if (total > 0) logEvent(hotelId, 'itinerary_generated', {
+      activities: recommendations.value.activities.length,
+      food: recommendations.value.food.length,
+    });
+  }
+});
 
 const isFavorite = (item) => myItinerary.value.some((i) => i.title === item.title);
 

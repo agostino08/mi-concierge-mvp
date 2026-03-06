@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import QRCode from 'qrcode';
 import { getAllHotels, createHotel, updateHotel, deleteHotel } from '../services/firebase';
+import { getHotelAnalytics, computeStats } from '../services/analytics';
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'admin123';
@@ -36,6 +37,8 @@ const deleting = ref(false);
 const listLoading = ref(false);
 const saveSuccess = ref(false);
 const qrDataUrl = ref('');
+const analytics = ref(null);
+const analyticsLoading = ref(false);
 
 const PARTNER_CATEGORIES = [
   'Restaurant / Café',
@@ -142,9 +145,15 @@ async function selectHotel(hotel) {
     partners: hotel.partners ? JSON.parse(JSON.stringify(hotel.partners)) : [],
   };
   qrDataUrl.value = '';
+  analytics.value = null;
   if (hotel.id) {
     const link = `${window.location.origin}/?hotel=${hotel.id}`;
     qrDataUrl.value = await QRCode.toDataURL(link, { margin: 2, width: 200 });
+    // Load analytics in background (non-blocking)
+    analyticsLoading.value = true;
+    getHotelAnalytics(hotel.id).then(events => {
+      analytics.value = computeStats(events);
+    }).catch(() => {}).finally(() => { analyticsLoading.value = false; });
   }
   screen.value = 'form';
 }
@@ -202,6 +211,55 @@ async function confirmDelete() {
 function copyLink() {
   navigator.clipboard.writeText(hotelLink.value).catch(() => {});
 }
+
+function copyKit(text) {
+  navigator.clipboard.writeText(text).catch(() => {});
+}
+
+// Pre-filled copy templates for hotel staff deployment
+const emailTemplate = computed(() => {
+  const name = form.value.name || '[Hotel Name]';
+  const url = hotelLink.value || '[URL]';
+  return `Subject: Your personalized city guide is ready 📍
+
+Dear Guest,
+
+Welcome to ${name}! We've prepared a personalized AI travel guide for your stay.
+
+Tap the link below to get a custom itinerary — activities, restaurants, transport and local tips matched to your interests:
+
+${url}
+
+No app download needed. Works on any phone.
+
+See you soon,
+The ${name} Team`;
+});
+
+const frontDeskTemplate = computed(() => {
+  const name = form.value.name || '[Hotel Name]';
+  const url = hotelLink.value || '[URL]';
+  return `YOUR DIGITAL CONCIERGE
+
+Scan the QR code or visit:
+${url}
+
+Get a personalized AI itinerary for ${form.value.city || 'the city'} — activities, restaurants & local tips.
+
+Crafted by ${name}`;
+});
+
+const whatsappTemplate = computed(() => {
+  const name = form.value.name || '[Hotel Name]';
+  const url = hotelLink.value || '[URL]';
+  return `Hi! Welcome to ${name} 👋
+
+We've set up your personal city guide — just tap the link to get a custom itinerary with activities, restaurants and local tips.
+
+${url}
+
+No app needed. Enjoy your stay!`;
+});
 
 // ─── FAQ Builder ──────────────────────────────────────────────────────────────
 function addFaq() {
@@ -659,6 +717,85 @@ const fieldGroups = [
               </div>
             </div>
           </div>
+
+          <!-- __ Deployment Kit ______________________________________________ -->
+          <div v-if="isEditing" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80">
+              <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Deployment Kit</h3>
+              <p class="text-[11px] text-stone-400 mt-0.5">Ready-to-use copy for emails, front desk & WhatsApp. Just copy and paste.</p>
+            </div>
+            <div class="p-5 space-y-5">
+
+              <!-- Email template -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Booking confirmation email
+                  </label>
+                  <button
+                    @click="copyKit(emailTemplate)"
+                    class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg text-[10px] font-bold hover:bg-stone-200 transition-all active:scale-95"
+                  >Copy</button>
+                </div>
+                <textarea
+                  :value="emailTemplate"
+                  readonly
+                  rows="7"
+                  class="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-xl text-[11px] text-stone-500 leading-relaxed resize-none font-mono focus:outline-none cursor-text select-all"
+                ></textarea>
+              </div>
+
+              <!-- Front desk / room card -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    Front desk card / room table tent
+                  </label>
+                  <button
+                    @click="copyKit(frontDeskTemplate)"
+                    class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg text-[10px] font-bold hover:bg-stone-200 transition-all active:scale-95"
+                  >Copy</button>
+                </div>
+                <textarea
+                  :value="frontDeskTemplate"
+                  readonly
+                  rows="5"
+                  class="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-xl text-[11px] text-stone-500 leading-relaxed resize-none font-mono focus:outline-none cursor-text select-all"
+                ></textarea>
+              </div>
+
+              <!-- WhatsApp / SMS -->
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="text-[10px] font-bold uppercase tracking-widest text-stone-500 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    WhatsApp / SMS message
+                  </label>
+                  <button
+                    @click="copyKit(whatsappTemplate)"
+                    class="px-3 py-1 bg-stone-100 text-stone-700 rounded-lg text-[10px] font-bold hover:bg-stone-200 transition-all active:scale-95"
+                  >Copy</button>
+                </div>
+                <textarea
+                  :value="whatsappTemplate"
+                  readonly
+                  rows="5"
+                  class="w-full px-4 py-3 bg-stone-50 border border-stone-100 rounded-xl text-[11px] text-stone-500 leading-relaxed resize-none font-mono focus:outline-none cursor-text select-all"
+                ></textarea>
+                <p class="text-[10px] text-stone-400 mt-1.5">Paste into WhatsApp Business templates, Cloudbeds/Mews automated messages, or booking.com pre-arrival messages.</p>
+              </div>
+
+            </div>
+          </div>
+
 
           <!-- Bottom save bar (sticky on scroll) -->
           <div class="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-stone-50/90 backdrop-blur border-t border-stone-200 flex items-center justify-between">

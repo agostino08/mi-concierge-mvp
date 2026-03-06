@@ -17,7 +17,8 @@
       "Bash(python write_app.py)",
       "Bash(python write_welcome3.py)",
       "Bash(python write_chatbot2.py)",
-      "Bash(python write_admin2.py)"
+      "Bash(python write_admin2.py)",
+      "Bash(python patch_analytics.py)"
     ]
   }
 }

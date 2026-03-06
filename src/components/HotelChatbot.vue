@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted, nextTick, computed, watch } from 'vue';
+import { logEvent } from '../services/analytics';
 import { useI18n } from 'vue-i18n';
 import { useHotelStore } from '../stores/useHotelStore';
 import { useUIStore } from '../stores/useUIStore';
@@ -18,6 +19,10 @@ const messagesContainer = ref(null);
 
 onMounted(() => {
   messages.value = [{ role: 'bot', text: t('chatbot.welcome') }];
+});
+
+watch(isOpen, (val) => {
+  if (val) logEvent(hotelInfo.value.id, 'chat_opened');
 });
 
 watch(locale, () => {
@@ -130,11 +135,13 @@ async function sendWithAI(text) {
 function quickAction(topic) {
   const label = t(`chatbot.quick_${topic}`);
   messages.value.push({ role: 'user', text: label });
+  logEvent(hotelInfo.value.id, 'chat_pill', { topic });
   sendWithAI(label);
 }
 
 function faqAction(faq) {
   messages.value.push({ role: 'user', text: faq.question });
+  logEvent(hotelInfo.value.id, 'chat_faq', { question: faq.question });
   isTyping.value = true;
   scrollToBottom();
   setTimeout(() => {
@@ -150,6 +157,7 @@ function sendMessage() {
   messages.value.push({ role: 'user', text: msg });
   userMessage.value = '';
   scrollToBottom();
+  logEvent(hotelInfo.value.id, 'chat_message');
   sendWithAI(msg);
 }
 </script>

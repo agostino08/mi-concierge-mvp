@@ -7,6 +7,7 @@ import { useFormStore } from './useFormStore';
 import { useRecommendationsStore } from './useRecommendationsStore';
 import { getSharedItinerary, getHotelById } from '../services/firebase';
 import { saveAndGetShareLink } from '../services/share';
+import { logEvent } from '../services/analytics';
 import i18n from '../i18n';
 
 export const useItineraryStore = defineStore('itinerary', () => {
@@ -29,6 +30,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
     } else {
       myItinerary.value.push(item);
       uiStore.triggerToast(i18n.global.t('toast.added'));
+      logEvent(hotelStore.hotelData?.id, 'place_favorited', { title: item.title });
     }
   }
 
@@ -55,6 +57,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
     }
     uiStore.triggerToast(i18n.global.t('toast.generating'));
     try {
+      logEvent(hotelStore.hotelData?.id, 'itinerary_shared');
       shareLink.value = await saveAndGetShareLink(
         hotelStore.hotelData,
         formStore.formData,
