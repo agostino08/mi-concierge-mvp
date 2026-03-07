@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import {
   getFirestore, doc, getDoc, collection, addDoc, getDocs,
-  setDoc, deleteDoc, serverTimestamp
+  setDoc, deleteDoc, serverTimestamp, query, where
 } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -24,6 +24,13 @@ export async function getHotelById(hotelId) {
   const docSnap = await getDoc(doc(db, "hotels", hotelId));
   if (!docSnap.exists()) throw new Error("Hotel not found in database");
   return { ...docSnap.data(), id: docSnap.id };
+}
+
+export async function getHotelBySlug(slug) {
+  if (!slug) throw new Error("Hotel slug not provided");
+  const snap = await getDocs(query(collection(db, "hotels"), where("slug", "==", slug)));
+  if (snap.empty) throw new Error("Hotel not found in database");
+  return { ...snap.docs[0].data(), id: snap.docs[0].id };
 }
 
 export async function getSharedItinerary(itineraryId) {

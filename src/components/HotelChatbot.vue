@@ -140,15 +140,11 @@ function quickAction(topic) {
 }
 
 function faqAction(faq) {
-  messages.value.push({ role: 'user', text: faq.question });
+  const display = faq.pill_text || faq.question;
+  messages.value.push({ role: 'user', text: display });
   logEvent(hotelInfo.value.id, 'chat_faq', { question: faq.question });
-  isTyping.value = true;
-  scrollToBottom();
-  setTimeout(() => {
-    isTyping.value = false;
-    messages.value.push({ role: 'bot', text: faq.answer });
-    scrollToBottom();
-  }, 500);
+  // Route through AI so the answer is automatically translated to the guest's language
+  sendWithAI(faq.question);
 }
 
 function sendMessage() {
@@ -267,7 +263,7 @@ function sendMessage() {
                 :disabled="isTyping"
                 class="px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full text-[13px] font-semibold hover:bg-amber-400 hover:text-white hover:border-amber-400 transition-all active:scale-95 disabled:opacity-40"
               >
-                {{ faq.question }}
+                {{ faq.pill_text || faq.question }}
               </button>
             </div>
           </div>

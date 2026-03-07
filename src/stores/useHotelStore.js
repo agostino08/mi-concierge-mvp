@@ -1,17 +1,19 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { getHotelById } from '../services/firebase';
+import { getHotelById, getHotelBySlug } from '../services/firebase';
 import { useUIStore } from './useUIStore';
 
 export const useHotelStore = defineStore('hotel', () => {
   const hotelData = ref(null);
   const uiStore = useUIStore();
 
-  async function fetchHotel(hotelId) {
+  async function fetchHotel(hotelParam) {
     uiStore.setLoading(true);
     uiStore.setError(null);
     try {
-      hotelData.value = await getHotelById(hotelId);
+      // Slugs contain hyphens; Firestore auto-generated IDs never do
+      const fetcher = hotelParam.includes('-') ? getHotelBySlug(hotelParam) : getHotelById(hotelParam);
+      hotelData.value = await fetcher;
     } catch (e) {
       console.error(e);
       uiStore.setError(e.message || 'Error loading hotel information.');

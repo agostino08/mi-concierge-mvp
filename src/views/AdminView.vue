@@ -80,9 +80,10 @@ const emptyForm = () => ({
 const form = ref(emptyForm());
 
 // ─── Computed ─────────────────────────────────────────────────────────────────
-const hotelLink = computed(() =>
-  selectedId.value ? `${window.location.origin}/?hotel=${selectedId.value}` : ''
-);
+const hotelLink = computed(() => {
+  const identifier = form.value.slug || selectedId.value;
+  return identifier ? `${window.location.origin}/?hotel=${identifier}` : '';
+});
 
 const isEditing = computed(() => !!selectedId.value);
 
@@ -326,7 +327,7 @@ No app needed. Enjoy your stay!`;
 
 // ─── FAQ Builder ──────────────────────────────────────────────────────────────
 function addFaq() {
-  form.value.faqs.push({ id: Date.now().toString(), question: '', answer: '' });
+  form.value.faqs.push({ id: Date.now().toString(), pill_text: '', question: '', answer: '' });
 }
 function removeFaq(idx) {
   form.value.faqs.splice(idx, 1);
@@ -852,13 +853,18 @@ const fieldGroups = [
                   </svg>
                 </button>
                 <input
+                  v-model="faq.pill_text"
+                  placeholder="Pill label (short, shown on chat button — e.g. Pool hours?)"
+                  class="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 pr-8"
+                />
+                <input
                   v-model="faq.question"
-                  placeholder="Question (shown as pill button in chat)"
+                  placeholder="Full question sent to AI (in English) — e.g. What are the pool opening hours?"
                   class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 pr-8"
                 />
                 <textarea
                   v-model="faq.answer"
-                  placeholder="Answer shown in chat when guest taps the pill"
+                  placeholder="Answer (in English) — the AI will translate this automatically for guests"
                   rows="2"
                   class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
                 ></textarea>
