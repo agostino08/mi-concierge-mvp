@@ -407,8 +407,8 @@ const fieldGroups = [
               <h1 class="font-bold text-sm text-stone-800 leading-none">Mi Concierge</h1>
               <span class="text-stone-300 text-sm leading-none">/</span>
               <span class="text-xs text-stone-500 font-medium leading-none">Admin</span>
-              <span v-if="screen === 'form' || screen === 'global'" class="text-stone-300 text-sm leading-none">/</span>
-              <span v-if="screen === 'form' || screen === 'global'" class="text-xs text-stone-500 font-medium leading-none truncate max-w-[120px]">
+              <span v-if="screen === 'form'" class="text-stone-300 text-sm leading-none">/</span>
+              <span v-if="screen === 'form'" class="text-xs text-stone-500 font-medium leading-none truncate max-w-[120px]">
                 {{ form.name || 'New Hotel' }}
               </span>
               <span v-if="screen === 'global'" class="text-stone-300 text-sm leading-none">/</span>
@@ -514,8 +514,180 @@ const fieldGroups = [
           </div>
         </div>
 
+
+        <!-- ── Global Insights ─────────────────────────────────── -->
+        <div v-if="screen === 'global'" class="space-y-6">
+          <div>
+            <h2 class="text-xl font-bold text-stone-800">Global Insights</h2>
+            <p class="text-sm text-stone-400 mt-0.5">All hotels · Last 30 days</p>
+          </div>
+          <div v-if="globalAnalyticsLoading" class="flex justify-center py-16">
+            <div class="w-8 h-8 border-2 border-stone-200 border-t-stone-600 rounded-full animate-spin"></div>
+          </div>
+          <div v-else-if="!globalAnalytics" class="text-center py-16">
+            <p class="text-stone-400 text-sm">No data available.</p>
+          </div>
+          <template v-else>
+            <!-- Key metrics -->
+            <div class="grid grid-cols-3 sm:grid-cols-5 gap-3">
+              <div class="bg-white rounded-2xl border border-stone-200 p-3.5 text-center">
+                <p class="text-2xl font-bold text-stone-800">{{ globalAnalytics.sessions }}</p>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Sessions</p>
+              </div>
+              <div class="bg-white rounded-2xl border border-stone-200 p-3.5 text-center">
+                <p class="text-2xl font-bold text-stone-800">{{ globalAnalytics.generated }}</p>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Itineraries</p>
+              </div>
+              <div class="bg-white rounded-2xl border border-stone-200 p-3.5 text-center">
+                <p class="text-2xl font-bold text-stone-800">{{ globalAnalytics.chatOpens }}</p>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Chat opens</p>
+              </div>
+              <div class="bg-white rounded-2xl border border-stone-200 p-3.5 text-center">
+                <p class="text-2xl font-bold text-stone-800">{{ globalAnalytics.favorites }}</p>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Favorites</p>
+              </div>
+              <div class="bg-white rounded-2xl border border-stone-200 p-3.5 text-center">
+                <p class="text-2xl font-bold text-stone-800">{{ globalAnalytics.shares }}</p>
+                <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-400 mt-0.5">Shares</p>
+              </div>
+            </div>
+            <!-- Conversion funnel -->
+            <div class="bg-white rounded-2xl border border-stone-200 p-5">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-4">Conversion funnel</p>
+              <div class="space-y-3">
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-stone-600 w-44 shrink-0">Sessions</span>
+                  <div class="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-stone-700 rounded-full" style="width:100%"></div></div>
+                  <span class="text-xs font-semibold text-stone-600 w-10 text-right shrink-0">{{ globalAnalytics.sessions }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-stone-600 w-44 shrink-0">Questionnaires</span>
+                  <div class="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-stone-500 rounded-full transition-all" :style="{ width: pct(globalAnalytics.questionnaire.total, globalAnalytics.sessions) + '%' }"></div></div>
+                  <span class="text-xs font-semibold text-stone-600 w-10 text-right shrink-0">{{ globalAnalytics.questionnaire.total }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-stone-600 w-44 shrink-0">Itineraries generated</span>
+                  <div class="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-amber-400 rounded-full transition-all" :style="{ width: pct(globalAnalytics.generated, globalAnalytics.sessions) + '%' }"></div></div>
+                  <span class="text-xs font-semibold text-stone-600 w-10 text-right shrink-0">{{ globalAnalytics.generated }}</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <span class="text-xs text-stone-600 w-44 shrink-0">Shared itineraries</span>
+                  <div class="flex-1 bg-stone-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-emerald-400 rounded-full transition-all" :style="{ width: pct(globalAnalytics.shares, globalAnalytics.sessions) + '%' }"></div></div>
+                  <span class="text-xs font-semibold text-stone-600 w-10 text-right shrink-0">{{ globalAnalytics.shares }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Top hotels -->
+            <div v-if="globalAnalytics.hotelBreakdown.length" class="bg-white rounded-2xl border border-stone-200 p-5">
+              <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-4">Top hotels by sessions</p>
+              <div class="space-y-2">
+                <div v-for="(hotel, idx) in globalAnalytics.hotelBreakdown" :key="hotel.hotelId" class="flex items-center gap-3">
+                  <span class="text-[10px] font-bold text-stone-300 w-4 shrink-0">{{ idx + 1 }}</span>
+                  <span class="text-xs text-stone-600 w-36 shrink-0 truncate">{{ hotel.name }}</span>
+                  <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-stone-700 rounded-full transition-all" :style="{ width: pct(hotel.count, globalAnalytics.hotelBreakdown[0].count) + '%' }"></div></div>
+                  <span class="text-[11px] font-semibold text-stone-400 w-8 text-right shrink-0">{{ hotel.count }}</span>
+                </div>
+              </div>
+            </div>
+            <!-- Guest preferences -->
+            <div v-if="globalAnalytics.questionnaire.total > 0" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+              <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80">
+                <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Guest Preferences</h3>
+                <p class="text-[11px] text-stone-400 mt-0.5">{{ globalAnalytics.questionnaire.total }} questionnaires across all hotels</p>
+              </div>
+              <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div v-if="globalAnalytics.questionnaire.group.length">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-2">Traveling as</p>
+                  <div class="space-y-1.5">
+                    <div v-for="item in globalAnalytics.questionnaire.group" :key="item.label" class="flex items-center gap-2">
+                      <span class="text-xs text-stone-600 w-16 shrink-0 truncate">{{ item.label }}</span>
+                      <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-amber-400 rounded-full transition-all" :style="{ width: pct(item.count, globalAnalytics.questionnaire.total) + '%' }"></div></div>
+                      <span class="text-[10px] text-stone-400 w-6 text-right shrink-0">{{ item.count }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="globalAnalytics.questionnaire.budget.length">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-2">Budget</p>
+                  <div class="space-y-1.5">
+                    <div v-for="item in globalAnalytics.questionnaire.budget" :key="item.label" class="flex items-center gap-2">
+                      <span class="text-xs text-stone-600 w-16 shrink-0 truncate">{{ item.label }}</span>
+                      <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-stone-500 rounded-full transition-all" :style="{ width: pct(item.count, globalAnalytics.questionnaire.total) + '%' }"></div></div>
+                      <span class="text-[10px] text-stone-400 w-6 text-right shrink-0">{{ item.count }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="globalAnalytics.questionnaire.days.length">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-2">Length of stay</p>
+                  <div class="space-y-1.5">
+                    <div v-for="item in globalAnalytics.questionnaire.days" :key="item.label" class="flex items-center gap-2">
+                      <span class="text-xs text-stone-600 w-16 shrink-0 truncate">{{ item.label }}</span>
+                      <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-stone-500 rounded-full transition-all" :style="{ width: pct(item.count, globalAnalytics.questionnaire.total) + '%' }"></div></div>
+                      <span class="text-[10px] text-stone-400 w-6 text-right shrink-0">{{ item.count }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="globalAnalytics.questionnaire.style.length">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-2">Travel style</p>
+                  <div class="space-y-1.5">
+                    <div v-for="item in globalAnalytics.questionnaire.style" :key="item.label" class="flex items-center gap-2">
+                      <span class="text-xs text-stone-600 w-16 shrink-0 truncate">{{ item.label }}</span>
+                      <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-amber-400 rounded-full transition-all" :style="{ width: pct(item.count, globalAnalytics.questionnaire.styleTotal) + '%' }"></div></div>
+                      <span class="text-[10px] text-stone-400 w-6 text-right shrink-0">{{ item.count }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="globalAnalytics.questionnaire.food.length">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-2">Food preferences</p>
+                  <div class="space-y-1.5">
+                    <div v-for="item in globalAnalytics.questionnaire.food" :key="item.label" class="flex items-center gap-2">
+                      <span class="text-xs text-stone-600 w-16 shrink-0 truncate">{{ item.label }}</span>
+                      <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-stone-500 rounded-full transition-all" :style="{ width: pct(item.count, globalAnalytics.questionnaire.foodTotal) + '%' }"></div></div>
+                      <span class="text-[10px] text-stone-400 w-6 text-right shrink-0">{{ item.count }}</span>
+                    </div>
+                  </div>
+                </div>
+                <div v-if="globalAnalytics.questionnaire.transport.length">
+                  <p class="text-[10px] font-semibold uppercase tracking-wide text-stone-500 mb-2">Transport</p>
+                  <div class="space-y-1.5">
+                    <div v-for="item in globalAnalytics.questionnaire.transport" :key="item.label" class="flex items-center gap-2">
+                      <span class="text-xs text-stone-600 w-16 shrink-0 truncate">{{ item.label }}</span>
+                      <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-stone-500 rounded-full transition-all" :style="{ width: pct(item.count, globalAnalytics.questionnaire.transportTotal) + '%' }"></div></div>
+                      <span class="text-[10px] text-stone-400 w-6 text-right shrink-0">{{ item.count }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Top chatbot topics + languages -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div v-if="globalAnalytics.topTopics.length" class="bg-white rounded-2xl border border-stone-200 p-5">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3">Top chatbot topics</p>
+                <div class="space-y-1.5">
+                  <div v-for="(topic, idx) in globalAnalytics.topTopics" :key="topic.label" class="flex items-center justify-between">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="text-[10px] font-bold text-stone-300 w-4 shrink-0">{{ idx + 1 }}</span>
+                      <span class="text-xs text-stone-600 truncate">{{ topic.label }}</span>
+                    </div>
+                    <span class="text-[11px] font-semibold text-stone-400 shrink-0 ml-2">{{ topic.count }}x</span>
+                  </div>
+                </div>
+              </div>
+              <div v-if="globalAnalytics.langs.length" class="bg-white rounded-2xl border border-stone-200 p-5">
+                <p class="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3">Languages</p>
+                <div class="space-y-2">
+                  <div v-for="lang in globalAnalytics.langs" :key="lang.lang" class="flex items-center gap-2">
+                    <span class="text-[11px] font-bold uppercase text-stone-500 w-8 shrink-0">{{ lang.lang }}</span>
+                    <div class="flex-1 bg-stone-100 rounded-full h-1.5 overflow-hidden"><div class="h-full bg-stone-600 rounded-full transition-all" :style="{ width: lang.pct + '%' }"></div></div>
+                    <span class="text-[11px] text-stone-400 w-8 text-right shrink-0">{{ lang.pct }}%</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+
         <!-- ── Hotel form ──────────────────────────────────────────────── -->
-        <div v-if="screen === 'form' || screen === 'global'" class="space-y-5">
+        <div v-if="screen === 'form'" class="space-y-5">
 
           <!-- Form header with actions -->
           <div class="flex items-center justify-between">
