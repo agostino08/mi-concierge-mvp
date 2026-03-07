@@ -27,8 +27,14 @@ export function useAppInit() {
     if (hotelId) {
       await hotelStore.fetchHotel(hotelId);
     } else {
-      uiStore.setLoading(false);
-      uiStore.setError('Hotel ID not found in the URL. Please use a valid hotel link.');
+      // Restore hotel from session on page refresh (user was already past Welcome)
+      const savedHotel = sessionStorage.getItem('mc_hotel');
+      if (savedHotel) {
+        await hotelStore.fetchHotel(savedHotel);
+      } else {
+        uiStore.setLoading(false);
+        uiStore.setError('Hotel ID not found in the URL. Please use a valid hotel link.');
+      }
     }
   }
 

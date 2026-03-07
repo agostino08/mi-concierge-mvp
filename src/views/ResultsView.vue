@@ -130,7 +130,7 @@ function handleReset() {
       <div class="relative h-64 rounded-[2.5rem] overflow-hidden shadow-2xl mb-12">
         <img :src="heroImage" alt="" class="absolute inset-0 w-full h-full object-cover" />
         <div class="absolute inset-0 bg-black/40 flex flex-col justify-center items-center text-center p-6">
-          <span class="text-white/80 text-[10px] uppercase tracking-[0.4em] mb-2">
+          <span class="text-white/80 text-xs uppercase tracking-[0.4em] mb-2">
             {{ $t('results.discover') }}
           </span>
           <h2 class="text-white text-4xl font-serif italic">{{ hotelData?.city }}</h2>
@@ -161,7 +161,7 @@ function handleReset() {
           :key="tab"
           @click="activeTab = tab"
           :class="activeTab === tab ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500'"
-          class="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all"
+          class="flex-1 py-3 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
         >
           {{ tab === 'activities' ? $t('results.tabs.activities') : tab === 'food' ? $t('results.tabs.food') : $t('results.tabs.transport') }}
         </button>
@@ -173,7 +173,7 @@ function handleReset() {
         class="flex flex-col items-center justify-center py-24 text-center gap-4"
       >
         <div class="w-12 h-12 border-2 border-stone-200 border-t-amber-400 rounded-full animate-spin"></div>
-        <p class="text-stone-400 text-sm tracking-wide">{{ $t('results.generating') }}</p>
+        <p class="text-stone-400 text-base tracking-wide">{{ $t('results.generating') }}</p>
       </div>
 
       <!-- Cards -->
@@ -204,13 +204,13 @@ function handleReset() {
 
           <div class="max-w-[85%] mt-2">
             <h4 class="text-2xl font-serif text-stone-800 mb-3 leading-tight">{{ item.title }}</h4>
-            <p class="text-stone-500 text-sm leading-relaxed mb-8">{{ item.description }}</p>
+            <p class="text-stone-500 text-base leading-relaxed mb-8">{{ item.description }}</p>
           </div>
 
           <div v-if="activeTab !== 'transport'" class="flex gap-4">
             <button
               @click="addToCalendar(item)"
-              class="flex-1 py-4 bg-stone-50 text-stone-600 rounded-2xl text-[9px] font-bold uppercase tracking-widest hover:bg-stone-100 transition-all flex items-center justify-center gap-2"
+              class="flex-1 py-4 bg-stone-50 text-stone-600 rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-stone-100 transition-all flex items-center justify-center gap-2"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />

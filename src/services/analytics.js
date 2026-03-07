@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, getDocs, deleteDoc, query, where, serverTimestamp } from 'firebase/firestore';
 
 // Unique session ID per browser tab — resets on new tab or hard refresh
 const sessionId = (() => {
@@ -37,6 +37,14 @@ export async function getHotelAnalytics(hotelId, days = 30) {
   return snap.docs
     .map(d => d.data())
     .filter(e => e.createdAt?.toMillis() > cutoff);
+}
+
+/**
+ * Delete all analytics events for a hotel (call when deleting a hotel).
+ */
+export async function deleteHotelAnalytics(hotelId) {
+  const snap = await getDocs(query(collection(db, 'analytics_events'), where('hotelId', '==', hotelId)));
+  await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
 }
 
 /**

@@ -50,10 +50,10 @@ const router = createRouter({
 router.beforeEach((to) => {
   if (!to.meta.requiresHotel) return true;
   const hotelStore = useHotelStore();
-  if (!hotelStore.hotelData) {
-    return { name: 'Welcome', query: to.query };
-  }
-  return true;
+  if (hotelStore.hotelData) return true;
+  // Allow if we have a saved hotel session — init() will restore hotel data on mount
+  if (sessionStorage.getItem('mc_hotel')) return true;
+  return { name: 'Welcome', query: to.query };
 });
 
 export default router;

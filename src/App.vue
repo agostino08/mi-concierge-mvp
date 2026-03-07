@@ -52,7 +52,7 @@ const FULL_SCREEN_ROUTES = ['Welcome', 'Admin'];
     <transition name="toast">
       <div
         v-if="uiStore.showToast"
-        class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest shadow-2xl z-[100] whitespace-nowrap"
+        class="fixed bottom-10 left-1/2 -translate-x-1/2 bg-stone-800 text-white px-6 py-3 rounded-full text-base font-bold uppercase tracking-widest shadow-2xl z-[100] whitespace-nowrap"
       >
         {{ uiStore.toastMessage }}
       </div>
@@ -74,6 +74,10 @@ const FULL_SCREEN_ROUTES = ['Welcome', 'Admin'];
 body {
   font-family: "Plus Jakarta Sans", sans-serif;
   -webkit-font-smoothing: antialiased;
+  font-size: 16px;
+}
+@media (max-width: 640px) {
+  body { font-size: 14px; }
 }
 .font-serif {
   font-family: "Playfair Display", serif;
@@ -85,7 +89,7 @@ body {
 }
 
 .btn-elegant {
-  @apply px-8 py-5 bg-white/60 backdrop-blur-md border border-white rounded-3xl text-sm font-bold uppercase tracking-widest text-stone-700
+  @apply px-8 py-5 bg-white/60 backdrop-blur-md border border-white rounded-3xl text-base font-bold uppercase tracking-widest text-stone-700
          hover:bg-white hover:shadow-xl transition-all active:scale-95;
 }
 
@@ -107,7 +111,7 @@ body {
 }
 
 .pill-card {
-  @apply px-6 py-3 rounded-full text-[14px] font-bold uppercase tracking-widest transition-all border;
+  @apply px-6 py-3 rounded-full text-[16px] font-bold uppercase tracking-widest transition-all border;
 }
 
 .pill-base {

@@ -107,7 +107,9 @@ export const useItineraryStore = defineStore('itinerary', () => {
     recommendationsStore.resetRecommendations();
     resetItinerary();
     localStorage.removeItem('my_itinerary_backup');
-    return hotelStore.hotelData?.id || new URLSearchParams(window.location.search).get('hotel');
+    const hotelId = hotelStore.hotelData?.id || new URLSearchParams(window.location.search).get('hotel');
+    sessionStorage.removeItem('mc_hotel');
+    return hotelId;
   }
 
   return {

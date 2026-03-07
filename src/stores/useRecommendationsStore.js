@@ -38,9 +38,29 @@ function extractCompleteJsonObjects(str) {
 }
 
 /**
+ * Finds the index of the matching closing ] for an opening [ at `start`.
+ * Returns -1 if the array is not yet closed (still streaming).
+ */
+function findArrayCloseIndex(str, start) {
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < str.length; i++) {
+    const c = str[i];
+    if (escape) { escape = false; continue; }
+    if (c === '\\' && inString) { escape = true; continue; }
+    if (c === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (c === '[') depth++;
+    else if (c === ']') { depth--; if (depth === 0) return i; }
+  }
+  return -1;
+}
+
+/**
  * Extracts partial recommendations from an incomplete streaming JSON buffer.
- * More reliable than regex-based heuristics: uses brace-counting to find
- * complete objects within each top-level array.
+ * Uses brace-counting bounded by each array's own closing bracket to prevent
+ * food/transport objects from leaking into the activities array during streaming.
  */
 function extractPartialRecommendations(buffer) {
   const result = EMPTY_RECOMMENDATIONS();
@@ -49,7 +69,9 @@ function extractPartialRecommendations(buffer) {
     if (keyIndex === -1) continue;
     const bracketIndex = buffer.indexOf('[', keyIndex);
     if (bracketIndex === -1) continue;
-    result[key] = extractCompleteJsonObjects(buffer.slice(bracketIndex + 1));
+    const closeIndex = findArrayCloseIndex(buffer, bracketIndex);
+    const sliceEnd = closeIndex !== -1 ? closeIndex : buffer.length;
+    result[key] = extractCompleteJsonObjects(buffer.slice(bracketIndex + 1, sliceEnd));
   }
   return result;
 }

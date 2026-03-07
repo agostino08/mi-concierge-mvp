@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import QRCode from 'qrcode';
 import { getAllHotels, createHotel, updateHotel, deleteHotel } from '../services/firebase';
-import { getHotelAnalytics, getAllAnalytics, computeStats } from '../services/analytics';
+import { getHotelAnalytics, getAllAnalytics, computeStats, deleteHotelAnalytics } from '../services/analytics';
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'admin123';
@@ -113,12 +113,14 @@ function goList() {
   selectedId.value = null;
   form.value = emptyForm();
   qrDataUrl.value = '';
+  activeFormTab.value = 'profile';
 }
 
 function createNew() {
   selectedId.value = null;
   form.value = emptyForm();
   qrDataUrl.value = '';
+  activeFormTab.value = 'profile';
   screen.value = 'form';
 }
 
@@ -154,6 +156,7 @@ async function selectHotel(hotel) {
     partners: hotel.partners ? JSON.parse(JSON.stringify(hotel.partners)) : [],
   };
   qrDataUrl.value = '';
+  activeFormTab.value = 'profile';
   analytics.value = null;
   if (hotel.id) {
     const qrIdentifier = hotel.slug || hotel.id;
@@ -208,7 +211,10 @@ async function confirmDelete() {
   if (!confirm(`Delete "${form.value.name}"? This cannot be undone.`)) return;
   deleting.value = true;
   try {
-    await deleteHotel(selectedId.value);
+    await Promise.all([
+      deleteHotel(selectedId.value),
+      deleteHotelAnalytics(selectedId.value),
+    ]);
     await loadHotels();
     goList();
   } catch (e) {
@@ -359,10 +365,20 @@ function removePartner(idx) {
   form.value.partners.splice(idx, 1);
 }
 
+// ─── Form tabs ────────────────────────────────────────────────────────────────
+const activeFormTab = ref('profile');
+const FORM_TABS = [
+  { key: 'profile', label: 'Profile & Branding' },
+  { key: 'info', label: 'Info & FAQs' },
+  { key: 'partners', label: 'Partners' },
+  { key: 'insights', label: 'Insights' },
+];
+
 // ─── Field groups ─────────────────────────────────────────────────────────────
 const fieldGroups = [
   {
     title: 'Identity',
+    tab: 'profile',
     fields: [
       { key: 'name', label: 'Hotel Name', type: 'text', placeholder: 'Grand Hotel Barcelona', required: true },
       { key: 'city', label: 'City', type: 'text', placeholder: 'Barcelona' },
@@ -377,6 +393,7 @@ const fieldGroups = [
   },
   {
     title: 'Branding',
+    tab: 'profile',
     fields: [
       { key: 'logo_url', label: 'Logo URL', type: 'text', placeholder: 'https://cdn.example.com/logo.png' },
       { key: 'cover_url', label: 'Cover Image URL', type: 'text', placeholder: 'https://cdn.example.com/cover.jpg' },
@@ -385,6 +402,7 @@ const fieldGroups = [
   },
   {
     title: 'Guest Information',
+    tab: 'info',
     fields: [
       { key: 'reception', label: 'Reception Phone', type: 'text', placeholder: '+34 93 000 0000' },
       { key: 'checkin', label: 'Check-in Time', type: 'time', hint: 'Select check-in time' },
@@ -396,6 +414,7 @@ const fieldGroups = [
   },
   {
     title: 'Facilities & Services',
+    tab: 'info',
     fields: [
       { key: 'pool', label: 'Pool', type: 'text', placeholder: 'Open daily 08:00–22:00 · Heated outdoor pool on rooftop' },
       { key: 'gym', label: 'Gym / Fitness', type: 'text', placeholder: 'Open 06:00–23:00 · 4th floor, free for guests' },
@@ -407,6 +426,8 @@ const fieldGroups = [
     ],
   },
 ];
+const profileFieldGroups = fieldGroups.slice(0, 2); // Identity + Branding
+const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facilities
 </script>
 
 <template>
@@ -557,8 +578,8 @@ const fieldGroups = [
                   {{ (hotel.name || 'H')[0] }}
                 </div>
                 <div>
-                  <p class="font-semibold text-stone-800">{{ hotel.name }}</p>
-                  <p class="text-xs text-stone-400 mt-0.5">{{ hotel.city }}</p>
+                  <p class="font-semibold text-stone-800 text-base">{{ hotel.name }}</p>
+                  <p class="text-sm text-stone-400 mt-0.5">{{ hotel.city }}</p>
                 </div>
               </div>
               <div class="flex items-center gap-3">
@@ -776,9 +797,23 @@ const fieldGroups = [
             </div>
           </div>
 
-          <!-- Field groups -->
+          <!-- Tab navigation -->
+          <div class="flex p-1 bg-stone-200/50 rounded-2xl sticky top-14 z-30 backdrop-blur-md border border-white">
+            <button
+              v-for="tab in FORM_TABS"
+              :key="tab.key"
+              @click="activeFormTab = tab.key"
+              :class="activeFormTab === tab.key ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500 hover:text-stone-700'"
+              class="flex-1 py-2.5 text-xs font-bold uppercase tracking-widest rounded-xl transition-all"
+            >
+              {{ tab.label }}
+            </button>
+          </div>
+
+          <!-- Field groups (shown/hidden per tab via v-show) -->
           <div
             v-for="group in fieldGroups"
+            v-show="activeFormTab === group.tab"
             :key="group.title"
             class="bg-white rounded-2xl border border-stone-200 overflow-hidden"
           >
@@ -797,12 +832,12 @@ const fieldGroups = [
                     v-model="form[field.key]"
                     :placeholder="field.placeholder"
                     rows="2"
-                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none transition-all"
+                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none transition-all"
                   ></textarea>
                   <select
                     v-else-if="field.type === 'select'"
                     v-model="form[field.key]"
-                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all appearance-none"
+                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all appearance-none"
                   >
                     <option value="">— Select —</option>
                     <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
@@ -812,7 +847,7 @@ const fieldGroups = [
                     v-model="form[field.key]"
                     :type="field.type"
                     :placeholder="field.placeholder || ''"
-                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all"
+                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all"
                     :class="{ 'pr-16': field.slugGen }"
                   />
                   <button
@@ -829,7 +864,7 @@ const fieldGroups = [
           </div>
 
           <!-- ── FAQ Builder ──────────────────────────────────────────── -->
-          <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div v-show="activeFormTab === 'info'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Custom FAQs</h3>
@@ -865,25 +900,25 @@ const fieldGroups = [
                 <input
                   v-model="faq.pill_text"
                   placeholder="Pill label (short, shown on chat button — e.g. Pool hours?)"
-                  class="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 pr-8"
+                  class="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-amber-300 pr-8"
                 />
                 <input
                   v-model="faq.question"
                   placeholder="Full question sent to AI (in English) — e.g. What are the pool opening hours?"
-                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 pr-8"
+                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300 pr-8"
                 />
                 <textarea
                   v-model="faq.answer"
                   placeholder="Answer (in English) — the AI will translate this automatically for guests"
                   rows="2"
-                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
+                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
                 ></textarea>
               </div>
             </div>
           </div>
 
           <!-- ── Partners Builder ─────────────────────────────────────── -->
-          <div class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div v-show="activeFormTab === 'partners'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Partners & Affiliates</h3>
@@ -920,11 +955,11 @@ const fieldGroups = [
                   <input
                     v-model="partner.name"
                     placeholder="Partner name"
-                    class="col-span-2 sm:col-span-1 px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                    class="col-span-2 sm:col-span-1 px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300"
                   />
                   <select
                     v-model="partner.category"
-                    class="col-span-2 sm:col-span-1 px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                    class="col-span-2 sm:col-span-1 px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300"
                   >
                     <option v-for="cat in PARTNER_CATEGORIES" :key="cat" :value="cat">{{ cat }}</option>
                   </select>
@@ -933,7 +968,7 @@ const fieldGroups = [
                   v-model="partner.description"
                   placeholder="Short description (e.g. Rooftop terrace with city views, 10 min walk)"
                   rows="2"
-                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
+                  class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
                 ></textarea>
                 <input
                   v-model="partner.discount"
@@ -944,19 +979,19 @@ const fieldGroups = [
                   <input
                     v-model="partner.maps_url"
                     placeholder="Google Maps URL (optional)"
-                    class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                    class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300"
                   />
                   <input
                     v-model="partner.website"
                     placeholder="Website URL (optional)"
-                    class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-stone-300"
+                    class="px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300"
                   />
                 </div>
               </div>
             </div>
           </div>
           <!-- ── Insights (Analytics) ──────────────────────────────── -->
-          <div v-if="isEditing" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div v-if="isEditing" v-show="activeFormTab === 'insights'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Insights</h3>
