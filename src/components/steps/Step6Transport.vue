@@ -5,6 +5,7 @@ import { useHotelStore } from '../../stores/useHotelStore';
 import { useUIStore } from '../../stores/useUIStore';
 import { useRecommendationsStore } from '../../stores/useRecommendationsStore';
 import { QUESTIONNAIRE_OPTIONS } from '../../constants/questionnaireOptions';
+import { logEvent } from '../../services/analytics';
 
 const router = useRouter();
 const formStore = useFormStore();
@@ -20,7 +21,16 @@ function toggle(option) {
 }
 
 async function submit() {
-  router.push('/results'); // navigate first so the loading screen appears immediately
+  // Log here — form data is 100% populated, hotelId is guaranteed present
+  logEvent(hotelStore.hotelData?.id, 'questionnaire_completed', {
+    group:     formStore.formData.group,
+    days:      formStore.formData.days,
+    style:     [...formStore.formData.style],
+    food:      [...formStore.formData.food],
+    budget:    formStore.formData.budget,
+    transport: [...formStore.formData.transport],
+  });
+  router.push('/results');
   await recommendationsStore.generateRecommendations(
     hotelStore.hotelData,
     formStore.formData,

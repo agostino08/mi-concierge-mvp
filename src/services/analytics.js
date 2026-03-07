@@ -23,7 +23,7 @@ export function logEvent(hotelId, eventType, data = {}) {
     data,
     sessionId,
     createdAt: serverTimestamp(),
-  }).catch(() => {});
+  }).catch((e) => { console.error('[analytics] write failed:', e.code, e.message); });
 }
 
 /**
