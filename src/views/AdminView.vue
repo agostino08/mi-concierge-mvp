@@ -367,12 +367,14 @@ function removePartner(idx) {
 
 // ─── Form tabs ────────────────────────────────────────────────────────────────
 const activeFormTab = ref('profile');
-const FORM_TABS = [
-  { key: 'profile', label: 'Profile & Branding' },
-  { key: 'info', label: 'Info & FAQs' },
-  { key: 'partners', label: 'Partners' },
-  { key: 'insights', label: 'Insights' },
+const ALL_FORM_TABS = [
+  { key: 'profile',  label: 'Profile'    },
+  { key: 'info',     label: 'Info & FAQs' },
+  { key: 'partners', label: 'Partners'   },
+  { key: 'insights', label: 'Insights'   },
 ];
+// Insights tab only available when editing an existing hotel
+const formTabs = computed(() => ALL_FORM_TABS.filter(t => t.key !== 'insights' || isEditing.value));
 
 // ─── Field groups ─────────────────────────────────────────────────────────────
 const fieldGroups = [
@@ -800,7 +802,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
           <!-- Tab navigation -->
           <div class="flex p-1 bg-stone-200/50 rounded-2xl sticky top-14 z-30 backdrop-blur-md border border-white">
             <button
-              v-for="tab in FORM_TABS"
+              v-for="tab in formTabs"
               :key="tab.key"
               @click="activeFormTab = tab.key"
               :class="activeFormTab === tab.key ? 'bg-white shadow-sm text-stone-900' : 'text-stone-500 hover:text-stone-700'"
@@ -868,7 +870,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Custom FAQs</h3>
-                <p class="text-[11px] text-stone-400 mt-0.5">Each FAQ becomes a quick-action pill in the chatbot</p>
+                <p class="text-[11px] text-stone-400 mt-0.5">Each FAQ becomes a quick-action pill in the chatbot · Answers are auto-translated to the guest's language</p>
               </div>
               <button
                 @click="addFaq"
@@ -899,17 +901,17 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
                 </button>
                 <input
                   v-model="faq.pill_text"
-                  placeholder="Pill label (short, shown on chat button — e.g. Pool hours?)"
+                  placeholder="Button label — short, shown on chat pill (e.g. Pool hours? · Horario piscina?)"
                   class="w-full px-3 py-2.5 bg-amber-50 border border-amber-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-amber-300 pr-8"
                 />
                 <input
                   v-model="faq.question"
-                  placeholder="Full question sent to AI (in English) — e.g. What are the pool opening hours?"
+                  placeholder="Full question for AI (English recommended) — e.g. What are the pool opening hours?"
                   class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300 pr-8"
                 />
                 <textarea
                   v-model="faq.answer"
-                  placeholder="Answer (in English) — the AI will translate this automatically for guests"
+                  placeholder="Answer in English — AI will translate automatically into the guest's language"
                   rows="2"
                   class="w-full px-3 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-base focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none"
                 ></textarea>
