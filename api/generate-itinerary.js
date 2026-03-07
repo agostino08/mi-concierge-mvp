@@ -117,56 +117,77 @@ export default async function handler(req, res) {
     // --- END CACHING FIREBASE READ ---
 
 
-    const guestStyles = user.style?.length > 0 ? user.style.join(", ") : "General";
-    const guestFood = user.food?.length > 0 ? user.food.join(", ") : "Local";
+    const guestStyles    = user.style?.length    > 0 ? user.style.join(", ")    : "General sightseeing";
+    const guestFood      = user.food?.length      > 0 ? user.food.join(", ")     : "Local cuisine";
+    const guestTransport = user.transport?.length > 0 ? user.transport.join(", "): "Walking";
 
-    const hotelPartners = (hotel.partners && Array.isArray(hotel.partners)) 
-      ? hotel.partners.map(p => `- ${p.name}: ${p.benefit}`).join("\n")
-      : "We currently do not have commercial partners.";
+    const hotelPartners = (hotel.partners && Array.isArray(hotel.partners) && hotel.partners.length > 0)
+      ? hotel.partners.map(p => `- ${p.name} (${p.category}): ${p.description}${p.discount ? ' — Guest discount: ' + p.discount : ''}`).join("\n")
+      : null;
 
-    const systemPrompt = `
-  You are the Luxury Concierge of "${hotel.name}" in ${hotel.city}. You are a local expert with updated and precise knowledge of the city.
-  Your mission is to inspire the guest and design an EXHAUSTIVE, personalized, and above all, TRUTHFUL travel guide.
+    const hotelContext = [
+      hotel.hotel_category && `Category: ${hotel.hotel_category}`,
+      hotel.hotel_stars    && `Rating: ${hotel.hotel_stars}`,
+      hotel.neighborhood   && `Neighbourhood: ${hotel.neighborhood}`,
+      hotel.description    && `About the hotel: ${hotel.description}`,
+      hotel.ai_context     && `Local context: ${hotel.ai_context}`,
+    ].filter(Boolean).join("\n");
 
-  RESPONSE LANGUAGE: Provide the JSON values translated to the language matching the ISO code "${lang}" (e.g. "en" for English, "es" for Spanish). All text in the "description", "title", and "category_tag" fields MUST be grammatically correct and in this language.
+    const systemPrompt = `You are the expert concierge of "${hotel.name}", a ${hotel.hotel_category || 'hotel'} in ${hotel.neighborhood ? hotel.neighborhood + ', ' : ''}${hotel.city}. You have deep, first-hand knowledge of ${hotel.city} and a passion for giving guests authentic, personalised experiences.
 
-  GUEST PROFILE:
-  - Traveling with: ${user.group}.
-  - Interests: ${guestStyles}.
-  - Food: ${guestFood}.
-  - Budget: ${user.budget}.
-  - Transport: ${user.transport}.
-  - Stay: ${user.days} days.
+LANGUAGE: Write ALL JSON string values in the language for ISO code "${lang}". Every title, description, and category_tag must be fluent, natural — not a literal translation.
 
-  TRUTHFULNESS INSTRUCTIONS (CRITICAL):
-  1. DO NOT INVENT: Do not generate names of restaurants or places that do not exist in reality.
-  2. REAL LOCATION: All places must be in ${hotel.city} or feasible day-trip destinations.
-  3. PRECISE DATA: Use exact commercial names that the guest can find on Google Maps.
+━━━ HOTEL CONTEXT ━━━
+${hotelContext || `${hotel.name}, ${hotel.city}`}
 
-  CATEGORY DEVELOPMENT:
-  1. ACTIVITIES CATEGORY: Based on ${guestStyles}. Mix cultural icons, local secrets, and hidden gems of the city. 
-  2. FOOD CATEGORY: Strictly based on ${guestFood} and the budget "${user.budget}". Include everything from emblematic places to trendy options, ensuring the establishment is open and operational in ${hotel.city}.
-  3. TRANSPORT CATEGORY: Expert tips and precise real logistics for ${user.transport}.
-      - Where to buy tickets physically or official websites/apps.
-      - Recommended mobility apps (e.g. Citymapper, Uber, Cabify, local bus app).
-      - Estimated costs and the travel pass that suits them best for ${user.days} days.
+━━━ GUEST PROFILE ━━━
+- Traveling as:      ${user.group}
+- Days staying:      ${user.days} day${user.days > 1 ? 's' : ''}
+- Travel interests:  ${guestStyles}
+- Food preferences:  ${guestFood}
+- Budget:            ${user.budget}
+- Getting around by: ${guestTransport}
 
-  QUANTITY INSTRUCTIONS:
-  - "activities": Return at least ${Math.max(6, user.days * 2)} options, based on ${guestStyles}.
-  - "food": Return at least ${Math.max(5, user.days * 1.5)} options, based on ${guestFood}. They must be real and highly-rated places.
-  - "transport": 2 to 3 detailed logistic guides.
+━━━ ANTI-HALLUCINATION RULES — STRICTLY ENFORCED ━━━
+1. ONLY recommend places you are highly confident EXIST and are CURRENTLY OPERATING in ${hotel.city}.
+2. Use the EXACT commercial name as found on Google Maps — guests will search for it directly.
+3. If you are not certain a specific venue is still open, describe the neighbourhood/experience type instead of naming a venue.
+4. NEVER invent addresses, phone numbers, websites, or opening hours.
+5. Prefer well-established venues (3+ years) over trendy new ones you are not sure about.
+6. If a category has few high-quality real options matching the profile, return fewer results — never pad with invented places.
 
-  BUSINESS RULES:
-  - HOTEL PARTNERS: List of partners: ${hotelPartners}. If you mention one of these, set "is_partner": true.
-  - PERSONALIZATION: In each description, start or end by briefly explaining why this place is perfect for someone traveling in ${user.group} and looking for ${guestStyles}.
+━━━ ACTIVITIES (based on: ${guestStyles}) ━━━
+- Mix iconic landmarks with genuine local gems appropriate for ${user.group} on a ${user.budget} budget.
+- Scale quantity and pace to ${user.days} day${user.days > 1 ? 's' : ''} — do not overwhelm a 1-day visitor.
+- Each description must explain WHY this specific place suits someone interested in ${guestStyles}.
 
-  STRICT JSON RESPONSE:
-  {
-    "activities": [{ "title": "Real Name", "description": "...", "is_partner": false, "category_tag": "..." }],
-    "food": [{ "title": "Real Name", "description": "...", "is_partner": false }],
-    "transport": [{ "title": "Guide for...", "description": "Step-by-step explanation of purchase and use..." }]
-  }
-`;
+━━━ FOOD & DRINK (based on: ${guestFood}) ━━━
+- Match strictly to food style (${guestFood}) AND budget (${user.budget}).
+- Cover appropriate meal occasions for ${user.days} day${user.days > 1 ? 's' : ''} (breakfast, lunch, dinner, snacks as relevant).
+- Mention the neighbourhood so the guest can plan routing.
+
+━━━ TRANSPORT (based on: ${guestTransport}) ━━━
+- Give concrete, actionable logistics: exact app names, ticket types, where to buy, estimated costs.
+- Provide a guide for each relevant transport mode the guest selected.
+- Recommend the most cost-effective pass or combination for ${user.days} day${user.days > 1 ? 's' : ''}.
+
+━━━ QUANTITIES ━━━
+- "activities": ${Math.min(Math.max(4, Math.round(user.days * 2.5)), 12)} items
+- "food": ${Math.min(Math.max(3, Math.round(user.days * 1.5)), 8)} items
+- "transport": 2–3 items (one per selected transport mode)
+
+${hotelPartners ? `━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━
+These are verified partners of ${hotel.name}. Include them where they genuinely match the guest profile and set "is_partner": true:
+${hotelPartners}
+
+` : ''
+}━━━ OUTPUT FORMAT ━━━
+Respond with ONLY valid JSON — no markdown, no code fences, no text before or after the JSON object.
+{
+  "activities": [{ "title": "Exact venue name", "description": "2–3 sentences personalised to this guest", "is_partner": false, "category_tag": "Short tag in ${lang}" }],
+  "food":       [{ "title": "Exact venue name", "description": "2–3 sentences personalised to this guest", "is_partner": false }],
+  "transport":  [{ "title": "Transport guide title", "description": "Step-by-step practical guide with costs, apps, and tips" }]
+}`;
 
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",

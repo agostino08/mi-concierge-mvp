@@ -212,6 +212,48 @@ function pct(count, total) {
   return total > 0 ? Math.round((count / total) * 100) : 0;
 }
 
+const reportCopied = ref(false);
+function copyAnalyticsReport() {
+  if (!analytics.value) return;
+  const a = analytics.value;
+  const hotelName = form.value.name || 'Hotel';
+  const month = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const lines = [
+    `GUEST INSIGHTS REPORT — ${hotelName.toUpperCase()}`,
+    `${month} · Last 30 days`,
+    '',
+    'OVERVIEW',
+    `• Sessions: ${a.sessions}`,
+    `• Itineraries generated: ${a.generated}`,
+    `• Chat opens: ${a.chatOpens}`,
+    `• Favorites saved: ${a.favorites}`,
+    `• Itineraries shared: ${a.shares}`,
+  ];
+  if (a.questionnaire?.total > 0) {
+    const q = a.questionnaire;
+    lines.push('', `GUEST PREFERENCES (${q.total} questionnaires)`);
+    if (q.group.length)     lines.push(`• Traveling as: ${q.group.map(i => `${i.label} (${i.count})`).join(', ')}`);
+    if (q.budget.length)    lines.push(`• Budget: ${q.budget.map(i => `${i.label} (${i.count})`).join(', ')}`);
+    if (q.days.length)      lines.push(`• Length of stay: ${q.days.map(i => `${i.label} (${i.count})`).join(', ')}`);
+    if (q.style.length)     lines.push(`• Travel style: ${q.style.map(i => i.label).join(', ')}`);
+    if (q.food.length)      lines.push(`• Food: ${q.food.map(i => i.label).join(', ')}`);
+    if (q.transport.length) lines.push(`• Transport: ${q.transport.map(i => i.label).join(', ')}`);
+  }
+  if (a.langs.length) {
+    lines.push('', 'LANGUAGES');
+    a.langs.forEach(l => lines.push(`• ${l.lang.toUpperCase()}: ${l.pct}%`));
+  }
+  if (a.topTopics.length) {
+    lines.push('', 'TOP CHATBOT TOPICS');
+    a.topTopics.forEach((t, i) => lines.push(`${i + 1}. ${t.label} (${t.count}x)`));
+  }
+  lines.push('', '— Mi Concierge');
+  navigator.clipboard.writeText(lines.join('\n')).then(() => {
+    reportCopied.value = true;
+    setTimeout(() => { reportCopied.value = false; }, 2500);
+  }).catch(() => {});
+}
+
 const globalAnalytics = ref(null);
 const globalAnalyticsLoading = ref(false);
 
@@ -313,7 +355,11 @@ const fieldGroups = [
     fields: [
       { key: 'name', label: 'Hotel Name', type: 'text', placeholder: 'Grand Hotel Barcelona', required: true },
       { key: 'city', label: 'City', type: 'text', placeholder: 'Barcelona' },
+      { key: 'neighborhood', label: 'Neighborhood / District', type: 'text', placeholder: 'Eixample, Gràcia, Gothic Quarter...' },
+      { key: 'hotel_category', label: 'Hotel Category', type: 'select', options: ['Boutique', 'Luxury', 'Business', 'Budget', 'Resort', 'Hostel', 'Aparthotel', 'Other'] },
+      { key: 'hotel_stars', label: 'Star Rating', type: 'select', options: ['Unrated', '1 Star', '2 Stars', '3 Stars', '4 Stars', '5 Stars'] },
       { key: 'description', label: 'Description', type: 'textarea', placeholder: 'A luxury boutique hotel in the heart of the city...' },
+      { key: 'ai_context', label: 'AI Context (injected into guest recommendations)', type: 'textarea', placeholder: 'Typical guest profile, what makes this hotel unique, nearby landmarks, local secrets, areas to avoid, best neighbourhoods for dining, insider tips for this city...' },
       { key: 'address', label: 'Address', type: 'text', placeholder: 'Carrer de Provença 123, Barcelona' },
       { key: 'maps_url', label: 'Google Maps URL', type: 'text', placeholder: 'https://maps.google.com/?q=...' },
     ],
@@ -742,6 +788,14 @@ const fieldGroups = [
                     rows="2"
                     class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 resize-none transition-all"
                   ></textarea>
+                  <select
+                    v-else-if="field.type === 'select'"
+                    v-model="form[field.key]"
+                    class="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-stone-300 transition-all appearance-none"
+                  >
+                    <option value="">— Select —</option>
+                    <option v-for="opt in field.options" :key="opt" :value="opt">{{ opt }}</option>
+                  </select>
                   <input
                     v-else
                     v-model="form[field.key]"
@@ -892,12 +946,25 @@ const fieldGroups = [
                 <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Insights</h3>
                 <p class="text-[11px] text-stone-400 mt-0.5">Guest activity — last 30 days</p>
               </div>
-              <span v-if="analyticsLoading" class="flex items-center gap-1.5 text-[11px] text-stone-400">
-                <svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                Loading…
-              </span>
+              <div class="flex items-center gap-2">
+                <button
+                  v-if="analytics && !analyticsLoading"
+                  @click="copyAnalyticsReport"
+                  class="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide rounded-lg transition-all"
+                  :class="reportCopied ? 'text-emerald-600 bg-emerald-50' : 'text-stone-600 hover:text-stone-900 bg-stone-100 hover:bg-stone-200'"
+                >
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  {{ reportCopied ? 'Copied!' : 'Copy Report' }}
+                </button>
+                <span v-if="analyticsLoading" class="flex items-center gap-1.5 text-[11px] text-stone-400">
+                  <svg class="w-3 h-3 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Loading…
+                </span>
+              </div>
             </div>
             <div class="p-5">
               <div v-if="analyticsLoading && !analytics" class="grid grid-cols-3 gap-3">
