@@ -24,7 +24,9 @@ const hotelData = computed(() => hotelStore.hotelData);
 
 const activeTab = ref('activities');
 
-// Analytics: track questionnaire completion + itinerary generation
+// Analytics: track questionnaire completion + itinerary generation.
+// Use immediate:true so the watch fires on mount even if generating is already
+// true (the false→true transition happens before ResultsView mounts).
 watch(generating, (isGen, wasGen) => {
   const hotelId = hotelData.value?.id;
   if (isGen && !wasGen) {
@@ -43,7 +45,7 @@ watch(generating, (isGen, wasGen) => {
       food: recommendations.value.food.length,
     });
   }
-});
+}, { immediate: true });
 
 const isFavorite = (item) => myItinerary.value.some((i) => i.title === item.title);
 
