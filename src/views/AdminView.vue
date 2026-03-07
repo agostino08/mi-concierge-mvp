@@ -55,7 +55,11 @@ const emptyForm = () => ({
   name: '',
   city: '',
   slug: '',
+  neighborhood: '',
+  hotel_category: '',
+  hotel_stars: '',
   description: '',
+  ai_context: '',
   address: '',
   maps_url: '',
   logo_url: '',
@@ -124,7 +128,11 @@ async function selectHotel(hotel) {
     name: hotel.name || '',
     city: hotel.city || '',
     slug: hotel.slug || '',
+    neighborhood: hotel.neighborhood || '',
+    hotel_category: hotel.hotel_category || '',
+    hotel_stars: hotel.hotel_stars || '',
     description: hotel.description || '',
+    ai_context: hotel.ai_context || '',
     address: hotel.address || '',
     maps_url: hotel.maps_url || '',
     logo_url: hotel.logo_url || '',
@@ -148,7 +156,8 @@ async function selectHotel(hotel) {
   qrDataUrl.value = '';
   analytics.value = null;
   if (hotel.id) {
-    const link = `${window.location.origin}/?hotel=${hotel.id}`;
+    const qrIdentifier = hotel.slug || hotel.id;
+    const link = `${window.location.origin}/?hotel=${qrIdentifier}`;
     qrDataUrl.value = await QRCode.toDataURL(link, { margin: 2, width: 200 });
     // Load analytics in background (non-blocking)
     analyticsLoading.value = true;
@@ -180,7 +189,8 @@ async function save() {
     } else {
       const newId = await createHotel(data);
       selectedId.value = newId;
-      const link = `${window.location.origin}/?hotel=${newId}`;
+      const qrIdentifier = form.value.slug || newId;
+      const link = `${window.location.origin}/?hotel=${qrIdentifier}`;
       qrDataUrl.value = await QRCode.toDataURL(link, { margin: 2, width: 200 });
     }
     saveSuccess.value = true;
