@@ -816,11 +816,10 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
             </button>
           </div>
 
-          <!-- Field groups (shown/hidden per tab via v-show) -->
+          <!-- Field groups rendered only for the active tab -->
+          <template v-for="group in fieldGroups" :key="group.title">
           <div
-            v-for="group in fieldGroups"
             v-if="activeFormTab === group.tab"
-            :key="group.title"
             class="bg-white rounded-2xl border border-stone-200 overflow-hidden"
           >
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80">
@@ -868,6 +867,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
               </div>
             </div>
           </div>
+          </template>
 
           <!-- ── FAQ Builder ──────────────────────────────────────────── -->
           <div v-if="activeFormTab === 'info'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
