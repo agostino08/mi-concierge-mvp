@@ -1,8 +1,9 @@
-const OpenAI = require("openai");
+import OpenAI from "openai";
+
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // Like translate.js but optimised for full sentences (chatbot topics, FAQ questions)
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== "POST") return res.status(405).end();
   try {
     const { texts, targetLang } = req.body;
