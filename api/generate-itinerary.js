@@ -220,7 +220,7 @@ Respond with ONLY valid JSON — no markdown, no code fences, no text before or 
 }`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         {

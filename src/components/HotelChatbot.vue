@@ -17,6 +17,36 @@ const messages = ref([]);
 const isTyping = ref(false);
 const messagesContainer = ref(null);
 
+// ─── FAQ pill translation ──────────────────────────────────────────────────────
+// Maps faq.id → translated pill_text for the current language
+const translatedPills = ref({});
+
+async function translateFaqPills(lang) {
+  const faqs = hotelInfo.value.faqs;
+  if (!faqs?.length) return;
+  if (!lang || lang === 'en') { translatedPills.value = {}; return; }
+
+  const pillTexts = faqs.map(f => f.pill_text || f.question).filter(Boolean);
+  if (!pillTexts.length) return;
+
+  try {
+    const res = await fetch('/api/translate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ texts: pillTexts, targetLang: lang }),
+    });
+    const data = await res.json();
+    if (data.translations?.length) {
+      const map = {};
+      faqs.forEach((faq, i) => { if (data.translations[i]) map[faq.id] = data.translations[i]; });
+      translatedPills.value = map;
+    }
+  } catch { /* keep original text on error */ }
+}
+
+watch(locale, (newLang) => translateFaqPills(newLang));
+watch(() => hotelInfo.value.faqs, () => translateFaqPills(locale.value));
+
 onMounted(() => {
   messages.value = [{ role: 'bot', text: t('chatbot.welcome') }];
 });
@@ -263,7 +293,7 @@ function sendMessage() {
                 :disabled="isTyping"
                 class="px-4 py-2 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full text-[13px] font-semibold hover:bg-amber-400 hover:text-white hover:border-amber-400 transition-all active:scale-95 disabled:opacity-40"
               >
-                {{ faq.pill_text || faq.question }}
+                {{ translatedPills[faq.id] || faq.pill_text || faq.question }}
               </button>
             </div>
           </div>

@@ -368,13 +368,17 @@ function removePartner(idx) {
 // ─── Form tabs ────────────────────────────────────────────────────────────────
 const activeFormTab = ref('profile');
 const ALL_FORM_TABS = [
-  { key: 'profile',  label: 'Profile'    },
-  { key: 'info',     label: 'Info & FAQs' },
-  { key: 'partners', label: 'Partners'   },
-  { key: 'insights', label: 'Insights'   },
+  { key: 'profile',  label: 'Profile'  },
+  { key: 'info',     label: 'Info'     },
+  { key: 'partners', label: 'Partners' },
+  { key: 'insights', label: 'Insights' },
+  { key: 'link',     label: 'Links'    },
 ];
-// Insights tab only available when editing an existing hotel
-const formTabs = computed(() => ALL_FORM_TABS.filter(t => t.key !== 'insights' || isEditing.value));
+// Insights and Links tabs only available when editing an existing hotel
+const formTabs = computed(() => ALL_FORM_TABS.filter(t => {
+  if (t.key === 'insights' || t.key === 'link') return isEditing.value;
+  return true;
+}));
 
 // ─── Field groups ─────────────────────────────────────────────────────────────
 const fieldGroups = [
@@ -815,7 +819,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
           <!-- Field groups (shown/hidden per tab via v-show) -->
           <div
             v-for="group in fieldGroups"
-            v-show="activeFormTab === group.tab"
+            v-if="activeFormTab === group.tab"
             :key="group.title"
             class="bg-white rounded-2xl border border-stone-200 overflow-hidden"
           >
@@ -866,7 +870,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
           </div>
 
           <!-- ── FAQ Builder ──────────────────────────────────────────── -->
-          <div v-show="activeFormTab === 'info'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div v-if="activeFormTab === 'info'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Custom FAQs</h3>
@@ -920,7 +924,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
           </div>
 
           <!-- ── Partners Builder ─────────────────────────────────────── -->
-          <div v-show="activeFormTab === 'partners'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div v-if="activeFormTab === 'partners'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Partners & Affiliates</h3>
@@ -993,7 +997,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
             </div>
           </div>
           <!-- ── Insights (Analytics) ──────────────────────────────── -->
-          <div v-if="isEditing" v-show="activeFormTab === 'insights'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div v-if="isEditing && activeFormTab === 'insights'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80 flex items-center justify-between">
               <div>
                 <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Insights</h3>
@@ -1171,7 +1175,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
           
 
           <!-- ── Hotel Link & QR Code ─────────────────────────────────── -->
-          <div v-if="isEditing" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div v-if="isEditing && activeFormTab === 'link'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80">
               <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Guest Link & QR Code</h3>
             </div>
@@ -1207,7 +1211,7 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
           </div>
 
           <!-- __ Deployment Kit ______________________________________________ -->
-          <div v-if="isEditing" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
+          <div v-if="isEditing && activeFormTab === 'link'" class="bg-white rounded-2xl border border-stone-200 overflow-hidden">
             <div class="px-5 py-3.5 border-b border-stone-100 bg-stone-50/80">
               <h3 class="text-xs font-bold uppercase tracking-widest text-stone-500">Deployment Kit</h3>
               <p class="text-[11px] text-stone-400 mt-0.5">Ready-to-use copy for emails, front desk & WhatsApp. Just copy and paste.</p>
@@ -1285,8 +1289,8 @@ const infoFieldGroups = fieldGroups.slice(2, 4);    // Guest Information + Facil
           </div>
 
 
-          <!-- Bottom save bar (sticky on scroll) -->
-          <div class="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-stone-50/90 backdrop-blur border-t border-stone-200 flex items-center justify-between">
+          <!-- Bottom save bar (hidden on read-only tabs) -->
+          <div v-if="activeFormTab !== 'link' && activeFormTab !== 'insights'" class="sticky bottom-0 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-stone-50/90 backdrop-blur border-t border-stone-200 flex items-center justify-between">
             <p v-if="saveSuccess" class="text-sm text-emerald-600 font-semibold flex items-center gap-1.5">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />

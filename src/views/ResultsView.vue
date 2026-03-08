@@ -22,6 +22,15 @@ const hotelData = computed(() => hotelStore.hotelData);
 
 const activeTab = ref('activities');
 
+// If the user refreshes on /results but there are no recommendations (Pinia reset),
+// redirect back to questionnaire step 1 so they can regenerate.
+onMounted(() => {
+  if (!generating.value) {
+    const total = recommendations.value.activities.length + recommendations.value.food.length + recommendations.value.transport.length;
+    if (total === 0) router.replace('/questionnaire/1');
+  }
+});
+
 // Analytics: track itinerary generation completion.
 // questionnaire_completed is logged in Step6Transport before navigation.
 watch(generating, (isGen, wasGen) => {
