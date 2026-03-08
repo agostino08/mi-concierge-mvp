@@ -103,25 +103,28 @@ async function handleTextShare() {
 
           <p class="text-stone-500 text-[15px] leading-relaxed mb-8">{{ item.description }}</p>
 
-          <div class="flex gap-3 no-print">
+          <div class="flex flex-col gap-2 no-print">
+            <a
+              :href="getGoogleMapsUrl(item.title)"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="flex items-center justify-center gap-2 w-full py-4 bg-stone-800 text-white rounded-2xl text-xs font-bold uppercase tracking-widest hover:bg-black transition-all shadow-lg"
+            >
+              <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {{ $t('results.see_on_maps') }}
+            </a>
             <button
               @click="addToCalendar(item)"
-              class="px-6 py-3 bg-stone-50 text-stone-600 rounded-xl text-[9px] font-bold uppercase tracking-widest hover:bg-stone-100 transition-all flex items-center gap-2"
+              class="flex items-center justify-center gap-2 w-full py-3 bg-stone-50 text-stone-500 rounded-2xl text-[9px] font-bold uppercase tracking-widest hover:bg-stone-100 transition-all"
             >
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
               {{ $t('summary.calendar') }}
             </button>
-            <a
-              :href="getGoogleMapsUrl(item.title)"
-              target="_blank"
-              class="px-6 py-3 bg-stone-900 text-white rounded-xl flex items-center hover:bg-black transition-all shadow-md"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              </svg>
-            </a>
           </div>
         </div>
       </div>
