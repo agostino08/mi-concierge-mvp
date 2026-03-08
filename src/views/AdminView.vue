@@ -35,13 +35,7 @@ function translateLabel(label) {
   return topicTranslations.value[label] ?? adminLocale.es.answerLabelMap[label] ?? label;
 }
 
-watch(() => analytics.value?.topTopics, (t) => { if (t) translateTopics(t); });
-watch(() => globalAnalytics.value?.topTopics, (t) => { if (t) translateTopics(t); });
-watch(adminLang, () => {
-  topicTranslations.value = {};
-  if (analytics.value?.topTopics) translateTopics(analytics.value.topTopics);
-  if (globalAnalytics.value?.topTopics) translateTopics(globalAnalytics.value.topTopics);
-});
+// NOTE: topic watchers are placed after analytics + globalAnalytics declarations (below)
 
 // ─── Send monthly report by email ─────────────────────────────────────────────
 const showSendReport = ref(false);
@@ -67,11 +61,21 @@ async function sendReport() {
       reportSentOk.value = true;
       setTimeout(() => { showSendReport.value = false; reportSentOk.value = false; reportEmailInput.value = ''; }, 2000);
     } else {
-      const err = await res.json().catch(() => ({}));
-      alert(err.error || 'Failed to send report');
+      const body = await res.text();
+      let msg;
+      try {
+        const err = JSON.parse(body);
+        msg = err.error || 'Email delivery failed.';
+      } catch {
+        // non-JSON response means the API endpoint is not deployed or reachable
+        msg = res.status === 404
+          ? 'Email API not found. Make sure the app is deployed to Vercel.'
+          : `Server error (${res.status}). Check Vercel logs for details.`;
+      }
+      alert(msg);
     }
   } catch {
-    alert('Network error — please try again');
+    alert('Network error — please try again.');
   } finally {
     sendingReport.value = false;
   }
@@ -352,6 +356,15 @@ function copyAnalyticsReport() {
 // ─── Global Insights ──────────────────────────────────────────────────────────
 const globalAnalytics = ref(null);
 const globalAnalyticsLoading = ref(false);
+
+// ─── Topic translation watchers (must be after analytics + globalAnalytics) ───
+watch(() => analytics.value?.topTopics, (t) => { if (t) translateTopics(t); });
+watch(() => globalAnalytics.value?.topTopics, (t) => { if (t) translateTopics(t); });
+watch(adminLang, () => {
+  topicTranslations.value = {};
+  if (analytics.value?.topTopics) translateTopics(analytics.value.topTopics);
+  if (globalAnalytics.value?.topTopics) translateTopics(globalAnalytics.value.topTopics);
+});
 
 async function loadGlobalInsights() {
   screen.value = 'global';
