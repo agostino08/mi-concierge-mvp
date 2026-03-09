@@ -157,7 +157,7 @@
               <option value="">Category</option>
               <option v-for="c in partnerCategories" :key="c">{{ c }}</option>
             </select>
-            <input class="sm:col-span-2" v-model="partner.description" type="text" placeholder="Short description" class="input" />
+            <input v-model="partner.description" type="text" placeholder="Short description" class="sm:col-span-2 input" />
             <input v-model="partner.discount" type="text" placeholder="Guest discount (optional)" class="input" />
             <input v-model="partner.maps_url" type="url" placeholder="Google Maps URL (optional)" class="input" />
           </div>
@@ -295,6 +295,7 @@ async function submit() {
 </script>
 
 <style scoped>
+@reference "tailwindcss";
 .input {
   @apply w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-base text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-300 focus:border-transparent transition-all;
 }
