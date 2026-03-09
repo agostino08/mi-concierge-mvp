@@ -14,6 +14,13 @@ export function useAppInit() {
   const uiStore = useUIStore();
 
   async function init() {
+    // Skip hotel init for standalone pages that don't need hotel context
+    const path = window.location.pathname;
+    if (path === '/admin' || path.startsWith('/onboard')) {
+      uiStore.setLoading(false);
+      return;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const itineraryId = params.get('itinerary');
     const hotelId = params.get('hotel');
