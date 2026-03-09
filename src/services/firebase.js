@@ -73,3 +73,23 @@ export async function updateHotel(id, data) {
 export async function deleteHotel(id) {
   await deleteDoc(doc(db, "hotels", id));
 }
+
+// ─── Hotel Onboarding Requests ─────────────────────────────────────────────────
+
+export async function submitOnboardingRequest(data) {
+  const docRef = await addDoc(collection(db, "onboarding_requests"), {
+    ...data,
+    status: 'pending',
+    createdAt: serverTimestamp(),
+  });
+  return docRef.id;
+}
+
+export async function getOnboardingRequests() {
+  const snap = await getDocs(collection(db, "onboarding_requests"));
+  return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+}
+
+export async function updateOnboardingRequestStatus(id, status) {
+  await setDoc(doc(db, "onboarding_requests", id), { status }, { merge: true });
+}

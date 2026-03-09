@@ -4,6 +4,7 @@ import QuestionnaireView from '../views/QuestionnaireView.vue';
 import ResultsView from '../views/ResultsView.vue';
 import SummaryView from '../views/SummaryView.vue';
 import AdminView from '../views/AdminView.vue';
+import OnboardingView from '../views/OnboardingView.vue';
 import { useHotelStore } from '../stores/useHotelStore';
 
 const routes = [
@@ -36,6 +37,11 @@ const routes = [
     path: '/admin',
     name: 'Admin',
     component: AdminView,
+  },
+  {
+    path: '/onboard',
+    name: 'Onboard',
+    component: OnboardingView,
   },
 ];
 

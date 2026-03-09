@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import QRCode from 'qrcode';
-import { getAllHotels, createHotel, updateHotel, deleteHotel } from '../services/firebase';
+import { getAllHotels, createHotel, updateHotel, deleteHotel, getOnboardingRequests, updateOnboardingRequestStatus } from '../services/firebase';
 import { getHotelAnalytics, getAllAnalytics, computeStats, deleteHotelAnalytics } from '../services/analytics';
 import { adminLocale } from '../locales/adminLocale';
 
@@ -82,20 +82,36 @@ async function sendReport() {
 }
 
 // ─── Auth ─────────────────────────────────────────────────────────────────────
-const ADMIN_PASS = import.meta.env.VITE_ADMIN_PASS || 'admin123';
 const isLoggedIn = ref(sessionStorage.getItem('mi_admin') === 'true');
 const passcode = ref('');
 const loginError = ref('');
+const loginLoading = ref(false);
 
-function login() {
-  if (passcode.value === ADMIN_PASS) {
-    sessionStorage.setItem('mi_admin', 'true');
-    isLoggedIn.value = true;
-    loginError.value = '';
-    loadHotels();
-  } else {
-    loginError.value = L.value.incorrectPasscode;
-    passcode.value = '';
+async function login() {
+  if (!passcode.value) return;
+  loginLoading.value = true;
+  loginError.value = '';
+  try {
+    const res = await fetch('/api/verify-admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password: passcode.value }),
+    });
+    if (res.ok) {
+      sessionStorage.setItem('mi_admin', 'true');
+      isLoggedIn.value = true;
+      passcode.value = '';
+      loadHotels();
+      loadRequests();
+    } else {
+      const { error } = await res.json().catch(() => ({}));
+      loginError.value = error || L.value.incorrectPasscode;
+      passcode.value = '';
+    }
+  } catch {
+    loginError.value = 'Network error — check your connection.';
+  } finally {
+    loginLoading.value = false;
   }
 }
 
@@ -106,8 +122,78 @@ function logout() {
 }
 
 // ─── State ────────────────────────────────────────────────────────────────────
-const screen = ref('list'); // 'list' | 'form' | 'global'
+const screen = ref('list'); // 'list' | 'form' | 'global' | 'requests'
 const hotels = ref([]);
+
+// ─── Pending onboarding requests ──────────────────────────────────────────────
+const requests = ref([]);
+const requestsLoading = ref(false);
+
+async function loadRequests() {
+  requestsLoading.value = true;
+  try {
+    requests.value = await getOnboardingRequests();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    requestsLoading.value = false;
+  }
+}
+
+const pendingCount = computed(() => requests.value.filter(r => r.status === 'pending').length);
+
+async function importRequest(req) {
+  // Pre-fill the hotel form with the request data and open form screen
+  selectedId.value = null;
+  form.value = {
+    name: req.name || '',
+    city: req.city || '',
+    slug: '',
+    neighborhood: req.neighborhood || '',
+    hotel_category: '',
+    hotel_stars: '',
+    description: req.description || '',
+    ai_context: '',
+    address: req.address || '',
+    maps_url: req.maps_url || '',
+    logo_url: '',
+    cover_url: '',
+    reception: req.reception || '',
+    checkin: req.checkin || '',
+    checkout: req.checkout || '',
+    wifi_name: req.wifi_name || '',
+    wifi_pass: req.wifi_pass || '',
+    breakfast: req.breakfast || '',
+    pool: req.pool || '',
+    gym: req.gym || '',
+    spa: req.spa || '',
+    parking: req.parking || '',
+    restaurant: req.restaurant || '',
+    room_service: req.room_service || '',
+    facilities: req.facilities || '',
+    faqs: (req.faqs || []).filter(f => f.question),
+    partners: (req.partners || []).filter(p => p.name).map(p => ({
+      id: crypto.randomUUID(),
+      name: p.name,
+      category: p.category || '',
+      description: p.description || '',
+      discount: p.discount || '',
+      maps_url: p.maps_url || '',
+      website: '',
+    })),
+  };
+  qrDataUrl.value = '';
+  activeFormTab.value = 'profile';
+  screen.value = 'form';
+  // Mark the request as imported
+  try { await updateOnboardingRequestStatus(req.id, 'imported'); } catch {}
+  requests.value = requests.value.map(r => r.id === req.id ? { ...r, status: 'imported' } : r);
+}
+
+async function dismissRequest(req) {
+  try { await updateOnboardingRequestStatus(req.id, 'dismissed'); } catch {}
+  requests.value = requests.value.map(r => r.id === req.id ? { ...r, status: 'dismissed' } : r);
+}
 const selectedId = ref(null);
 const saving = ref(false);
 const deleting = ref(false);
@@ -182,7 +268,7 @@ async function loadHotels() {
 }
 
 onMounted(() => {
-  if (isLoggedIn.value) loadHotels();
+  if (isLoggedIn.value) { loadHotels(); loadRequests(); }
 });
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
@@ -569,15 +655,16 @@ const fieldGroups = computed(() => {
           <p v-if="loginError" class="text-rose-600 text-sm font-medium">{{ loginError }}</p>
           <button
             @click="login"
-            class="w-full py-3.5 bg-stone-900 text-white rounded-xl font-semibold text-base hover:bg-stone-700 transition-all active:scale-95"
+            :disabled="loginLoading"
+            class="w-full py-3.5 bg-stone-900 text-white rounded-xl font-semibold text-base hover:bg-stone-700 transition-all active:scale-95 disabled:opacity-60"
           >
-            {{ L.signIn }}
+            {{ loginLoading ? '...' : L.signIn }}
           </button>
         </div>
 
         <div class="flex items-center justify-between">
           <p class="text-[11px] text-stone-300">
-            Set <code class="bg-stone-100 px-1 rounded">VITE_ADMIN_PASS</code> in env vars.
+            Set <code class="bg-stone-100 px-1 rounded">ADMIN_PASS</code> in Vercel env vars.
           </p>
           <button
             @click="adminLang = adminLang === 'en' ? 'es' : 'en'"
@@ -609,8 +696,9 @@ const fieldGroups = computed(() => {
               <span v-if="screen === 'form'" class="text-xs text-stone-500 font-medium leading-none truncate max-w-[120px]">
                 {{ form.name || L.newHotel }}
               </span>
-              <span v-if="screen === 'global'" class="text-stone-300 text-sm leading-none">/</span>
+              <span v-if="screen === 'global' || screen === 'requests'" class="text-stone-300 text-sm leading-none">/</span>
               <span v-if="screen === 'global'" class="text-xs text-stone-500 font-medium leading-none">{{ L.globalTitle }}</span>
+              <span v-if="screen === 'requests'" class="text-xs text-stone-500 font-medium leading-none">Hotel Requests</span>
             </div>
           </div>
         </div>
@@ -623,7 +711,7 @@ const fieldGroups = computed(() => {
             {{ adminLang === 'en' ? 'ES' : 'EN' }}
           </button>
           <button
-            v-if="screen === 'form' || screen === 'global'"
+            v-if="screen === 'form' || screen === 'global' || screen === 'requests'"
             @click="goList"
             class="text-xs font-semibold text-stone-500 hover:text-stone-800 transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-stone-100"
           >
@@ -650,15 +738,27 @@ const fieldGroups = computed(() => {
               <h2 class="text-xl font-bold text-stone-800">{{ L.hotels }}</h2>
               <p class="text-sm text-stone-400 mt-0.5">{{ L.hotelsCount(hotels.length) }}</p>
             </div>
-            <button
-              @click="loadGlobalInsights"
-              class="flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-stone-600 rounded-xl text-sm font-semibold hover:bg-stone-100 transition-all active:scale-95"
-            >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              {{ L.globalInsights }}
-            </button>
+            <div class="flex items-center gap-2">
+              <button
+                @click="screen = 'requests'; loadRequests()"
+                class="relative flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-stone-600 rounded-xl text-sm font-semibold hover:bg-stone-100 transition-all active:scale-95"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                Requests
+                <span v-if="pendingCount > 0" class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{{ pendingCount }}</span>
+              </button>
+              <button
+                @click="loadGlobalInsights"
+                class="flex items-center gap-2 px-4 py-2.5 border border-stone-200 text-stone-600 rounded-xl text-sm font-semibold hover:bg-stone-100 transition-all active:scale-95"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                {{ L.globalInsights }}
+              </button>
+            </div>
             <button
               @click="createNew"
               class="flex items-center gap-2 px-5 py-2.5 bg-stone-900 text-white rounded-xl text-sm font-semibold hover:bg-stone-700 transition-all active:scale-95"
@@ -715,6 +815,84 @@ const fieldGroups = computed(() => {
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
                 </svg>
               </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ── Pending Onboarding Requests ───────────────────────── -->
+        <div v-if="screen === 'requests'" class="space-y-6">
+          <div>
+            <h2 class="text-xl font-bold text-stone-800">Hotel Requests</h2>
+            <p class="text-sm text-stone-400 mt-0.5">Forms submitted by hotels via your onboarding link.</p>
+          </div>
+
+          <div v-if="requestsLoading" class="flex justify-center py-16">
+            <div class="w-8 h-8 border-2 border-stone-200 border-t-stone-600 rounded-full animate-spin"></div>
+          </div>
+
+          <div v-else-if="requests.length === 0" class="text-center py-20 bg-white rounded-2xl border border-stone-200">
+            <p class="font-semibold text-stone-600 mb-1">No submissions yet</p>
+            <p class="text-sm text-stone-400 mt-1">Share your onboarding link with hotels to get started.</p>
+            <p class="text-xs font-mono text-stone-300 mt-3 bg-stone-50 rounded-xl px-4 py-2 inline-block">{{ window.location.origin }}/onboard</p>
+          </div>
+
+          <div v-else class="space-y-3">
+            <div
+              v-for="req in requests"
+              :key="req.id"
+              class="bg-white rounded-2xl border p-5 space-y-3 transition-all"
+              :class="req.status === 'pending' ? 'border-amber-200 bg-amber-50/30' : 'border-stone-200 opacity-60'"
+            >
+              <div class="flex items-start justify-between gap-4">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <p class="font-semibold text-stone-800 text-base">{{ req.name }}</p>
+                    <span
+                      class="text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 rounded-full"
+                      :class="req.status === 'pending' ? 'bg-amber-100 text-amber-700' : req.status === 'imported' ? 'bg-emerald-100 text-emerald-700' : 'bg-stone-100 text-stone-400'"
+                    >{{ req.status }}</span>
+                  </div>
+                  <p class="text-sm text-stone-400 mt-0.5">{{ req.city }} · {{ req.contact_name }} · {{ req.contact_email }}</p>
+                </div>
+              </div>
+
+              <div v-if="req.description" class="text-sm text-stone-500 italic">"{{ req.description }}"</div>
+
+              <div class="flex flex-wrap gap-2 text-xs text-stone-500">
+                <span v-if="req.checkin" class="bg-stone-100 rounded-lg px-2 py-1">Check-in: {{ req.checkin }}</span>
+                <span v-if="req.checkout" class="bg-stone-100 rounded-lg px-2 py-1">Check-out: {{ req.checkout }}</span>
+                <span v-if="req.wifi_name" class="bg-stone-100 rounded-lg px-2 py-1">WiFi: {{ req.wifi_name }}</span>
+                <span v-if="req.faqs?.length" class="bg-stone-100 rounded-lg px-2 py-1">{{ req.faqs.length }} FAQ(s)</span>
+                <span v-if="req.partners?.length" class="bg-stone-100 rounded-lg px-2 py-1">{{ req.partners.length }} partner(s)</span>
+              </div>
+
+              <div v-if="req.status === 'pending'" class="flex items-center gap-2 pt-1">
+                <button
+                  @click="importRequest(req)"
+                  class="flex-1 py-2.5 bg-stone-900 text-white rounded-xl text-sm font-semibold hover:bg-stone-700 transition-all active:scale-95"
+                >
+                  Import as new hotel
+                </button>
+                <button
+                  @click="dismissRequest(req)"
+                  class="px-4 py-2.5 border border-stone-200 text-stone-400 rounded-xl text-sm font-semibold hover:bg-stone-100 transition-all"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-stone-50 rounded-2xl border border-stone-200 p-5">
+            <p class="text-xs font-bold uppercase tracking-widest text-stone-400 mb-2">Your onboarding link</p>
+            <p class="text-sm text-stone-500 mb-3">Share this link with hotels. They fill in their info and it appears here for you to review and import.</p>
+            <div class="flex items-center gap-3">
+              <code class="flex-1 text-xs font-mono bg-white border border-stone-200 rounded-xl px-4 py-2.5 text-stone-600 truncate">{{ window.location.origin }}/onboard</code>
+              <button
+                @click="() => { navigator.clipboard.writeText(window.location.origin + '/onboard'); }"
+                class="px-4 py-2.5 bg-stone-900 text-white rounded-xl text-xs font-semibold hover:bg-stone-700 transition-all"
+              >Copy</button>
             </div>
           </div>
         </div>

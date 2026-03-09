@@ -19,20 +19,8 @@ if (!admin.apps.length) {
   }
 }
 
-// Simple In-Memory Rate Limiter (approximate for Serverless)
-const rateLimit = new Map();
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 const MAX_REQUESTS = 5;
-
-// Helper to clean old rate limit entries
-setInterval(() => {
-  const now = Date.now();
-  for (const [ip, data] of rateLimit.entries()) {
-    if (now - data.timestamp > RATE_LIMIT_WINDOW_MS) {
-      rateLimit.delete(ip);
-    }
-  }
-}, RATE_LIMIT_WINDOW_MS);
 
 
 export default async function handler(req, res) {
@@ -57,23 +45,26 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  // --- RATE LIMITING ---
-  const ip = req.headers["x-forwarded-for"] || req.socket.remoteAddress || "unknown_ip";
-  const now = Date.now();
-  
-  if (!rateLimit.has(ip)) {
-    rateLimit.set(ip, { count: 1, timestamp: now });
-  } else {
-    const data = rateLimit.get(ip);
-    if (now - data.timestamp > RATE_LIMIT_WINDOW_MS) {
-       rateLimit.set(ip, { count: 1, timestamp: now }); // Reset window
-    } else {
-       if (data.count >= MAX_REQUESTS) {
-         return res.status(429).json({ error: "Too many requests. Please try again later." });
-       }
-       data.count++;
-       rateLimit.set(ip, data);
+  // --- RATE LIMITING (Firestore-based — survives serverless cold starts) ---
+  const rawIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "unknown";
+  const ipKey = rawIp.replace(/[^a-zA-Z0-9]/g, "_");
+  try {
+    if (admin.apps.length) {
+      const db = admin.firestore();
+      const rlRef = db.collection("rate_limits").doc(ipKey);
+      const now = Date.now();
+      const snap = await rlRef.get();
+      const data = snap.data();
+      if (!data || now - data.windowStart > RATE_LIMIT_WINDOW_MS) {
+        await rlRef.set({ count: 1, windowStart: now });
+      } else if (data.count >= MAX_REQUESTS) {
+        return res.status(429).json({ error: "Too many requests. Please try again in 10 minutes." });
+      } else {
+        await rlRef.update({ count: data.count + 1 });
+      }
     }
+  } catch (e) {
+    console.warn("Rate limit check failed (non-blocking):", e.message);
   }
   // --- END RATE LIMITING ---
 
