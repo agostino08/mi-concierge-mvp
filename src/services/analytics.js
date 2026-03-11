@@ -1,5 +1,5 @@
 import { db } from './firebase';
-import { collection, addDoc, getDocs, deleteDoc, query, where, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 // Unique session ID per browser tab — resets on new tab or hard refresh
 const sessionId = (() => {
@@ -26,36 +26,40 @@ export function logEvent(hotelId, eventType, data = {}) {
   }).catch((e) => { console.error('[analytics] write failed:', e.code, e.message); });
 }
 
+// Admin analytics reads/deletes route through /api/admin-data (requires session token).
+async function adminRequest(action, params = {}) {
+  const token = sessionStorage.getItem("mi_admin_token") || "";
+  const res = await fetch("/api/admin-data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-admin-token": token },
+    body: JSON.stringify({ action, ...params }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.error || "Admin request failed");
+  }
+  return res.json();
+}
+
 /**
  * Fetch analytics events for a single hotel, filtered to the last `days` days.
  */
 export async function getHotelAnalytics(hotelId, days = 30) {
-  const snap = await getDocs(
-    query(collection(db, 'analytics_events'), where('hotelId', '==', hotelId))
-  );
-  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-  return snap.docs
-    .map(d => d.data())
-    .filter(e => e.createdAt?.toMillis() > cutoff);
+  return adminRequest("getHotelAnalytics", { hotelId, days });
 }
 
 /**
  * Delete all analytics events for a hotel (call when deleting a hotel).
  */
 export async function deleteHotelAnalytics(hotelId) {
-  const snap = await getDocs(query(collection(db, 'analytics_events'), where('hotelId', '==', hotelId)));
-  await Promise.all(snap.docs.map(d => deleteDoc(d.ref)));
+  await adminRequest("deleteHotelAnalytics", { hotelId });
 }
 
 /**
  * Fetch all analytics events across every hotel (global view).
  */
 export async function getAllAnalytics(days = 30) {
-  const snap = await getDocs(collection(db, 'analytics_events'));
-  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
-  return snap.docs
-    .map(d => d.data())
-    .filter(e => e.createdAt?.toMillis() > cutoff);
+  return adminRequest("getAllAnalytics", { days });
 }
 
 // ─── Internal helpers ─────────────────────────────────────────────────────────

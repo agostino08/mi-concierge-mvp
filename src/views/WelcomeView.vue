@@ -61,6 +61,7 @@ function handleClickOutside(event) {
           :src="hotelStore.hotelData.logo_url"
           :alt="hotelStore.hotelData.name"
           class="h-16 object-contain drop-shadow-sm"
+          @error="(e) => e.target.style.display = 'none'"
         />
       </div>
       <p class="text-[10px] font-bold uppercase tracking-[0.4em] text-stone-400">

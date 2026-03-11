@@ -73,7 +73,7 @@ async function handleTextShare() {
       <div class="absolute top-0 left-0 w-full h-2 bg-stone-800"></div>
 
       <div class="flex flex-col items-center text-center gap-4 pb-10 border-b border-stone-100">
-        <img v-if="hotelData?.logo_url" :src="hotelData.logo_url" class="h-12 mix-blend-multiply mb-2" />
+        <img v-if="hotelData?.logo_url" :src="hotelData.logo_url" class="h-12 mix-blend-multiply mb-2" @error="(e) => e.target.style.display = 'none'" />
         <div>
           <h3 class="text-[11px] font-bold uppercase tracking-[0.5em] text-stone-900">{{ hotelData?.name }}</h3>
           <p class="text-stone-400 text-[10px] uppercase tracking-widest mt-1">

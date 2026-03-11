@@ -47,36 +47,47 @@ export async function saveSharedItinerary(payload) {
   return docRef.id;
 }
 
+// ─── Admin API helper ──────────────────────────────────────────────────────────
+// All admin writes route through /api/admin-data (Firebase Admin SDK, bypasses rules).
+// Session token is stored in sessionStorage by AdminView.vue after login.
+
+async function adminRequest(action, params = {}) {
+  const token = sessionStorage.getItem("mi_admin_token") || "";
+  const res = await fetch("/api/admin-data", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-admin-token": token },
+    body: JSON.stringify({ action, ...params }),
+  });
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}));
+    throw new Error(e.error || "Admin request failed");
+  }
+  return res.json();
+}
+
 // ─── Admin CRUD ────────────────────────────────────────────────────────────────
 
 export async function getAllHotels() {
-  const snap = await getDocs(collection(db, "hotels"));
-  return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+  return adminRequest("getAllHotels");
 }
 
 export async function createHotel(data) {
-  const docRef = await addDoc(collection(db, "hotels"), {
-    ...data,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  });
-  return docRef.id;
+  const result = await adminRequest("createHotel", { data });
+  return result.id;
 }
 
 export async function updateHotel(id, data) {
-  await setDoc(doc(db, "hotels", id), {
-    ...data,
-    updatedAt: serverTimestamp(),
-  }, { merge: true });
+  await adminRequest("updateHotel", { id, data });
 }
 
 export async function deleteHotel(id) {
-  await deleteDoc(doc(db, "hotels", id));
+  await adminRequest("deleteHotel", { id });
 }
 
 // ─── Hotel Onboarding Requests ─────────────────────────────────────────────────
 
 export async function submitOnboardingRequest(data) {
+  // Guest-facing: client SDK write is allowed by Firestore rules (create-only).
   const docRef = await addDoc(collection(db, "onboarding_requests"), {
     ...data,
     status: 'pending',
@@ -86,10 +97,9 @@ export async function submitOnboardingRequest(data) {
 }
 
 export async function getOnboardingRequests() {
-  const snap = await getDocs(collection(db, "onboarding_requests"));
-  return snap.docs.map(d => ({ ...d.data(), id: d.id }));
+  return adminRequest("getOnboardingRequests");
 }
 
 export async function updateOnboardingRequestStatus(id, status) {
-  await setDoc(doc(db, "onboarding_requests", id), { status }, { merge: true });
+  await adminRequest("updateOnboardingRequestStatus", { id, status });
 }

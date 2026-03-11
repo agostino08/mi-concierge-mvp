@@ -98,7 +98,9 @@ async function login() {
       body: JSON.stringify({ password: passcode.value }),
     });
     if (res.ok) {
+      const { token } = await res.json().catch(() => ({}));
       sessionStorage.setItem('mi_admin', 'true');
+      if (token) sessionStorage.setItem('mi_admin_token', token);
       isLoggedIn.value = true;
       passcode.value = '';
       loadHotels();
@@ -117,6 +119,7 @@ async function login() {
 
 function logout() {
   sessionStorage.removeItem('mi_admin');
+  sessionStorage.removeItem('mi_admin_token');
   isLoggedIn.value = false;
   screen.value = 'list';
 }
@@ -797,6 +800,7 @@ const fieldGroups = computed(() => {
                   :src="hotel.logo_url"
                   :alt="hotel.name"
                   class="w-12 h-12 object-contain rounded-xl bg-stone-50 border border-stone-100 p-1"
+                  @error="(e) => e.target.style.display = 'none'"
                 />
                 <div
                   v-else
@@ -1536,7 +1540,7 @@ const fieldGroups = computed(() => {
                 </p>
                 <div v-if="form.logo_url" class="pt-1">
                   <p class="text-xs text-stone-400 mb-2">{{ L.logoPreview }}</p>
-                  <img :src="form.logo_url" :alt="form.name" class="h-10 object-contain" />
+                  <img :src="form.logo_url" :alt="form.name" class="h-10 object-contain" @error="(e) => e.target.style.display = 'none'" />
                 </div>
               </div>
             </div>

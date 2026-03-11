@@ -1,3 +1,11 @@
+import crypto from "crypto";
+
+// Deterministic session token — same password always produces same token.
+// No server-side state needed; validated by admin-data.js using the same derivation.
+function makeSessionToken(pass) {
+  return crypto.createHmac("sha256", pass).update("mi-concierge-admin-session").digest("hex");
+}
+
 export default async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader("Access-Control-Allow-Methods", "POST,OPTIONS");
@@ -14,7 +22,7 @@ export default async function handler(req, res) {
   }
 
   if (password === correct) {
-    return res.status(200).json({ ok: true });
+    return res.status(200).json({ ok: true, token: makeSessionToken(correct) });
   }
 
   return res.status(401).json({ error: "Incorrect passcode." });
