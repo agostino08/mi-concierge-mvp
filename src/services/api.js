@@ -1,8 +1,13 @@
-const STREAM_TIMEOUT_MS = 30_000; // 30 seconds total — covers cold start + full generation
+// How long to wait for the initial server response (covers Vercel cold starts).
+const CONNECT_TIMEOUT_MS = 20_000;
+// How long to wait between chunks during streaming.
+// Resets on every chunk — so a slow-but-working 60s generation is fine.
+// Only fires if the connection goes completely silent mid-stream.
+const INACTIVITY_TIMEOUT_MS = 15_000;
 
 export async function generateItinerary(hotel, user, lang, onChunk) {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), STREAM_TIMEOUT_MS);
+  let timeoutId = setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS);
 
   try {
     const response = await fetch("/api/generate-itinerary", {
@@ -20,9 +25,18 @@ export async function generateItinerary(hotel, user, lang, onChunk) {
     const reader = response.body.getReader();
     const decoder = new TextDecoder("utf-8");
 
+    // Connection established — switch to inactivity timer.
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => controller.abort(), INACTIVITY_TIMEOUT_MS);
+
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
+
+      // Reset inactivity timer on every chunk — generation can take as long as needed.
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => controller.abort(), INACTIVITY_TIMEOUT_MS);
+
       const chunk = decoder.decode(value, { stream: true });
       if (onChunk) onChunk(chunk);
     }
