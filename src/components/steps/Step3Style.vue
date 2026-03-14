@@ -28,12 +28,5 @@ function toggle(option) {
         {{ $t(`options.${o}`) }}
       </button>
     </div>
-    <button
-      @click="next()"
-      :disabled="formStore.formData.style.length === 0"
-      class="btn-dark w-full mt-12 shadow-xl"
-    >
-      {{ $t('questionnaire.next') }}
-    </button>
   </div>
 </template>

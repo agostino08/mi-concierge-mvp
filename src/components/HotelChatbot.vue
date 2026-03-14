@@ -1,17 +1,28 @@
 <script setup>
 import { ref, onMounted, nextTick, computed, watch } from 'vue';
+import { useRoute } from 'vue-router';
 import { logEvent } from '../services/analytics';
 import { useI18n } from 'vue-i18n';
 import { useHotelStore } from '../stores/useHotelStore';
 import { useUIStore } from '../stores/useUIStore';
 
 const { t, locale } = useI18n();
+const route = useRoute();
 const hotelStore = useHotelStore();
 const uiStore = useUIStore();
 
 const hotelInfo = computed(() => hotelStore.hotelData || {});
 
 const isOpen = ref(false);
+
+// Raise FAB above questionnaire fixed nav bar; always above loading overlay (z-[100])
+const containerClass = computed(() =>
+  isOpen.value
+    ? 'top-2 left-2 right-2 bottom-2 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:items-end'
+    : route.name === 'Questionnaire'
+      ? 'bottom-24 right-4 sm:right-6 items-end'
+      : 'bottom-6 right-6 items-end'
+);
 const userMessage = ref('');
 const messages = ref([]);
 const isTyping = ref(false);
@@ -197,11 +208,10 @@ function sendMessage() {
   />
 
   <!-- Main container: full-screen on mobile, corner popup on desktop -->
+  <!-- z-[110] ensures the FAB floats above the results loading overlay (z-[100]) -->
   <div
-    class="fixed z-50 no-print flex flex-col"
-    :class="isOpen
-      ? 'top-2 left-2 right-2 bottom-2 sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:items-end'
-      : 'bottom-6 right-6 items-end'"
+    class="fixed z-[110] no-print flex flex-col"
+    :class="containerClass"
   >
     <!-- Chat window -->
     <transition name="chat-slide">
@@ -323,18 +333,29 @@ function sendMessage() {
       </div>
     </transition>
 
-    <!-- ── FAB: hidden on mobile when chat is open (header close button suffices) ── -->
+    <!-- ── FAB: pill with label when closed; compact circle when open on desktop ── -->
+    <!-- Hidden on mobile when chat is open (header X button closes on mobile) -->
     <button
       @click="isOpen = !isOpen"
-      class="w-14 h-14 bg-stone-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all ring-4 ring-white flex-shrink-0 self-end mt-3 sm:mt-0"
-      :class="{ 'hidden sm:flex': isOpen }"
+      class="bg-stone-900 text-white rounded-full flex items-center shadow-2xl hover:scale-105 active:scale-95 transition-all ring-2 ring-white/80 flex-shrink-0 self-end"
+      :class="isOpen
+        ? 'w-12 h-12 justify-center hidden sm:flex mt-0'
+        : 'pl-3 pr-4 h-14'"
       :aria-label="$t('chatbot.title')"
     >
       <transition name="icon-switch" mode="out-in">
-        <svg v-if="!isOpen" key="chat" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-        <svg v-else key="close" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Closed state: icon with green dot + label text -->
+        <div v-if="!isOpen" key="chat" class="flex items-center gap-2.5">
+          <div class="relative w-8 h-8 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+            </svg>
+            <span class="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-stone-900"></span>
+          </div>
+          <span class="text-[12px] font-bold uppercase tracking-widest whitespace-nowrap pr-1">{{ $t('chatbot.title') }}</span>
+        </div>
+        <!-- Open state (desktop only): close X icon -->
+        <svg v-else key="close" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
         </svg>
       </transition>
