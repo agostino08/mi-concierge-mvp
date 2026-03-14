@@ -11,12 +11,10 @@ export function useStepNavigation() {
   const step = computed(() => parseInt(route.params.step) || 1);
 
   function next() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     router.push(`/questionnaire/${step.value + 1}`);
   }
 
   function prev() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
     if (step.value === 1) router.push('/welcome');
     else router.push(`/questionnaire/${step.value - 1}`);
   }

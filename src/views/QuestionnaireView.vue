@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { useStepNavigation } from '../composables/useStepNavigation';
 import Step1Group from '../components/steps/Step1Group.vue';
 import Step2Days from '../components/steps/Step2Days.vue';
@@ -13,6 +13,11 @@ const { step, prev } = useStepNavigation();
 const STEPS = [Step1Group, Step2Days, Step3Style, Step4Food, Step5Budget, Step6Transport];
 const currentStep = computed(() => STEPS[step.value - 1]);
 const progress = computed(() => (step.value / STEPS.length) * 100);
+
+// Scroll to top after each step change (post-flush = after DOM update)
+watch(step, () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}, { flush: 'post' });
 </script>
 
 <template>
