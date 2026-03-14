@@ -97,7 +97,7 @@ function handleClickOutside(event) {
       </transition>
     </div>
 
-    <button @click="next()" class="btn-dark w-full shadow-xl">
+    <button @click="next()" class="btn-dark fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-[528px] z-[104] shadow-xl no-print">
       {{ $t('questionnaire.next') }}
     </button>
   </div>

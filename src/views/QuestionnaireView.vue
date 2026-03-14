@@ -16,7 +16,7 @@ const progress = computed(() => (step.value / STEPS.length) * 100);
 </script>
 
 <template>
-  <div class="flex flex-col pt-6 pb-24">
+  <div class="flex flex-col pt-6 pb-32">
     <!-- Inline progress bar -->
     <div class="mb-6">
       <div class="flex justify-between items-center mb-2">
@@ -34,10 +34,14 @@ const progress = computed(() => (step.value / STEPS.length) * 100);
 
     <component :is="currentStep" />
 
+    <!-- Gradient fade at bottom -->
+    <div class="fixed bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#fdfcfb]/90 to-transparent z-[103] pointer-events-none no-print"></div>
+
+    <!-- Back button: fixed bottom-left pill -->
     <button
       v-if="step > 1"
       @click="prev()"
-      class="text-stone-400 text-xs font-bold uppercase tracking-widest block mx-auto hover:text-stone-800 transition-colors mt-6"
+      class="fixed bottom-6 left-6 z-[105] no-print bg-white/70 backdrop-blur-sm rounded-full px-4 py-2.5 text-stone-500 text-xs font-bold uppercase tracking-widest hover:text-stone-800 hover:bg-white transition-all shadow-sm"
     >
       &larr; {{ $t('questionnaire.back') }}
     </button>

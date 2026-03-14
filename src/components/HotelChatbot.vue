@@ -326,10 +326,15 @@ function sendMessage() {
     <!-- ── FAB: hidden on mobile when chat is open (header close button suffices) ── -->
     <button
       @click="isOpen = !isOpen"
-      class="fab-btn bg-stone-900 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 active:scale-95 transition-all ring-4 ring-white flex-shrink-0 self-end mt-3 sm:mt-0"
+      class="fab-btn relative bg-gradient-to-br from-stone-800 to-stone-950 text-white rounded-full flex items-center justify-center shadow-2xl hover:scale-105 hover:shadow-stone-900/50 active:scale-95 transition-all ring-[3px] ring-white flex-shrink-0 self-end mt-3 sm:mt-0"
       :class="[{ 'hidden sm:flex': isOpen }, isOpen ? 'w-14 h-14' : 'gap-2.5 px-5 py-3.5']"
       :aria-label="$t('chatbot.title')"
     >
+      <!-- Green online dot (only when closed) -->
+      <span v-if="!isOpen" class="absolute -top-1 -right-1 flex h-3.5 w-3.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-3.5 w-3.5 bg-emerald-500 border-2 border-white"></span>
+      </span>
       <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path v-if="!isOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
         <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />

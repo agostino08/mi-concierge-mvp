@@ -59,7 +59,7 @@ async function submit() {
     <button
       @click="submit()"
       :disabled="formStore.formData.transport.length === 0"
-      class="btn-dark w-full mt-12 animate-in slide-in-from-bottom-2 shadow-2xl"
+      class="btn-dark fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-[528px] z-[104] shadow-2xl no-print"
     >
       {{ $t('questionnaire.generate') }}
     </button>

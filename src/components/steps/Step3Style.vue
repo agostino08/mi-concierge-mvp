@@ -31,7 +31,7 @@ function toggle(option) {
     <button
       @click="next()"
       :disabled="formStore.formData.style.length === 0"
-      class="btn-dark w-full mt-12 shadow-xl"
+      class="btn-dark fixed bottom-24 left-1/2 -translate-x-1/2 w-[calc(100%-3rem)] max-w-[528px] z-[104] shadow-xl no-print"
     >
       {{ $t('questionnaire.next') }}
     </button>
