@@ -244,6 +244,9 @@ const emptyForm = () => ({
   restaurant: '',
   room_service: '',
   facilities: '',
+  review_google: '',
+  review_booking: '',
+  review_tripadvisor: '',
   faqs: [],
   partners: [],
 });
@@ -319,6 +322,9 @@ async function selectHotel(hotel) {
     restaurant: hotel.restaurant || '',
     room_service: hotel.room_service || '',
     facilities: hotel.facilities || '',
+    review_google: hotel.review_google || '',
+    review_booking: hotel.review_booking || '',
+    review_tripadvisor: hotel.review_tripadvisor || '',
     faqs: hotel.faqs ? JSON.parse(JSON.stringify(hotel.faqs)) : [],
     partners: hotel.partners ? JSON.parse(JSON.stringify(hotel.partners)) : [],
   };
@@ -590,6 +596,15 @@ const fieldGroups = computed(() => {
         { key: 'restaurant',   label: loc.labelRestaurant,  type: 'text',     placeholder: 'La Terraza · Lunch 13:00–15:30 · Dinner 19:00–23:00' },
         { key: 'room_service', label: loc.labelRoomService, type: 'text',     placeholder: 'Available 07:00–23:00 · Call extension 0' },
         { key: 'facilities',   label: loc.labelFacilities,  type: 'textarea', placeholder: 'Business centre 24h · Concierge desk · Luggage storage · Laundry service...' },
+      ],
+    },
+    {
+      title: loc.groupReviewLinks,
+      tab: 'link',
+      fields: [
+        { key: 'review_google',      label: loc.labelReviewGoogle,      type: 'text', placeholder: 'https://g.page/r/...' },
+        { key: 'review_booking',     label: loc.labelReviewBooking,     type: 'text', placeholder: 'https://www.booking.com/hotel/...' },
+        { key: 'review_tripadvisor', label: loc.labelReviewTripadvisor, type: 'text', placeholder: 'https://www.tripadvisor.com/Hotel_Review-...' },
       ],
     },
   ];
