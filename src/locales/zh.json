@@ -57,7 +57,7 @@
     "subtitle": "您的专属精选",
     "back": "返回",
     "remove": "移除",
-    "share": "发送魔法链接",
+    "share": "分享给他人",
     "qr_desc": "扫描以在手机上查看",
     "share_title": "📍 我在 {hotel} 的收藏\n\n",
     "share_map": "📍 地图：{url}",
@@ -65,7 +65,11 @@
     "personal_selection": "个人精选",
     "calendar": "日历",
     "prepared_for_you": "专为您的住宿精心准备。",
-    "send_whatsapp": "通过文字/WhatsApp发送"
+    "send_whatsapp": "通过文字/WhatsApp发送",
+    "leave_review": "留下评价",
+    "review_google": "Google Reviews",
+    "review_booking": "Booking.com",
+    "review_tripadvisor": "Tripadvisor"
   },
   "chatbot": {
     "title": "礼宾助手",

@@ -57,7 +57,7 @@
     "subtitle": "Ваш личный выбор",
     "back": "Назад",
     "remove": "Удалить",
-    "share": "Отправить волшебную ссылку",
+    "share": "Поделиться с кем-то",
     "qr_desc": "Сканируйте для просмотра на телефоне",
     "share_title": "📍 МОИ ИЗБРАННЫЕ В {hotel}\n\n",
     "share_map": "📍 Карта: {url}",
@@ -65,7 +65,11 @@
     "personal_selection": "Личный выбор",
     "calendar": "Календарь",
     "prepared_for_you": "Подготовлено специально для вашего пребывания.",
-    "send_whatsapp": "Отправить как текст / WhatsApp"
+    "send_whatsapp": "Отправить как текст / WhatsApp",
+    "leave_review": "Оставить отзыв",
+    "review_google": "Google Reviews",
+    "review_booking": "Booking.com",
+    "review_tripadvisor": "Tripadvisor"
   },
   "chatbot": {
     "title": "Ассистент консьержа",

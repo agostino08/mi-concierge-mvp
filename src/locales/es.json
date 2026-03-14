@@ -57,7 +57,7 @@
     "subtitle": "Tu selección personalizada",
     "back": "Atrás",
     "remove": "Eliminar",
-    "share": "Enviar Enlace Único",
+    "share": "Compartir con alguien",
     "qr_desc": "Escanea para ver en tu móvil",
     "share_title": "📍 MIS FAVORITOS EN {hotel}\n\n",
     "share_map": "📍 Mapa: {url}",
@@ -65,7 +65,11 @@
     "personal_selection": "Selección Personal",
     "calendar": "Calendario",
     "prepared_for_you": "Preparado especialmente para tu estancia.",
-    "send_whatsapp": "Enviar por Texto / WhatsApp"
+    "send_whatsapp": "Enviar por Texto / WhatsApp",
+    "leave_review": "Dejar una reseña",
+    "review_google": "Google Reviews",
+    "review_booking": "Booking.com",
+    "review_tripadvisor": "Tripadvisor"
   },
   "chatbot": {
     "title": "Asistente Concierge",

@@ -57,7 +57,7 @@
     "subtitle": "カスタマイズされた選択",
     "back": "戻る",
     "remove": "削除",
-    "share": "マジックリンクを送信",
+    "share": "誰かと共有する",
     "qr_desc": "スキャンして携帯で見る",
     "share_title": "📍 {hotel} のお気に入り\n\n",
     "share_map": "📍 地図：{url}",
@@ -65,7 +65,11 @@
     "personal_selection": "個人セレクション",
     "calendar": "カレンダー",
     "prepared_for_you": "ご滞在のために特別に準備しました。",
-    "send_whatsapp": "テキスト / WhatsApp で送信"
+    "send_whatsapp": "テキスト / WhatsApp で送信",
+    "leave_review": "レビューを書く",
+    "review_google": "Google Reviews",
+    "review_booking": "Booking.com",
+    "review_tripadvisor": "Tripadvisor"
   },
   "chatbot": {
     "title": "コンシェルジュアシスト",

@@ -57,7 +57,7 @@
     "subtitle": "Ihre persönliche Auswahl",
     "back": "Zurück",
     "remove": "Entfernen",
-    "share": "Magic Link senden",
+    "share": "Mit jemandem teilen",
     "qr_desc": "Scannen für Ansicht auf dem Smartphone",
     "share_title": "📍 MEINE FAVORITEN IN {hotel}\n\n",
     "share_map": "📍 Karte: {url}",
@@ -65,7 +65,11 @@
     "personal_selection": "Persönliche Auswahl",
     "calendar": "Kalender",
     "prepared_for_you": "Speziell für Ihren Aufenthalt zusammengestellt.",
-    "send_whatsapp": "Als Text / WhatsApp senden"
+    "send_whatsapp": "Als Text / WhatsApp senden",
+    "leave_review": "Bewertung schreiben",
+    "review_google": "Google Reviews",
+    "review_booking": "Booking.com",
+    "review_tripadvisor": "Tripadvisor"
   },
   "chatbot": {
     "title": "Concierge-Assistent",

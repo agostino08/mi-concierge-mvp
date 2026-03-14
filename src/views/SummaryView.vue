@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useItineraryStore } from '../stores/useItineraryStore';
@@ -34,21 +34,14 @@ async function handleMagicShare() {
   }
 }
 
-// Share as plain text (no Firebase save needed)
-async function handleTextShare() {
-  const hotelName = hotelData.value?.name || 'hotel';
-  let message = $t('summary.share_title', { hotel: hotelName.toUpperCase() });
-  myItinerary.value.forEach((item, idx) => {
-    message += `${idx + 1}. ${item.title.toUpperCase()}\n${item.description}\n${$t('summary.share_map', { url: getGoogleMapsUrl(item.title) })}\n\n`;
-  });
-
-  if (navigator.share) {
-    try { await navigator.share({ title: $t('summary.share_guide', { city: hotelData.value?.city }), text: message }); }
-    catch (err) { if (err.name !== 'AbortError') console.error(err); }
-  } else {
-    window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
-  }
-}
+// Review links from hotel profile (filtered to only those with a URL)
+const showReviewOptions = ref(false);
+const reviewLinks = computed(() => [
+  { key: 'google',      label: $t('summary.review_google'),      url: hotelData.value?.review_google },
+  { key: 'booking',     label: $t('summary.review_booking'),     url: hotelData.value?.review_booking },
+  { key: 'tripadvisor', label: $t('summary.review_tripadvisor'), url: hotelData.value?.review_tripadvisor },
+].filter(r => r.url));
+const hasReviewLinks = computed(() => reviewLinks.value.length > 0);
 </script>
 
 <template>
@@ -145,15 +138,44 @@ async function handleTextShare() {
         {{ $t('summary.share') }}
       </button>
 
-      <button
-        @click="handleTextShare()"
-        class="w-full py-5 bg-white text-stone-600 border border-stone-200 rounded-[2rem] text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all hover:bg-stone-50"
-      >
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-        </svg>
-        {{ $t('summary.send_whatsapp') }}
-      </button>
+      <div v-if="hasReviewLinks" class="space-y-2">
+        <button
+          @click="showReviewOptions = !showReviewOptions"
+          class="w-full py-5 bg-white text-stone-600 border border-stone-200 rounded-[2rem] text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all hover:bg-stone-50"
+        >
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+          </svg>
+          {{ $t('summary.leave_review') }}
+          <svg
+            class="w-4 h-4 transition-transform duration-300"
+            :class="{ 'rotate-180': showReviewOptions }"
+            fill="none" stroke="currentColor" viewBox="0 0 24 24"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <transition name="expand">
+          <div v-if="showReviewOptions" class="space-y-2 pl-1">
+            <a
+              v-for="r in reviewLinks"
+              :key="r.key"
+              :href="r.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="w-full py-4 bg-stone-50 text-stone-500 border border-stone-100 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-stone-100 hover:text-stone-800 transition-all"
+            >
+              {{ r.label }}
+            </a>
+          </div>
+        </transition>
+      </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.expand-enter-active, .expand-leave-active { transition: all 0.25s ease; }
+.expand-enter-from, .expand-leave-to { opacity: 0; transform: translateY(-6px); }
+</style>

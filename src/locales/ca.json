@@ -57,7 +57,7 @@
     "subtitle": "La teva selecció personalitzada",
     "back": "Enrere",
     "remove": "Eliminar",
-    "share": "Enviar Enllaç Màgic",
+    "share": "Compartir amb algú",
     "qr_desc": "Escaneja per veure-ho al telèfon",
     "share_title": "📍 ELS MEUS PREFERITS A {hotel}\n\n",
     "share_map": "📍 Mapa: {url}",
@@ -65,7 +65,11 @@
     "personal_selection": "Selecció Personal",
     "calendar": "Calendari",
     "prepared_for_you": "Preparat especialment per a la teva estada.",
-    "send_whatsapp": "Enviar per Text / WhatsApp"
+    "send_whatsapp": "Enviar per Text / WhatsApp",
+    "leave_review": "Deixar una ressenya",
+    "review_google": "Google Reviews",
+    "review_booking": "Booking.com",
+    "review_tripadvisor": "Tripadvisor"
   },
   "chatbot": {
     "title": "Assistent Concierge",
