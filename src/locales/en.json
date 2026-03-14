@@ -25,6 +25,8 @@
   "results": {
     "generating": "Crafting your perfect itinerary...",
     "wait_msg": "Our AI is gathering the best local recommendations.",
+    "my_favorites": "My Favorites",
+    "favorites_subtitle": "Here you can see your saved recommendations.",
     "tabs": {
       "activities": "Activities",
       "food": "Food & Drink",

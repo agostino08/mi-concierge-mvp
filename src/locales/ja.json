@@ -25,6 +25,8 @@
   "results": {
     "generating": "完璧な旅行をデザインしています...",
     "wait_msg": "AIが最高のおすすめスポットを集めています。",
+    "my_favorites": "お気に入り",
+    "favorites_subtitle": "保存したおすすめを確認できます。",
     "tabs": {
       "activities": "アクティビティ",
       "food": "グルメ",

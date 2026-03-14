@@ -25,6 +25,8 @@
   "results": {
     "generating": "Dissenyant el teu viatge perfecte...",
     "wait_msg": "La nostra IA està buscant les millors recomanacions locals.",
+    "my_favorites": "Els Meus Preferits",
+    "favorites_subtitle": "Aquí podeu veure les vostres recomanacions guardades.",
     "tabs": {
       "activities": "Activitats",
       "food": "Menjar & Beguda",

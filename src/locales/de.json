@@ -25,6 +25,8 @@
   "results": {
     "generating": "Entwerfe Ihre perfekte Reise...",
     "wait_msg": "Unsere KI sammelt die besten lokalen Empfehlungen.",
+    "my_favorites": "Meine Favoriten",
+    "favorites_subtitle": "Hier siehst du deine gespeicherten Empfehlungen.",
     "tabs": {
       "activities": "Aktivitäten",
       "food": "Essen & Trinken",

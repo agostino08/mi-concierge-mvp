@@ -148,8 +148,8 @@ function handleReset() {
 
       <div class="bg-stone-900 text-stone-50 p-8 rounded-[2.5rem] shadow-xl flex flex-col md:flex-row justify-between items-center gap-6 border border-white/10">
         <div class="text-center md:text-left">
-          <h4 class="text-xl font-serif">{{ $t('results.generating') }}</h4>
-          <p class="text-stone-400 text-sm">{{ $t('results.wait_msg') }}</p>
+          <h4 class="text-xl font-serif">{{ $t('results.my_favorites') }}</h4>
+          <p class="text-stone-400 text-sm">{{ $t('results.favorites_subtitle') }}</p>
           <p class="text-stone-500 text-[10px] uppercase tracking-widest mt-1">
             {{ myItinerary.length }} {{ $t('results.saved_places') }}
           </p>

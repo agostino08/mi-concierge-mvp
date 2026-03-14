@@ -25,6 +25,8 @@
   "results": {
     "generating": "A criar a sua viagem perfeita...",
     "wait_msg": "A nossa IA está a reunir as melhores recomendações locais.",
+    "my_favorites": "Os Meus Favoritos",
+    "favorites_subtitle": "Aqui pode ver as suas recomendações guardadas.",
     "tabs": {
       "activities": "Atividades",
       "food": "Comida & Bebida",
