@@ -11,30 +11,28 @@ async function validatePlace(name, city, apiKey) {
     const data = await response.json();
 
     if (data.status !== "OK" || !data.candidates || data.candidates.length === 0) {
-      console.log(`Places: "${name}" — not found, removing.`);
+      console.log(`Places: "${name}" — not found, removing from cache.`);
       return null;
     }
-
     const place = data.candidates[0];
     if (place.business_status === "CLOSED_PERMANENTLY" || place.business_status === "CLOSED_TEMPORARILY") {
-      console.log(`Places: "${name}" — ${place.business_status}, removing.`);
+      console.log(`Places: "${name}" — ${place.business_status}, removing from cache.`);
       return null;
     }
-
     return { rating: place.rating || null };
   } catch (e) {
-    console.warn(`Places validation error for "${name}":`, e.message);
-    return { rating: null }; // fail open — keep the item on network error
+    console.warn(`Places error for "${name}":`, e.message);
+    return { rating: null }; // fail open on network error
   }
 }
 
 async function validateItems(items, city, apiKey) {
   const results = await Promise.all(
     items.map(async (item) => {
-      if (item.is_partner) return item; // hotel partners are pre-verified by admin
-      const validation = await validatePlace(item.title, city, apiKey);
-      if (validation === null) return null; // not found or closed → drop
-      return { ...item, ...(validation.rating ? { rating: validation.rating } : {}) };
+      if (item.is_partner) return item; // partners are admin-verified
+      const v = await validatePlace(item.title, city, apiKey);
+      if (v === null) return null;
+      return { ...item, ...(v.rating ? { rating: v.rating } : {}) };
     })
   );
   return results.filter(Boolean);
@@ -186,13 +184,16 @@ The guest's selected interests ("${guestStyles}") are the SOLE lens for every ac
 - A guest who chose Nightlife wants bars, clubs, and late-night venues — NOT museums or monuments.
 - Mix interests only when multiple were selected.
 
-━━━ VERIFIED REAL PLACES — STRICTLY ENFORCED ━━━
-1. ONLY recommend venues you are highly confident EXIST and are CURRENTLY OPERATING in ${hotel.city}.
+━━━ VERIFIED REAL PLACES — YOUR MOST CRITICAL RESPONSIBILITY ━━━
+The guest will physically visit every place you name. If it does not exist or is closed, they will be stranded. This is unacceptable.
+
+1. ONLY recommend venues you are HIGHLY CERTAIN exist and are CURRENTLY OPERATING in ${hotel.city}. "Highly certain" means: you have seen this venue mentioned multiple times in travel guides, reviews, or news — not just once.
 2. Use the EXACT commercial name as it appears on Google Maps — guests will search for it directly.
-3. NEVER invent, guess, or approximate addresses, phone numbers, websites, or opening hours.
-4. Prefer well-established venues (3+ years operating) over recent openings you are uncertain about.
-5. If you cannot confidently name a real, currently-open venue for a category, describe the experience type or neighbourhood instead of fabricating a name.
-6. Return FEWER results rather than pad with unverified or fictional places.
+3. NEVER invent, approximate, or conflate venue names. A venue that sounds plausible but that you are not certain about MUST be omitted.
+4. Prefer well-established venues (5+ years operating, with a clear public presence) over recent or obscure openings.
+5. If you cannot confidently name a real, currently-open venue for a slot, SKIP THAT SLOT entirely — do not fabricate a substitute.
+6. It is far better to return 3 real, verified places than 6 places where 2 are invented.
+7. NEVER include addresses, phone numbers, websites, or opening hours — you cannot verify these and they will be wrong.
 
 ━━━ ACTIVITIES — EXCLUSIVELY BASED ON: ${guestStyles} ━━━
 Every activity must directly serve at least one of the guest's selected interests. Use this mapping:
@@ -232,8 +233,8 @@ Each description must explicitly state WHY this venue matches "${guestStyles}" f
 - Recommend the most cost-effective pass or combination for ${user.days} day${user.days > 1 ? 's' : ''}.
 
 ━━━ QUANTITIES ━━━
-- "activities": ${Math.min(Math.max(4, Math.round(user.days * 2.5)), 12)} items
-- "food": ${Math.min(Math.max(3, Math.round(user.days * 1.5)), 8)} items
+- "activities": aim for ${Math.min(Math.max(3, Math.round(user.days * 2)), 10)} items — but return FEWER if you are not fully confident in a venue. Quality over quantity.
+- "food": aim for ${Math.min(Math.max(2, Math.round(user.days * 1.5)), 7)} items — same rule applies.
 - "transport": 2–3 items (one per selected mode)
 
 ${hotelPartners ? `━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━
@@ -259,41 +260,53 @@ Respond with ONLY valid JSON — no markdown, no code fences, no text before or 
         },
       ],
       response_format: { type: "json_object" },
+      stream: true,
     });
-
-    const fullResponse = completion.choices[0].message.content;
-    let parsed = JSON.parse(fullResponse);
-
-    // --- GOOGLE PLACES VALIDATION ---
-    const placesApiKey = process.env.GOOGLE_PLACES_API_KEY;
-    if (placesApiKey) {
-      const [validatedActivities, validatedFood] = await Promise.all([
-        validateItems(parsed.activities || [], hotel.city, placesApiKey),
-        validateItems(parsed.food || [], hotel.city, placesApiKey),
-      ]);
-      parsed.activities = validatedActivities;
-      parsed.food = validatedFood;
-      console.log(`Places validation: ${parsed.activities.length} activities, ${parsed.food.length} food kept.`);
-    }
-    // --- END GOOGLE PLACES VALIDATION ---
-
-    // --- CACHING SAVE LOGIC ---
-    if (db && cacheHash) {
-       try {
-           await db.collection("cached_itineraries").doc(cacheHash).set({
-               result: parsed,
-               createdAt: admin.firestore.FieldValue.serverTimestamp()
-           });
-       } catch (e) {
-           console.error("Failed to save cache:", e.message);
-       }
-    }
-    // --- END CACHING SAVE LOGIC ---
 
     res.setHeader("Content-Type", "text/event-stream");
     res.setHeader("Cache-Control", "no-cache");
     res.setHeader("Connection", "keep-alive");
-    res.write(JSON.stringify(parsed));
+
+    let fullResponse = "";
+
+    for await (const chunk of completion) {
+      const content = chunk.choices[0]?.delta?.content || "";
+      if (content) {
+        fullResponse += content;
+        res.write(content);
+      }
+    }
+
+    // --- VALIDATE + CACHE ---
+    // Streaming is complete — client already has the full AI response.
+    // Now validate with Places API (parallel, ~2-3s) before closing the connection.
+    // The validated version is saved to cache so future requests with the same profile
+    // get clean, verified results immediately.
+    if (db && cacheHash) {
+      try {
+        let parsed = JSON.parse(fullResponse);
+
+        const placesApiKey = process.env.GOOGLE_PLACES_API_KEY;
+        if (placesApiKey) {
+          const [validatedActivities, validatedFood] = await Promise.all([
+            validateItems(parsed.activities || [], hotel.city, placesApiKey),
+            validateItems(parsed.food || [], hotel.city, placesApiKey),
+          ]);
+          parsed.activities = validatedActivities;
+          parsed.food = validatedFood;
+          console.log(`Places validation done: ${parsed.activities.length} activities, ${parsed.food.length} food saved to cache.`);
+        }
+
+        await db.collection("cached_itineraries").doc(cacheHash).set({
+          result: parsed,
+          createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+      } catch (e) {
+        console.error("Validate/cache error:", e.message);
+      }
+    }
+    // --- END VALIDATE + CACHE ---
+
     return res.end();
   } catch (error) {
     console.error("API Error:", error);
