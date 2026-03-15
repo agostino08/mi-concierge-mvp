@@ -2,6 +2,45 @@ import OpenAI from "openai";
 import crypto from "crypto";
 import admin from "firebase-admin";
 
+// --- GOOGLE PLACES VALIDATION ---
+async function validatePlace(name, city, apiKey) {
+  try {
+    const input = encodeURIComponent(`${name} ${city}`);
+    const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${input}&inputtype=textquery&fields=business_status,rating,name&key=${apiKey}`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.status !== "OK" || !data.candidates || data.candidates.length === 0) {
+      console.log(`Places: "${name}" — not found, removing.`);
+      return null;
+    }
+
+    const place = data.candidates[0];
+    if (place.business_status === "CLOSED_PERMANENTLY" || place.business_status === "CLOSED_TEMPORARILY") {
+      console.log(`Places: "${name}" — ${place.business_status}, removing.`);
+      return null;
+    }
+
+    return { rating: place.rating || null };
+  } catch (e) {
+    console.warn(`Places validation error for "${name}":`, e.message);
+    return { rating: null }; // fail open — keep the item on network error
+  }
+}
+
+async function validateItems(items, city, apiKey) {
+  const results = await Promise.all(
+    items.map(async (item) => {
+      if (item.is_partner) return item; // hotel partners are pre-verified by admin
+      const validation = await validatePlace(item.title, city, apiKey);
+      if (validation === null) return null; // not found or closed → drop
+      return { ...item, ...(validation.rating ? { rating: validation.rating } : {}) };
+    })
+  );
+  return results.filter(Boolean);
+}
+// --- END GOOGLE PLACES VALIDATION ---
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
@@ -220,29 +259,29 @@ Respond with ONLY valid JSON — no markdown, no code fences, no text before or 
         },
       ],
       response_format: { type: "json_object" },
-      stream: true,
     });
 
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
+    const fullResponse = completion.choices[0].message.content;
+    let parsed = JSON.parse(fullResponse);
 
-    let fullResponse = "";
-
-    for await (const chunk of completion) {
-      const content = chunk.choices[0]?.delta?.content || "";
-      if (content) {
-        fullResponse += content;
-        res.write(content);
-      }
+    // --- GOOGLE PLACES VALIDATION ---
+    const placesApiKey = process.env.GOOGLE_PLACES_API_KEY;
+    if (placesApiKey) {
+      const [validatedActivities, validatedFood] = await Promise.all([
+        validateItems(parsed.activities || [], hotel.city, placesApiKey),
+        validateItems(parsed.food || [], hotel.city, placesApiKey),
+      ]);
+      parsed.activities = validatedActivities;
+      parsed.food = validatedFood;
+      console.log(`Places validation: ${parsed.activities.length} activities, ${parsed.food.length} food kept.`);
     }
+    // --- END GOOGLE PLACES VALIDATION ---
 
     // --- CACHING SAVE LOGIC ---
     if (db && cacheHash) {
        try {
-           const parsedResult = JSON.parse(fullResponse);
            await db.collection("cached_itineraries").doc(cacheHash).set({
-               result: parsedResult,
+               result: parsed,
                createdAt: admin.firestore.FieldValue.serverTimestamp()
            });
        } catch (e) {
@@ -251,6 +290,10 @@ Respond with ONLY valid JSON — no markdown, no code fences, no text before or 
     }
     // --- END CACHING SAVE LOGIC ---
 
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.write(JSON.stringify(parsed));
     return res.end();
   } catch (error) {
     console.error("API Error:", error);
