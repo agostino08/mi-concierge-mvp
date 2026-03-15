@@ -12,8 +12,7 @@ import zh from './locales/zh.json';
 import ja from './locales/ja.json';
 
 const savedLang = localStorage.getItem('user_lang');
-const browserLang = navigator.language.split('-')[0];
-const defaultLang = savedLang || (['en', 'es', 'it', 'de', 'pt', 'fr', 'ca', 'ru', 'zh', 'ja'].includes(browserLang) ? browserLang : 'en');
+const defaultLang = savedLang || 'en'; // New users always get English; returning users keep their choice
 
 const i18n = createI18n({
   legacy: false, 

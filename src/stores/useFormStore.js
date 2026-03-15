@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 
 const FORM_DEFAULTS = {
   group: '',
@@ -12,6 +12,11 @@ const FORM_DEFAULTS = {
 
 export const useFormStore = defineStore('form', () => {
   const formData = ref({ ...FORM_DEFAULTS, style: [], food: [], transport: [] });
+
+  // Persist form choices so the user can return to their questionnaire step
+  watch(formData, (val) => {
+    localStorage.setItem('mc_form', JSON.stringify(val));
+  }, { deep: true });
 
   function resetForm() {
     formData.value = { ...FORM_DEFAULTS, style: [], food: [], transport: [] };

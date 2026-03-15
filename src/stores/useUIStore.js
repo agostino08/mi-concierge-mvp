@@ -6,7 +6,7 @@ export const useUIStore = defineStore('ui', () => {
   const showToast = ref(false);
   const toastMessage = ref('');
   const error = ref(null);
-  const lang = ref(localStorage.getItem('user_lang') || navigator.language.split('-')[0] || 'en');
+  const lang = ref(localStorage.getItem('user_lang') || 'en'); // New users get English; returning users keep their choice
 
   function triggerToast(msg) {
     toastMessage.value = msg;

@@ -48,8 +48,24 @@ watch(locale, (newLang) => translateFaqPills(newLang));
 watch(() => hotelInfo.value.faqs, () => translateFaqPills(locale.value));
 
 onMounted(() => {
+  // Restore chat history from previous session if available
+  const saved = localStorage.getItem('mc_chat');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed) && parsed.length > 1) {
+        messages.value = parsed;
+        return;
+      }
+    } catch { /* ignore corrupt data */ }
+  }
   messages.value = [{ role: 'bot', text: t('chatbot.welcome') }];
 });
+
+// Persist chat messages so they survive tab close
+watch(messages, (val) => {
+  localStorage.setItem('mc_chat', JSON.stringify(val));
+}, { deep: true });
 
 watch(isOpen, (val) => {
   if (val) logEvent(hotelInfo.value.id, 'chat_opened');

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import HotelChatbot from './components/HotelChatbot.vue';
 import { useUIStore } from './stores/useUIStore';
@@ -13,6 +13,13 @@ const itineraryStore = useItineraryStore();
 
 const { init } = useAppInit();
 onMounted(init);
+
+// Save current route so the user can return to the same page after closing the tab
+watch(route, (r) => {
+  if (r.name && !['Welcome', 'Admin', 'Onboard'].includes(r.name)) {
+    localStorage.setItem('mc_route', r.path);
+  }
+});
 
 function resetApp() {
   const hotelId = itineraryStore.resetApp();

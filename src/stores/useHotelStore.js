@@ -15,7 +15,7 @@ export const useHotelStore = defineStore('hotel', () => {
       const fetcher = hotelParam.includes('-') ? getHotelBySlug(hotelParam) : getHotelById(hotelParam);
       hotelData.value = await fetcher;
       // Persist hotel param so the page can be refreshed without losing hotel context
-      if (hotelData.value?.id) sessionStorage.setItem('mc_hotel', hotelParam);
+      if (hotelData.value?.id) localStorage.setItem('mc_hotel', hotelParam);
     } catch (e) {
       console.error(e);
       uiStore.setError(e.message || 'Error loading hotel information.');

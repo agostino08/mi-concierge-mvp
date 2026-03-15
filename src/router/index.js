@@ -55,7 +55,7 @@ router.beforeEach((to) => {
   const hotelStore = useHotelStore();
   if (hotelStore.hotelData) return true;
   // Allow if we have a saved hotel session — init() will restore hotel data on mount
-  const savedHotel = sessionStorage.getItem('mc_hotel');
+  const savedHotel = localStorage.getItem('mc_hotel');
   if (savedHotel) return true;
   // No hotel context — redirect to welcome, preserving query params
   return { name: 'Welcome', query: to.query };

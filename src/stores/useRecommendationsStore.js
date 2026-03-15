@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import { generateItinerary as apiGenerateItinerary } from '../services/api';
 import { useUIStore } from './useUIStore';
 
@@ -80,6 +80,13 @@ export const useRecommendationsStore = defineStore('recommendations', () => {
   const uiStore = useUIStore();
   const generating = ref(false);
   const recommendations = ref(EMPTY_RECOMMENDATIONS());
+
+  // Persist recommendations to localStorage so the user can return to their results
+  watch(recommendations, (val) => {
+    const hasData = val.activities.length > 0 || val.food.length > 0 || val.transport.length > 0;
+    if (hasData) localStorage.setItem('mc_recs', JSON.stringify(val));
+    else localStorage.removeItem('mc_recs');
+  }, { deep: true });
 
   async function generateRecommendations(hotelData, formData, lang) {
     generating.value = true;

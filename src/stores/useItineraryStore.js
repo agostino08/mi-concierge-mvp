@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import QRCode from 'qrcode';
 import { useUIStore } from './useUIStore';
 import { useHotelStore } from './useHotelStore';
@@ -19,6 +19,12 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const myItinerary = ref([]);
   const qrCodeUrl = ref('');
   const shareLink = ref('');
+
+  // Persist favorites so the user can return to their saved items
+  watch(myItinerary, (val) => {
+    if (val.length > 0) localStorage.setItem('mc_itinerary', JSON.stringify(val));
+    else localStorage.removeItem('mc_itinerary');
+  }, { deep: true });
 
   const t = () => i18n.global.t;
 
@@ -101,14 +107,19 @@ export const useItineraryStore = defineStore('itinerary', () => {
     shareLink.value = '';
   }
 
+  // Setter for session restore (used by useAppInit)
+  function setItinerary(items) {
+    myItinerary.value = items;
+  }
+
   // Resets all app state and returns the hotelId for the caller to navigate
   function resetApp() {
     formStore.resetForm();
     recommendationsStore.resetRecommendations();
     resetItinerary();
-    localStorage.removeItem('my_itinerary_backup');
+    // Clear all persisted session data
+    ['mc_hotel', 'mc_recs', 'mc_form', 'mc_itinerary', 'mc_route', 'mc_chat', 'my_itinerary_backup'].forEach(k => localStorage.removeItem(k));
     const hotelId = hotelStore.hotelData?.id || new URLSearchParams(window.location.search).get('hotel');
-    sessionStorage.removeItem('mc_hotel');
     return hotelId;
   }
 
@@ -122,6 +133,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
     generateShareLink,
     loadSharedItinerary,
     resetItinerary,
+    setItinerary,
     resetApp,
   };
 });
