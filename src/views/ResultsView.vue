@@ -190,15 +190,9 @@ function handleReset() {
         <div
           v-for="item in recommendations[activeTab]"
           :key="item.title"
-          class="relative bg-white border border-stone-100 p-8 rounded-[2.5rem] shadow-sm hover:shadow-md transition-all group overflow-hidden"
+          :class="item.is_partner ? 'bg-amber-50/60 border-amber-200' : 'bg-white border-stone-100'"
+          class="relative border p-8 rounded-[2.5rem] shadow-sm hover:shadow-md transition-all group overflow-hidden"
         >
-          <div
-            v-if="item.is_partner"
-            class="absolute -top-1 -left-1 bg-amber-400 text-amber-900 px-4 py-1.5 rounded-br-2xl shadow-sm z-10 border-b border-r border-white"
-          >
-            <span class="text-[8px] font-black uppercase tracking-tighter">{{ $t('results.local_suggestion') }}</span>
-          </div>
-
           <button
             v-if="activeTab !== 'transport'"
             @click="itineraryStore.toggleFavorite(item)"
@@ -212,6 +206,15 @@ function handleReset() {
           </button>
 
           <div class="max-w-[85%] mt-2">
+            <div v-if="item.is_partner" class="flex items-center gap-2 mb-4">
+              <span class="inline-flex items-center gap-1.5 bg-amber-400 text-amber-950 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-sm">
+                <svg class="w-2.5 h-2.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+                {{ $t('results.hotel_suggestion') }}
+              </span>
+              <span v-if="hotelData?.name" class="text-[10px] text-amber-700 font-semibold truncate">{{ hotelData.name }}</span>
+            </div>
             <h4 class="text-2xl font-serif text-stone-800 mb-3 leading-tight">{{ item.title }}</h4>
             <p class="text-stone-500 text-base leading-relaxed mb-8">{{ item.description }}</p>
           </div>

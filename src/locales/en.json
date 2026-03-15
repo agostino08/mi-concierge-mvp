@@ -38,7 +38,7 @@
     "customizing": "Customizing your stay in {city}",
     "discover": "Discover",
     "saved_places": "saved places",
-    "local_suggestion": "Local Suggestion",
+    "hotel_suggestion": "Hotel's Pick",
     "add_to_calendar": "Add to Calendar",
     "see_on_maps": "See on Maps",
     "tip0_title": "Local Life",
@@ -69,7 +69,9 @@
     "leave_review": "Leave a Review",
     "review_google": "Google Reviews",
     "review_booking": "Booking.com",
-    "review_tripadvisor": "Tripadvisor"
+    "review_tripadvisor": "Tripadvisor",
+    "review_heading": "Loved your stay?",
+    "review_subheading": "Your review helps other travelers find us"
   },
   "chatbot": {
     "title": "Concierge Assist",

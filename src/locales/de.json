@@ -38,7 +38,7 @@
     "customizing": "Ihr Aufenthalt in {city} wird personalisiert",
     "discover": "Entdecken",
     "saved_places": "gespeicherte Orte",
-    "local_suggestion": "Lokaler Tipp",
+    "hotel_suggestion": "Empfehlung des Hotels",
     "add_to_calendar": "Zum Kalender hinzufügen",
     "see_on_maps": "Auf Maps ansehen",
     "tip0_title": "Lokales Leben",
@@ -69,7 +69,9 @@
     "leave_review": "Bewertung schreiben",
     "review_google": "Google Reviews",
     "review_booking": "Booking.com",
-    "review_tripadvisor": "Tripadvisor"
+    "review_tripadvisor": "Tripadvisor",
+    "review_heading": "Hat Ihnen der Aufenthalt gefallen?",
+    "review_subheading": "Ihre Bewertung hilft anderen Reisenden, uns zu finden"
   },
   "chatbot": {
     "title": "Concierge-Assistent",

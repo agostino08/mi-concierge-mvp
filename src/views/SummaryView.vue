@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useItineraryStore } from '../stores/useItineraryStore';
@@ -35,7 +35,6 @@ async function handleMagicShare() {
 }
 
 // Review links from hotel profile (filtered to only those with a URL)
-const showReviewOptions = ref(false);
 const reviewLinks = computed(() => [
   { key: 'google',      label: $t('summary.review_google'),      url: hotelData.value?.review_google },
   { key: 'booking',     label: $t('summary.review_booking'),     url: hotelData.value?.review_booking },
@@ -77,8 +76,11 @@ const hasReviewLinks = computed(() => reviewLinks.value.length > 0);
 
       <div class="space-y-16">
         <div v-for="(item, idx) in myItinerary" :key="idx" class="relative group">
-          <div v-if="item.is_partner" class="mb-4 inline-flex items-center gap-2 bg-amber-50 text-amber-700 px-3 py-1 rounded-full border border-amber-100">
-            <p class="text-[10px] text-stone-400 uppercase tracking-widest">{{ $t('results.local_suggestion') }}</p>
+          <div v-if="item.is_partner" class="mb-3 inline-flex items-center gap-1.5 bg-amber-400 text-amber-950 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-wider shadow-sm">
+            <svg class="w-2.5 h-2.5 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+            {{ $t('results.hotel_suggestion') }}
           </div>
 
           <div class="flex justify-between items-start mb-4">
@@ -138,44 +140,30 @@ const hasReviewLinks = computed(() => reviewLinks.value.length > 0);
         {{ $t('summary.share') }}
       </button>
 
-      <div v-if="hasReviewLinks" class="space-y-2">
-        <button
-          @click="showReviewOptions = !showReviewOptions"
-          class="w-full py-5 bg-white text-stone-600 border border-stone-200 rounded-[2rem] text-[10px] font-bold uppercase tracking-[0.2em] shadow-sm flex items-center justify-center gap-3 active:scale-95 transition-all hover:bg-stone-50"
-        >
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
-          </svg>
-          {{ $t('summary.leave_review') }}
-          <svg
-            class="w-4 h-4 transition-transform duration-300"
-            :class="{ 'rotate-180': showReviewOptions }"
-            fill="none" stroke="currentColor" viewBox="0 0 24 24"
-          >
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        <transition name="expand">
-          <div v-if="showReviewOptions" class="space-y-2 pl-1">
-            <a
-              v-for="r in reviewLinks"
-              :key="r.key"
-              :href="r.url"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="w-full py-4 bg-stone-50 text-stone-500 border border-stone-100 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:bg-stone-100 hover:text-stone-800 transition-all"
-            >
-              {{ r.label }}
-            </a>
+      <div v-if="hasReviewLinks" class="bg-amber-50 border border-amber-100 rounded-[2rem] p-6 space-y-4">
+        <div class="text-center space-y-2">
+          <div class="flex justify-center gap-0.5 mb-3">
+            <svg v-for="i in 5" :key="i" class="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
           </div>
-        </transition>
+          <h4 class="font-serif text-lg text-stone-800">{{ $t('summary.review_heading') }}</h4>
+          <p class="text-stone-500 text-[11px] leading-relaxed">{{ $t('summary.review_subheading') }}</p>
+        </div>
+        <div class="space-y-2 pt-1">
+          <a
+            v-for="r in reviewLinks"
+            :key="r.key"
+            :href="r.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex items-center justify-center gap-2 w-full py-4 bg-white border border-amber-100 text-stone-700 rounded-2xl text-[10px] font-bold uppercase tracking-[0.15em] hover:border-amber-300 hover:bg-amber-50/80 hover:text-stone-900 transition-all shadow-sm"
+          >
+            {{ r.label }}
+          </a>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
-<style scoped>
-.expand-enter-active, .expand-leave-active { transition: all 0.25s ease; }
-.expand-enter-from, .expand-leave-to { opacity: 0; transform: translateY(-6px); }
-</style>

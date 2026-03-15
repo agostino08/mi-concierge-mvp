@@ -38,7 +38,7 @@
     "customizing": "Персонализация вашего пребывания в {city}",
     "discover": "Открыть",
     "saved_places": "сохранённых мест",
-    "local_suggestion": "Местная рекомендация",
+    "hotel_suggestion": "Рекомендация отеля",
     "add_to_calendar": "Добавить в календарь",
     "see_on_maps": "Смотреть на картах",
     "tip0_title": "Местная жизнь",
@@ -69,7 +69,9 @@
     "leave_review": "Оставить отзыв",
     "review_google": "Google Reviews",
     "review_booking": "Booking.com",
-    "review_tripadvisor": "Tripadvisor"
+    "review_tripadvisor": "Tripadvisor",
+    "review_heading": "Понравилось пребывание?",
+    "review_subheading": "Ваш отзыв помогает другим путешественникам нас найти"
   },
   "chatbot": {
     "title": "Ассистент консьержа",

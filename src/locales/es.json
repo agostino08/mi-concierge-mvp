@@ -38,7 +38,7 @@
     "customizing": "Personalizando su estancia en {city}",
     "discover": "Descubrir",
     "saved_places": "lugares guardados",
-    "local_suggestion": "Sugerencia Local",
+    "hotel_suggestion": "Recomendación del Hotel",
     "add_to_calendar": "Añadir al Calendario",
     "see_on_maps": "Ver en Maps",
     "tip0_title": "Vida Local",
@@ -69,7 +69,9 @@
     "leave_review": "Dejar una reseña",
     "review_google": "Google Reviews",
     "review_booking": "Booking.com",
-    "review_tripadvisor": "Tripadvisor"
+    "review_tripadvisor": "Tripadvisor",
+    "review_heading": "¿Disfrutaste tu estancia?",
+    "review_subheading": "Tu reseña ayuda a otros viajeros a encontrarnos"
   },
   "chatbot": {
     "title": "Asistente Concierge",

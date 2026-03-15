@@ -38,7 +38,7 @@
     "customizing": "{city}でのご滞在をカスタマイズしています",
     "discover": "発見する",
     "saved_places": "保存したスポット",
-    "local_suggestion": "ローカルのおすすめ",
+    "hotel_suggestion": "ホテルのおすすめ",
     "add_to_calendar": "カレンダーに追加",
     "see_on_maps": "マップで見る",
     "tip0_title": "ローカルな生活",
@@ -69,7 +69,9 @@
     "leave_review": "レビューを書く",
     "review_google": "Google Reviews",
     "review_booking": "Booking.com",
-    "review_tripadvisor": "Tripadvisor"
+    "review_tripadvisor": "Tripadvisor",
+    "review_heading": "ご滞在はいかがでしたか？",
+    "review_subheading": "あなたのレビューが他の旅行者の参考になります"
   },
   "chatbot": {
     "title": "コンシェルジュアシスト",

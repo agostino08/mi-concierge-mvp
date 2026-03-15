@@ -38,7 +38,7 @@
     "customizing": "Personalitzant la teva estada a {city}",
     "discover": "Descobrir",
     "saved_places": "llocs guardats",
-    "local_suggestion": "Suggeriment Local",
+    "hotel_suggestion": "Recomanació de l'Hotel",
     "add_to_calendar": "Afegir al calendari",
     "see_on_maps": "Veure al Maps",
     "tip0_title": "Vida Local",
@@ -69,7 +69,9 @@
     "leave_review": "Deixar una ressenya",
     "review_google": "Google Reviews",
     "review_booking": "Booking.com",
-    "review_tripadvisor": "Tripadvisor"
+    "review_tripadvisor": "Tripadvisor",
+    "review_heading": "T'ha agradat l'estada?",
+    "review_subheading": "La teva ressenya ajuda altres viatgers a trobar-nos"
   },
   "chatbot": {
     "title": "Assistent Concierge",

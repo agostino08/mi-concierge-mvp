@@ -38,7 +38,7 @@
     "customizing": "正在为您定制 {city} 之旅",
     "discover": "探索",
     "saved_places": "已保存地点",
-    "local_suggestion": "本地推荐",
+    "hotel_suggestion": "酒店推荐",
     "add_to_calendar": "添加到日历",
     "see_on_maps": "在地图上查看",
     "tip0_title": "当地生活",
@@ -69,7 +69,9 @@
     "leave_review": "留下评价",
     "review_google": "Google Reviews",
     "review_booking": "Booking.com",
-    "review_tripadvisor": "Tripadvisor"
+    "review_tripadvisor": "Tripadvisor",
+    "review_heading": "喜欢您的住宿体验吗？",
+    "review_subheading": "您的评价能帮助其他旅行者找到我们"
   },
   "chatbot": {
     "title": "礼宾助手",
