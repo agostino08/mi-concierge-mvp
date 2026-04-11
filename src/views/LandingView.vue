@@ -16,7 +16,7 @@ onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }));
 onUnmounted(() => window.removeEventListener('scroll', onScroll));
 
 // ─── QR Code ──────────────────────────────────────────────────────────────────
-const DEMO_URL = `${window.location.origin}/?hotel=demo`;
+const DEMO_URL = 'https://consergi.com/welcome?hotel=hotel-nova-gracia';
 const qrDataUrl = ref('');
 
 onMounted(async () => {
