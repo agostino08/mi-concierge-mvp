@@ -26,7 +26,7 @@ function resetApp() {
   router.push({ path: '/welcome', query: { hotel: hotelId } });
 }
 
-const FULL_SCREEN_ROUTES = ['Welcome', 'Admin', 'Onboard'];
+const FULL_SCREEN_ROUTES = ['Landing', 'Welcome', 'Admin', 'Onboard'];
 </script>
 
 <template>
@@ -65,7 +65,7 @@ const FULL_SCREEN_ROUTES = ['Welcome', 'Admin', 'Onboard'];
       </div>
     </transition>
 
-    <HotelChatbot v-if="route.name !== 'Admin' && route.name !== 'Onboard'" />
+    <HotelChatbot v-if="route.name !== 'Admin' && route.name !== 'Onboard' && route.name !== 'Landing'" />
   </div>
 </template>
 

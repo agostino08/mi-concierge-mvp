@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import LandingView from '../views/LandingView.vue';
 import WelcomeView from '../views/WelcomeView.vue';
 import QuestionnaireView from '../views/QuestionnaireView.vue';
 import ResultsView from '../views/ResultsView.vue';
@@ -10,8 +11,12 @@ import { useHotelStore } from '../stores/useHotelStore';
 const routes = [
   {
     path: '/',
+    name: 'Landing',
+    component: LandingView,
+  },
+  {
+    path: '/welcome',
     name: 'Welcome',
-    alias: '/welcome',
     component: WelcomeView,
   },
   {
@@ -51,6 +56,10 @@ const router = createRouter({
 });
 
 router.beforeEach((to) => {
+  // If landing page is accessed with a hotel param, redirect to /welcome to start the guest flow
+  if (to.name === 'Landing' && to.query.hotel) {
+    return { name: 'Welcome', query: to.query };
+  }
   if (!to.meta.requiresHotel) return true;
   const hotelStore = useHotelStore();
   if (hotelStore.hotelData) return true;
