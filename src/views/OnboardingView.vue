@@ -31,33 +31,84 @@
         <p class="text-stone-500 text-sm">{{ T.pageSubtitle }}</p>
       </div>
 
+      <!-- Section: AI Auto-fill -->
+      <div class="bg-gradient-to-br from-stone-900 to-stone-700 rounded-2xl p-6 space-y-4 text-white">
+        <div class="flex items-start gap-3">
+          <div class="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h2 class="font-bold text-base">{{ T.autofillTitle }}</h2>
+            <p class="text-stone-300 text-sm mt-0.5">{{ T.autofillSubtitle }}</p>
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <input
+            v-model="websiteUrl"
+            type="url"
+            :placeholder="T.phWebsiteUrl"
+            :disabled="scraping"
+            class="flex-1 px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-sm text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-white/30 transition-all disabled:opacity-50"
+          />
+          <button
+            @click="autofillFromWebsite"
+            :disabled="scraping || !websiteUrl.trim()"
+            class="px-5 py-3 bg-white text-stone-900 font-semibold text-sm rounded-xl hover:bg-stone-100 transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
+          >
+            <span v-if="scraping" class="flex items-center gap-2">
+              <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"/>
+              </svg>
+              {{ T.scraping }}
+            </span>
+            <span v-else>{{ T.autofillBtn }}</span>
+          </button>
+        </div>
+        <p v-if="scrapeError" class="text-rose-300 text-xs font-medium">{{ scrapeError }}</p>
+        <p v-if="scrapeSuccess" class="text-emerald-300 text-xs font-medium flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+          </svg>
+          {{ T.scrapeSuccess }}
+        </p>
+        <p class="text-white/30 text-xs">{{ T.autofillNote }}</p>
+      </div>
+
       <!-- Section: Basic Info -->
       <div class="bg-white rounded-2xl border border-stone-200 p-6 space-y-4">
-        <h2 class="text-xs font-bold uppercase tracking-widest text-stone-400">{{ T.sectionBasic }}</h2>
+        <div class="flex items-center justify-between">
+          <h2 class="text-xs font-bold uppercase tracking-widest text-stone-400">{{ T.sectionBasic }}</h2>
+          <span v-if="autoFilledCount > 0" class="text-xs font-semibold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
+            {{ autoFilledCount }} {{ T.fieldsAutoFilled }}
+          </span>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div class="sm:col-span-2">
             <label class="label">{{ T.hotelName }} *</label>
-            <input v-model="form.name" type="text" :placeholder="T.phHotelName" class="input" />
+            <input v-model="form.name" type="text" :placeholder="T.phHotelName" :class="['input', autoFilled.name && 'input-autofilled']" />
           </div>
           <div>
             <label class="label">{{ T.city }} *</label>
-            <input v-model="form.city" type="text" :placeholder="T.phCity" class="input" />
+            <input v-model="form.city" type="text" :placeholder="T.phCity" :class="['input', autoFilled.city && 'input-autofilled']" />
           </div>
           <div>
             <label class="label">{{ T.neighborhood }}</label>
-            <input v-model="form.neighborhood" type="text" :placeholder="T.phNeighborhood" class="input" />
+            <input v-model="form.neighborhood" type="text" :placeholder="T.phNeighborhood" :class="['input', autoFilled.neighborhood && 'input-autofilled']" />
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ T.address }}</label>
-            <input v-model="form.address" type="text" :placeholder="T.phAddress" class="input" />
+            <input v-model="form.address" type="text" :placeholder="T.phAddress" :class="['input', autoFilled.address && 'input-autofilled']" />
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ T.mapsUrl }}</label>
-            <input v-model="form.maps_url" type="url" placeholder="https://maps.google.com/..." class="input" />
+            <input v-model="form.maps_url" type="url" placeholder="https://maps.google.com/..." :class="['input', autoFilled.maps_url && 'input-autofilled']" />
           </div>
           <div class="sm:col-span-2">
             <label class="label">{{ T.description }}</label>
-            <textarea v-model="form.description" rows="3" :placeholder="T.phDescription" class="input resize-none"></textarea>
+            <textarea v-model="form.description" rows="3" :placeholder="T.phDescription" :class="['input resize-none', autoFilled.description && 'input-autofilled']"></textarea>
           </div>
         </div>
       </div>
@@ -68,19 +119,19 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="label">{{ T.checkin }}</label>
-            <input v-model="form.checkin" type="text" :placeholder="T.phCheckin" class="input" />
+            <input v-model="form.checkin" type="text" :placeholder="T.phCheckin" :class="['input', autoFilled.checkin && 'input-autofilled']" />
           </div>
           <div>
             <label class="label">{{ T.checkout }}</label>
-            <input v-model="form.checkout" type="text" :placeholder="T.phCheckout" class="input" />
+            <input v-model="form.checkout" type="text" :placeholder="T.phCheckout" :class="['input', autoFilled.checkout && 'input-autofilled']" />
           </div>
           <div>
             <label class="label">{{ T.reception }}</label>
-            <input v-model="form.reception" type="text" :placeholder="T.phReception" class="input" />
+            <input v-model="form.reception" type="text" :placeholder="T.phReception" :class="['input', autoFilled.reception && 'input-autofilled']" />
           </div>
           <div>
             <label class="label">{{ T.breakfast }}</label>
-            <input v-model="form.breakfast" type="text" :placeholder="T.phBreakfast" class="input" />
+            <input v-model="form.breakfast" type="text" :placeholder="T.phBreakfast" :class="['input', autoFilled.breakfast && 'input-autofilled']" />
           </div>
         </div>
       </div>
@@ -224,11 +275,95 @@ const submitted = ref(false);
 const submitting = ref(false);
 const submitError = ref('');
 
+// ─── Auto-fill state ───────────────────────────────────────────────────────────
+const websiteUrl = ref('');
+const scraping = ref(false);
+const scrapeError = ref('');
+const scrapeSuccess = ref(false);
+
+// Tracks which fields were auto-populated (for green highlight)
+const autoFilled = reactive({
+  name: false, city: false, neighborhood: false, address: false,
+  maps_url: false, description: false,
+  checkin: false, checkout: false, reception: false, breakfast: false,
+});
+
+const autoFilledCount = computed(() => Object.values(autoFilled).filter(Boolean).length);
+
+// ─── Auto-fill function ────────────────────────────────────────────────────────
+async function autofillFromWebsite() {
+  scrapeError.value = '';
+  scrapeSuccess.value = false;
+  scraping.value = true;
+
+  try {
+    const res = await fetch('/api/scrape-hotel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url: websiteUrl.value.trim() }),
+    });
+    const json = await res.json();
+
+    if (!res.ok) {
+      scrapeError.value = json.error || T.value.scrapeError;
+      return;
+    }
+
+    const d = json.data || {};
+
+    // Fill form fields and track which ones were populated
+    const textFields = ['name', 'city', 'neighborhood', 'address', 'maps_url', 'description',
+                        'checkin', 'checkout', 'reception', 'breakfast'];
+
+    for (const key of textFields) {
+      if (d[key] && typeof d[key] === 'string' && d[key].trim()) {
+        form[key] = d[key].trim();
+        if (key in autoFilled) autoFilled[key] = true;
+      }
+    }
+
+    // Facilities: pool, gym, spa, parking, restaurant, room_service
+    const facilityKeys = ['pool', 'gym', 'spa', 'parking', 'restaurant', 'room_service'];
+    for (const key of facilityKeys) {
+      if (d[key] && typeof d[key] === 'string' && d[key].trim()) {
+        form.facilities[key].enabled = true;
+        form.facilities[key].description = d[key].trim();
+      }
+    }
+
+    if (d.facilities_extra?.trim()) {
+      form.facilities_extra = d.facilities_extra.trim();
+    }
+
+    // FAQs
+    if (Array.isArray(d.faqs) && d.faqs.length > 0) {
+      const validFaqs = d.faqs.filter(f => f.question?.trim() && f.answer?.trim());
+      if (validFaqs.length > 0) form.faqs = validFaqs.slice(0, 8);
+    }
+
+    scrapeSuccess.value = true;
+  } catch (e) {
+    console.error('Scrape error:', e);
+    scrapeError.value = T.value.scrapeError;
+  } finally {
+    scraping.value = false;
+  }
+}
+
 // ─── i18n strings ──────────────────────────────────────────────────────────────
 const strings = {
   en: {
     pageTitle: 'Hotel Information Form',
     pageSubtitle: 'Fill in as much as you can — we\'ll handle the rest.',
+    autofillTitle: 'Auto-fill from your website',
+    autofillSubtitle: 'Paste your hotel website URL and we\'ll extract the information automatically.',
+    phWebsiteUrl: 'https://yourhotel.com',
+    autofillBtn: 'Auto-fill',
+    scraping: 'Analyzing...',
+    scrapeSuccess: 'Form auto-filled! Review the fields below and complete anything that\'s missing.',
+    scrapeError: 'Could not extract data from the website. Please fill the form manually.',
+    autofillNote: 'Works best on standard hotel websites. WiFi and contact details must be filled manually.',
+    fieldsAutoFilled: 'fields auto-filled',
     successTitle: 'Thank you!',
     successBody: 'Your information has been submitted. We\'ll be in touch shortly to set up your Mi Concierge profile.',
     sectionBasic: 'Basic Information',
@@ -278,6 +413,15 @@ const strings = {
   es: {
     pageTitle: 'Formulario de Información del Hotel',
     pageSubtitle: 'Completa lo que puedas — nosotros nos encargamos del resto.',
+    autofillTitle: 'Relleno automático desde tu web',
+    autofillSubtitle: 'Pega la URL de tu web y extraeremos la información automáticamente.',
+    phWebsiteUrl: 'https://tuhotel.com',
+    autofillBtn: 'Rellenar',
+    scraping: 'Analizando...',
+    scrapeSuccess: '¡Formulario rellenado automáticamente! Revisa los campos y completa lo que falte.',
+    scrapeError: 'No se pudo extraer información de la web. Por favor, rellena el formulario manualmente.',
+    autofillNote: 'Funciona mejor en webs estándar de hoteles. El WiFi y los datos de contacto debes rellenarlos manualmente.',
+    fieldsAutoFilled: 'campos rellenados',
     successTitle: '¡Gracias!',
     successBody: 'Tu información ha sido enviada. Nos pondremos en contacto contigo pronto para configurar tu perfil de Mi Concierge.',
     sectionBasic: 'Información Básica',
@@ -434,6 +578,9 @@ async function submit() {
 @reference "tailwindcss";
 .input {
   @apply w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl text-base text-stone-800 placeholder-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-300 focus:border-transparent transition-all;
+}
+.input-autofilled {
+  @apply bg-emerald-50 border-emerald-200 focus:ring-emerald-200;
 }
 .label {
   @apply block text-xs font-semibold text-stone-500 uppercase tracking-wide mb-1.5;
