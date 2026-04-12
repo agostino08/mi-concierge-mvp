@@ -110,6 +110,15 @@ const T = {
         { n: '03', t: 'Tus huéspedes lo usan', d: 'Escanean el QR y acceden al conserje en su propio idioma. Sin descargas, sin cuentas.' },
       ],
     },
+    reviews: {
+      eyebrow: 'Hoteles que ya lo usan',
+      h2: 'Lo que dicen nuestros clientes',
+      items: [
+        { quote: 'Antes pasábamos horas respondiendo las mismas preguntas en inglés con el traductor. Ahora los huéspedes lo resuelven solos y la recepción puede centrarse en lo que realmente importa.', name: 'Laura M.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
+        { quote: 'Lo mejor fue ver a un grupo de turistas japoneses usando el chatbot sin ningún problema. Jamás habríamos podido comunicarnos así. Y lo pusimos en marcha en menos de una hora.', name: 'Javier C.', role: 'Propietario', location: 'Finca boutique · Mallorca' },
+        { quote: 'Los huéspedes llegan ya con todo claro: horarios, WiFi, qué ver en la ciudad. Las preguntas de recepción han bajado muchísimo y las valoraciones en Booking han subido.', name: 'Ana S.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
+      ],
+    },
     demo: {
       eyebrow: 'Demo en vivo',
       h2: 'Pruébalo ahora mismo',
@@ -145,7 +154,7 @@ const T = {
       or: 'O si lo prefieres, escríbenos directamente por WhatsApp',
       whatsappBtn: 'Abrir WhatsApp',
     },
-    footer: { tagline: 'El conserje virtual para hoteles boutique.', contact: 'agustin@consergi.com', demo: 'Demo', admin: 'Panel Admin', onboard: 'Solicitar acceso' },
+    footer: { tagline: 'El conserje virtual para hoteles boutique.', contact: 'agustin@consergi.com', demo: 'Demo', privacy: 'Privacidad', onboard: 'Solicitar acceso' },
     chat: {
       greeting: '¡Hola! ¿En qué puedo ayudarte hoy?',
       q: '¿Cuál es la contraseña del WiFi?',
@@ -195,6 +204,15 @@ const T = {
         { n: '03', t: "Els teus hostes l'usen", d: "Escanegen el QR i accedeixen al concierge en el seu propi idioma. Sense descàrregues, sense comptes." },
       ],
     },
+    reviews: {
+      eyebrow: 'Hotels que ja ho fan servir',
+      h2: 'El que diuen els nostres clients',
+      items: [
+        { quote: "Abans passàvem hores responent les mateixes preguntes en anglès amb el traductor. Ara els hostes ho resolen sols i la recepció pot centrar-se en el que realment importa.", name: 'Laura M.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
+        { quote: "El millor va ser veure un grup de turistes japonesos fent servir el chatbot sense cap problema. Mai hauríem pogut comunicar-nos així. I ho vam posar en marxa en menys d'una hora.", name: 'Javier C.', role: 'Propietari', location: 'Finca boutique · Mallorca' },
+        { quote: "Els hostes arriben ja amb tot clar: horaris, WiFi, què veure a la ciutat. Les preguntes de recepció han baixat moltíssim i les valoracions a Booking han pujat.", name: 'Ana S.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
+      ],
+    },
     demo: {
       eyebrow: 'Demo en viu',
       h2: 'Prova-ho ara mateix',
@@ -230,7 +248,7 @@ const T = {
       or: 'O si ho prefereixes, escriu-nos directament per WhatsApp',
       whatsappBtn: 'Obrir WhatsApp',
     },
-    footer: { tagline: 'El concierge virtual per a hotels boutique.', contact: 'agustin@consergi.com', demo: 'Demo', admin: 'Panell Admin', onboard: 'Sol·licitar accés' },
+    footer: { tagline: 'El concierge virtual per a hotels boutique.', contact: 'agustin@consergi.com', demo: 'Demo', privacy: 'Privacitat', onboard: 'Sol·licitar accés' },
     chat: {
       greeting: 'Hola! En què puc ajudar-te avui?',
       q: 'Quina és la contrasenya del WiFi?',
@@ -280,6 +298,15 @@ const T = {
         { n: '03', t: 'Guests use it', d: 'They scan the QR and access the concierge in their own language. No downloads, no accounts.' },
       ],
     },
+    reviews: {
+      eyebrow: 'Hotels already using it',
+      h2: 'What our customers say',
+      items: [
+        { quote: 'We used to spend hours answering the same questions in broken English. Now guests sort it out themselves and our reception team can focus on what actually matters.', name: 'Laura M.', role: 'Hotel Director', location: 'Rural boutique hotel · Girona' },
+        { quote: 'Seeing a group of Japanese tourists using the chatbot without any issues was incredible. We never could have communicated that way before. And we had it running in under an hour.', name: 'Javier C.', role: 'Owner', location: 'Boutique finca · Mallorca' },
+        { quote: 'Guests now arrive already knowing everything: check-out times, WiFi, what to do in the city. Reception questions dropped a lot and our Booking.com reviews went up.', name: 'Ana S.', role: 'Receptionist', location: 'Boutique guesthouse · Granada' },
+      ],
+    },
     demo: {
       eyebrow: 'Live demo',
       h2: 'Try it right now',
@@ -315,7 +342,7 @@ const T = {
       or: 'Or if you prefer, message us directly on WhatsApp',
       whatsappBtn: 'Open WhatsApp',
     },
-    footer: { tagline: 'The AI concierge for boutique hotels.', contact: 'agustin@consergi.com', demo: 'Demo', admin: 'Admin Panel', onboard: 'Request access' },
+    footer: { tagline: 'The AI concierge for boutique hotels.', contact: 'agustin@consergi.com', demo: 'Demo', privacy: 'Privacy', onboard: 'Request access' },
     chat: {
       greeting: 'Hello! How can I help you today?',
       q: "What's the WiFi password?",
@@ -494,6 +521,17 @@ const t = computed(() => T[lang.value]);
       </div>
     </section>
 
+    <!-- ═══ LIFESTYLE IMAGE ═════════════════════════════════════════════════ -->
+    <div class="lifestyle-img-wrap reveal">
+      <div class="max-w-6xl mx-auto px-6">
+        <img
+          src="/img/hotel-room-qr-use.png"
+          alt="Hotel guests using Consergi on their phone"
+          class="lifestyle-img"
+        />
+      </div>
+    </div>
+
     <!-- ═══ FEATURES ══════════════════════════════════════════════════════════ -->
     <section class="section reveal">
       <div class="section-inner">
@@ -531,6 +569,45 @@ const t = computed(() => T[lang.value]);
             <span class="step-num">{{ step.n }}</span>
             <h3 class="step-title">{{ step.t }}</h3>
             <p class="step-desc">{{ step.d }}</p>
+          </div>
+        </div>
+
+        <!-- QR stand photo -->
+        <div class="mt-12 reveal">
+          <img
+            src="/img/qr-code-stand.png"
+            alt="Consergi QR code stand at hotel reception"
+            class="qr-stand-img"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══ REVIEWS ═════════════════════════════════════════════════════════════ -->
+    <section class="section reveal">
+      <div class="section-inner">
+        <div class="section-header">
+          <p class="eyebrow">{{ t.reviews.eyebrow }}</p>
+          <h2 class="section-title">{{ t.reviews.h2 }}</h2>
+        </div>
+        <div class="reviews-grid">
+          <div
+            v-for="(review, i) in t.reviews.items" :key="i"
+            class="review-card reveal"
+            :style="`animation-delay: ${i * 0.12}s`"
+          >
+            <!-- Stars -->
+            <div class="review-stars">
+              <span v-for="s in 5" :key="s" class="star">★</span>
+            </div>
+            <p class="review-quote">"{{ review.quote }}"</p>
+            <div class="review-author">
+              <div class="review-avatar">{{ review.name[0] }}</div>
+              <div>
+                <p class="review-name">{{ review.name }}</p>
+                <p class="review-role">{{ review.role }} · {{ review.location }}</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -619,7 +696,7 @@ const t = computed(() => T[lang.value]);
         </div>
         <div class="footer-links">
           <a :href="DEMO_URL" class="footer-link">{{ t.footer.demo }}</a>
-          <a href="/admin" class="footer-link">{{ t.footer.admin }}</a>
+          <a href="/privacy" class="footer-link">{{ t.footer.privacy }}</a>
           <button @click="openModal()" class="footer-link">{{ t.footer.onboard }}</button>
         </div>
         <div class="footer-contact">
@@ -1010,11 +1087,43 @@ const t = computed(() => T[lang.value]);
   line-height: 1.6;
 }
 
+/* ─── Lifestyle image ─────────────────────────────────────────────────────── */
+.lifestyle-img-wrap {
+  padding: 0 0 64px;
+}
+.lifestyle-img {
+  width: 100%;
+  max-height: 480px;
+  object-fit: cover;
+  object-position: center 30%;
+  border-radius: 28px;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.12);
+}
+
+/* ─── QR stand photo ──────────────────────────────────────────────────────── */
+.qr-stand-img {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  max-height: 340px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 24px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.10);
+  margin: 0 auto;
+}
+
 /* ─── Features grid ───────────────────────────────────────────────────────── */
 .features-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 16px;
+}
+@media (max-width: 768px) {
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+  .features-grid { grid-template-columns: 1fr; }
 }
 .feature-card {
   background: rgba(255,255,255,0.4);
@@ -1287,6 +1396,50 @@ const t = computed(() => T[lang.value]);
   color: #a8a29e;
   text-align: center;
 }
+
+/* ─── Reviews ────────────────────────────────────────────────────────────── */
+.reviews-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+.review-card {
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.9);
+  border-radius: 24px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.review-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+.review-stars { display: flex; gap: 2px; }
+.star { color: #f59e0b; font-size: 1rem; }
+.review-quote {
+  font-size: 0.92rem;
+  color: #44403c;
+  line-height: 1.7;
+  flex: 1;
+  font-style: italic;
+}
+.review-author { display: flex; align-items: center; gap: 12px; margin-top: 4px; }
+.review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #1c1917;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+.review-name { font-size: 0.875rem; font-weight: 700; color: #1c1917; }
+.review-role { font-size: 0.75rem; color: #a8a29e; margin-top: 2px; }
 
 /* ─── Scroll reveal ───────────────────────────────────────────────────────── */
 .reveal {

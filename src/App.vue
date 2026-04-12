@@ -1,10 +1,18 @@
 <script setup>
-import { onMounted, watch } from 'vue';
+import { onMounted, watch, ref } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import HotelChatbot from './components/HotelChatbot.vue';
 import { useUIStore } from './stores/useUIStore';
 import { useItineraryStore } from './stores/useItineraryStore';
 import { useAppInit } from './composables/useAppInit';
+
+// ─── Cookie consent ────────────────────────────────────────────────────────────
+const showCookieBanner = ref(false);
+onMounted(() => {
+  if (!localStorage.getItem('mc_cookies')) showCookieBanner.value = true;
+});
+function acceptCookies()  { localStorage.setItem('mc_cookies', 'accepted');  showCookieBanner.value = false; }
+function declineCookies() { localStorage.setItem('mc_cookies', 'declined');  showCookieBanner.value = false; }
 
 const router = useRouter();
 const route = useRoute();
@@ -26,7 +34,7 @@ function resetApp() {
   router.push({ path: '/welcome', query: { hotel: hotelId } });
 }
 
-const FULL_SCREEN_ROUTES = ['Landing', 'Welcome', 'Admin', 'Onboard'];
+const FULL_SCREEN_ROUTES = ['Landing', 'Welcome', 'Admin', 'Onboard', 'Privacy'];
 </script>
 
 <template>
@@ -65,9 +73,37 @@ const FULL_SCREEN_ROUTES = ['Landing', 'Welcome', 'Admin', 'Onboard'];
       </div>
     </transition>
 
-    <HotelChatbot v-if="route.name !== 'Admin' && route.name !== 'Onboard' && route.name !== 'Landing'" />
+    <HotelChatbot v-if="route.name !== 'Admin' && route.name !== 'Onboard' && route.name !== 'Landing' && route.name !== 'Privacy'" />
+
+    <!-- Cookie consent -->
+    <Transition name="cookie">
+      <div
+        v-if="showCookieBanner"
+        class="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-6 sm:bottom-6 sm:max-w-sm z-[150] bg-stone-900 text-white rounded-2xl shadow-2xl p-5"
+      >
+        <p class="text-sm leading-relaxed text-stone-300 mb-4">
+          Usamos cookies para analítica y mejorar la experiencia.
+          <a href="/privacy" class="underline text-stone-400 hover:text-white">Política de privacidad</a>.
+        </p>
+        <div class="flex gap-2">
+          <button
+            @click="acceptCookies"
+            class="flex-1 py-2 bg-white text-stone-900 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-stone-100 transition-all"
+          >Aceptar</button>
+          <button
+            @click="declineCookies"
+            class="flex-1 py-2 bg-stone-700 text-stone-300 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-stone-600 transition-all"
+          >Rechazar</button>
+        </div>
+      </div>
+    </Transition>
   </div>
 </template>
+
+<style>
+.cookie-enter-active, .cookie-leave-active { transition: all 0.35s ease; }
+.cookie-enter-from, .cookie-leave-to { opacity: 0; transform: translateY(16px); }
+</style>
 
 <style>
 @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap");

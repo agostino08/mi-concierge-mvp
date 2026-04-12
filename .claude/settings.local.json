@@ -30,7 +30,10 @@
       "Bash(pip install:*)",
       "Bash(pip3 install:*)",
       "Bash(python -c \"import playwright; print\\('ok'\\)\")",
-      "Bash(python -m playwright install chromium)"
+      "Bash(python -m playwright install chromium)",
+      "Bash(mkdir -p \"c:/Users/Administrator/mi-concierge-mvp/public/img\")",
+      "Bash(cp \"c:/Users/Administrator/mi-concierge-mvp/dist/assets/img/qr-code-stand.png\" \"c:/Users/Administrator/mi-concierge-mvp/public/img/\")",
+      "Bash(cp \"c:/Users/Administrator/mi-concierge-mvp/dist/assets/img/hotel-room-qr-use.png\" \"c:/Users/Administrator/mi-concierge-mvp/public/img/\")"
     ]
   }
 }
