@@ -19,6 +19,34 @@ onUnmounted(() => window.removeEventListener('scroll', onScroll));
 const DEMO_URL = 'https://consergi.com/welcome?hotel=hotel-nova-gracia';
 const qrDataUrl = ref('');
 
+// ─── WhatsApp ──────────────────────────────────────────────────────────────────
+// ↓ Replace XXXXXXXXXX with your number without + (e.g. 34612345678)
+const WHATSAPP_NUMBER = '34667310019';
+const waMessages = { es: 'Hola, me interesa Consergi para mi hotel', ca: "Hola, m'interessa Consergi per al meu hotel", en: 'Hi, I\'m interested in Consergi for my hotel' };
+const whatsappUrl = computed(() => `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(waMessages[lang.value])}`);
+
+// ─── Contact modal ─────────────────────────────────────────────────────────────
+const showModal = ref(false);
+const contactForm = ref({ name: '', hotel: '', email: '', phone: '' });
+const formStatus = ref('idle'); // idle | sending | success | error
+
+function openModal() { showModal.value = true; document.body.style.overflow = 'hidden'; }
+function closeModal() { showModal.value = false; formStatus.value = 'idle'; contactForm.value = { name: '', hotel: '', email: '', phone: '' }; document.body.style.overflow = ''; }
+
+async function submitForm() {
+  formStatus.value = 'sending';
+  try {
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ...contactForm.value, lang: lang.value }),
+    });
+    formStatus.value = res.ok ? 'success' : 'error';
+  } catch {
+    formStatus.value = 'error';
+  }
+}
+
 onMounted(async () => {
   try {
     qrDataUrl.value = await QRCode.toDataURL(DEMO_URL, {
@@ -47,7 +75,8 @@ const T = {
       h1b: 'En el idioma de cada huésped.',
       sub: 'Consergi responde las preguntas de tus huéspedes al instante, genera itinerarios personalizados y funciona en 10 idiomas. Sin descargas. Sin integraciones. Listo en 15 minutos.',
       cta1: 'Ver demo en vivo',
-      cta2: 'Empezar gratis',
+      cta2: 'Agenda tu demo',
+      whatsapp: 'O escríbenos por WhatsApp',
       qrLabel: 'Escanea para probarlo ahora',
     },
     trust: 'Diseñado para hoteles boutique independientes',
@@ -93,14 +122,28 @@ const T = {
       sub: 'Empieza gratis. Sin tarjeta de crédito.',
       trial: '30 días gratis en cualquier plan · Sin tarjeta de crédito · Cancela cuando quieras',
       plans: [
-        { name: 'Starter', price: '€49', per: '/mes', desc: 'Para hoteles que empiezan', features: ['1 hotel', 'Chatbot + 10 idiomas', 'Itinerarios con IA', 'Soporte por email'], cta: 'Empezar gratis', highlight: false },
-        { name: 'Growth', price: '€99', per: '/mes', desc: 'Para hoteles que quieren crecer', features: ['1 hotel', 'Todo en Starter', 'Panel de analítica', 'Portal de socios', 'Marca personalizada', 'Soporte prioritario'], cta: 'Empezar gratis', highlight: true },
+        { name: 'Starter', price: '€49', per: '/mes', desc: 'Para hoteles que empiezan', features: ['1 hotel', 'Chatbot + 10 idiomas', 'Itinerarios con IA', 'Soporte por email'], cta: 'Habla con nosotros', highlight: false },
+        { name: 'Growth', price: '€99', per: '/mes', desc: 'Para hoteles que quieren crecer', features: ['1 hotel', 'Todo en Starter', 'Panel de analítica', 'Portal de socios', 'Marca personalizada', 'Soporte prioritario'], cta: 'Habla con nosotros', highlight: true },
       ],
     },
     cta: {
       h2: '¿Listo para transformar la experiencia de tus huéspedes?',
       sub: 'Únete a los primeros hoteles boutique que ya usan Consergi.',
-      btn: 'Solicitar acceso gratuito',
+      btn: 'Agenda tu demo gratuita',
+    },
+    contact: {
+      title: 'Agenda tu demo personal',
+      sub: 'Agustín te escribirá personalmente en menos de 24h. Sin compromiso.',
+      namePlaceholder: 'Tu nombre',
+      hotelPlaceholder: 'Nombre del hotel',
+      emailPlaceholder: 'Email',
+      phonePlaceholder: 'Teléfono (opcional)',
+      btn: 'Enviar',
+      sending: 'Enviando...',
+      success: '¡Perfecto! Te escribiremos muy pronto.',
+      error: 'Algo fue mal. Escríbenos a agustin@consergi.com',
+      or: 'O si lo prefieres, escríbenos directamente por WhatsApp',
+      whatsappBtn: 'Abrir WhatsApp',
     },
     footer: { tagline: 'El conserje virtual para hoteles boutique.', contact: 'agustin@consergi.com', demo: 'Demo', admin: 'Panel Admin', onboard: 'Solicitar acceso' },
     chat: {
@@ -117,7 +160,8 @@ const T = {
       h1b: "En l'idioma de cada hoste.",
       sub: "Consergi respon les preguntes dels teus hostes a l'instant, genera itineraris personalitzats i funciona en 10 idiomes. Sense descàrregues. Sense integracions. Llest en 15 minuts.",
       cta1: 'Veure demo en viu',
-      cta2: 'Començar gratis',
+      cta2: 'Agenda la demo',
+      whatsapp: 'O escriu-nos per WhatsApp',
       qrLabel: 'Escaneja per provar-ho ara',
     },
     trust: "Dissenyat per a hotels boutique independents",
@@ -163,14 +207,28 @@ const T = {
       sub: 'Comença gratis. Sense targeta de crèdit.',
       trial: '30 dies gratis en qualsevol pla · Sense targeta de crèdit · Cancel·la quan vulguis',
       plans: [
-        { name: 'Starter', price: '€49', per: '/mes', desc: 'Per a hotels que comencen', features: ['1 hotel', 'Chatbot + 10 idiomes', 'Itineraris amb IA', 'Suport per email'], cta: 'Començar gratis', highlight: false },
-        { name: 'Growth', price: '€99', per: '/mes', desc: 'Per a hotels que volen créixer', features: ['1 hotel', 'Tot a Starter', "Panell d'analítica", 'Portal de socis', 'Marca personalitzada', 'Suport prioritari'], cta: 'Començar gratis', highlight: true },
+        { name: 'Starter', price: '€49', per: '/mes', desc: 'Per a hotels que comencen', features: ['1 hotel', 'Chatbot + 10 idiomes', 'Itineraris amb IA', 'Suport per email'], cta: 'Parla amb nosaltres', highlight: false },
+        { name: 'Growth', price: '€99', per: '/mes', desc: 'Per a hotels que volen créixer', features: ['1 hotel', 'Tot a Starter', "Panell d'analítica", 'Portal de socis', 'Marca personalitzada', 'Suport prioritari'], cta: 'Parla amb nosaltres', highlight: true },
       ],
     },
     cta: {
       h2: "Llest per transformar l'experiència dels teus hostes?",
       sub: "Uneix-te als primers hotels boutique que ja fan servir Consergi.",
-      btn: 'Sol·licitar accés gratuït',
+      btn: 'Agenda la teva demo gratuïta',
+    },
+    contact: {
+      title: 'Agenda la teva demo personal',
+      sub: "L'Agustín t'escriurà personalment en menys de 24h. Sense compromís.",
+      namePlaceholder: 'El teu nom',
+      hotelPlaceholder: "Nom de l'hotel",
+      emailPlaceholder: 'Email',
+      phonePlaceholder: 'Telèfon (opcional)',
+      btn: 'Enviar',
+      sending: 'Enviant...',
+      success: 'Perfecte! T\'escriurem molt aviat.',
+      error: 'Alguna cosa ha anat malament. Escriu-nos a agustin@consergi.com',
+      or: 'O si ho prefereixes, escriu-nos directament per WhatsApp',
+      whatsappBtn: 'Obrir WhatsApp',
     },
     footer: { tagline: 'El concierge virtual per a hotels boutique.', contact: 'agustin@consergi.com', demo: 'Demo', admin: 'Panell Admin', onboard: 'Sol·licitar accés' },
     chat: {
@@ -187,7 +245,8 @@ const T = {
       h1b: "In every guest's language.",
       sub: "Consergi answers guest questions instantly, generates personalized city itineraries, and works in 10 languages. No downloads. No integrations. Ready in 15 minutes.",
       cta1: 'See live demo',
-      cta2: 'Start for free',
+      cta2: 'Book your demo',
+      whatsapp: 'Or message us on WhatsApp',
       qrLabel: 'Scan to try it now',
     },
     trust: 'Built for independent boutique hotels',
@@ -233,14 +292,28 @@ const T = {
       sub: 'Start free. No credit card needed.',
       trial: '30 days free on any plan · No credit card · Cancel anytime',
       plans: [
-        { name: 'Starter', price: '€49', per: '/mo', desc: 'For hotels getting started', features: ['1 hotel', 'Chatbot + 10 languages', 'AI itineraries', 'Email support'], cta: 'Start for free', highlight: false },
-        { name: 'Growth', price: '€99', per: '/mo', desc: 'For hotels that want to grow', features: ['1 hotel', 'Everything in Starter', 'Analytics dashboard', 'Partners portal', 'Custom branding', 'Priority support'], cta: 'Start for free', highlight: true },
+        { name: 'Starter', price: '€49', per: '/mo', desc: 'For hotels getting started', features: ['1 hotel', 'Chatbot + 10 languages', 'AI itineraries', 'Email support'], cta: 'Talk to us', highlight: false },
+        { name: 'Growth', price: '€99', per: '/mo', desc: 'For hotels that want to grow', features: ['1 hotel', 'Everything in Starter', 'Analytics dashboard', 'Partners portal', 'Custom branding', 'Priority support'], cta: 'Talk to us', highlight: true },
       ],
     },
     cta: {
       h2: 'Ready to transform your guest experience?',
       sub: 'Join the first boutique hotels already using Consergi.',
-      btn: 'Request free access',
+      btn: 'Book your free demo',
+    },
+    contact: {
+      title: 'Book your personal demo',
+      sub: 'Agustín will write to you personally within 24h. No commitment.',
+      namePlaceholder: 'Your name',
+      hotelPlaceholder: 'Hotel name',
+      emailPlaceholder: 'Email',
+      phonePlaceholder: 'Phone (optional)',
+      btn: 'Send',
+      sending: 'Sending...',
+      success: 'Perfect! We\'ll be in touch very soon.',
+      error: 'Something went wrong. Email us at agustin@consergi.com',
+      or: 'Or if you prefer, message us directly on WhatsApp',
+      whatsappBtn: 'Open WhatsApp',
     },
     footer: { tagline: 'The AI concierge for boutique hotels.', contact: 'agustin@consergi.com', demo: 'Demo', admin: 'Admin Panel', onboard: 'Request access' },
     chat: {
@@ -280,7 +353,7 @@ const t = computed(() => T[lang.value]);
 
           <!-- CTA -->
           <button
-            @click="router.push('/onboard')"
+            @click="openModal()"
             class="hidden sm:block px-5 py-2 bg-stone-800 text-white rounded-full text-sm font-bold tracking-wide hover:bg-stone-700 transition-all shadow-md hover:shadow-lg active:scale-95"
           >{{ t.nav.cta }}</button>
         </div>
@@ -303,15 +376,27 @@ const t = computed(() => T[lang.value]);
           <p class="text-stone-500 text-lg leading-relaxed max-w-lg">{{ t.hero.sub }}</p>
 
           <div class="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              @click="openModal()"
+              class="inline-flex items-center justify-center px-7 py-4 bg-stone-800 text-white rounded-2xl text-base font-bold tracking-wide hover:bg-stone-700 transition-all shadow-xl hover:shadow-2xl active:scale-95"
+            >{{ t.hero.cta2 }}</button>
             <a
               :href="DEMO_URL"
-              class="inline-flex items-center justify-center px-7 py-4 bg-stone-800 text-white rounded-2xl text-base font-bold tracking-wide hover:bg-stone-700 transition-all shadow-xl hover:shadow-2xl active:scale-95"
-            >{{ t.hero.cta1 }}</a>
-            <button
-              @click="router.push('/onboard')"
               class="inline-flex items-center justify-center px-7 py-4 bg-white/60 backdrop-blur-sm border border-white text-stone-700 rounded-2xl text-base font-bold tracking-wide hover:bg-white hover:shadow-lg transition-all active:scale-95"
-            >{{ t.hero.cta2 }}</button>
+            >{{ t.hero.cta1 }}</a>
           </div>
+          <!-- WhatsApp secondary -->
+          <a
+            :href="whatsappUrl"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center gap-2 text-stone-500 hover:text-stone-800 text-sm font-medium transition-colors pt-1"
+          >
+            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+            </svg>
+            {{ t.hero.whatsapp }}
+          </a>
         </div>
 
         <!-- Right: phone mockup -->
@@ -503,7 +588,7 @@ const t = computed(() => T[lang.value]);
               </li>
             </ul>
             <button
-              @click="router.push('/onboard')"
+              @click="openModal()"
               class="plan-cta"
               :class="plan.highlight ? 'plan-cta-highlight' : 'plan-cta-base'"
             >{{ plan.cta }}</button>
@@ -519,7 +604,7 @@ const t = computed(() => T[lang.value]);
         <h2 class="footer-cta-title">{{ t.cta.h2 }}</h2>
         <p class="footer-cta-sub">{{ t.cta.sub }}</p>
         <button
-          @click="router.push('/onboard')"
+          @click="openModal()"
           class="footer-cta-btn"
         >{{ t.cta.btn }}</button>
       </div>
@@ -535,7 +620,7 @@ const t = computed(() => T[lang.value]);
         <div class="footer-links">
           <a :href="DEMO_URL" class="footer-link">{{ t.footer.demo }}</a>
           <a href="/admin" class="footer-link">{{ t.footer.admin }}</a>
-          <button @click="router.push('/onboard')" class="footer-link">{{ t.footer.onboard }}</button>
+          <button @click="openModal()" class="footer-link">{{ t.footer.onboard }}</button>
         </div>
         <div class="footer-contact">
           <a :href="`mailto:${t.footer.contact}`" class="footer-email">{{ t.footer.contact }}</a>
@@ -545,6 +630,89 @@ const t = computed(() => T[lang.value]);
         <p>© 2026 Consergi · <a :href="`mailto:${t.footer.contact}`" class="hover:text-stone-600 transition-colors">{{ t.footer.contact }}</a></p>
       </div>
     </footer>
+
+    <!-- ═══ CONTACT MODAL ══════════════════════════════════════════════════════ -->
+    <Teleport to="body">
+      <Transition name="modal">
+        <div v-if="showModal" class="modal-backdrop" @click.self="closeModal()">
+          <div class="modal-box">
+            <!-- Close -->
+            <button @click="closeModal()" class="modal-close" aria-label="Cerrar">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+              </svg>
+            </button>
+
+            <!-- Success state -->
+            <div v-if="formStatus === 'success'" class="modal-success">
+              <div class="success-icon">✓</div>
+              <p class="success-msg">{{ t.contact.success }}</p>
+            </div>
+
+            <!-- Form state -->
+            <template v-else>
+              <p class="eyebrow mb-1">{{ t.nav.cta }}</p>
+              <h3 class="modal-title">{{ t.contact.title }}</h3>
+              <p class="modal-sub">{{ t.contact.sub }}</p>
+
+              <form @submit.prevent="submitForm()" class="modal-form">
+                <input
+                  v-model="contactForm.name"
+                  :placeholder="t.contact.namePlaceholder"
+                  required
+                  class="modal-input"
+                />
+                <input
+                  v-model="contactForm.hotel"
+                  :placeholder="t.contact.hotelPlaceholder"
+                  required
+                  class="modal-input"
+                />
+                <input
+                  v-model="contactForm.email"
+                  type="email"
+                  :placeholder="t.contact.emailPlaceholder"
+                  required
+                  class="modal-input"
+                />
+                <input
+                  v-model="contactForm.phone"
+                  type="tel"
+                  :placeholder="t.contact.phonePlaceholder"
+                  class="modal-input"
+                />
+
+                <p v-if="formStatus === 'error'" class="modal-error">{{ t.contact.error }}</p>
+
+                <button
+                  type="submit"
+                  :disabled="formStatus === 'sending'"
+                  class="modal-submit"
+                >
+                  {{ formStatus === 'sending' ? t.contact.sending : t.contact.btn }}
+                </button>
+              </form>
+
+              <!-- WhatsApp divider -->
+              <div class="modal-divider">
+                <span>{{ t.contact.or }}</span>
+              </div>
+              <a
+                :href="whatsappUrl"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="modal-whatsapp"
+              >
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                </svg>
+                {{ t.contact.whatsappBtn }}
+              </a>
+            </template>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
 
   </div>
 </template>
@@ -1130,4 +1298,151 @@ const t = computed(() => T[lang.value]);
   opacity: 1;
   transform: translateY(0);
 }
+
+/* ─── Contact Modal ───────────────────────────────────────────────────────── */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 25, 23, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.modal-box {
+  position: relative;
+  background: white;
+  border-radius: 32px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.2);
+}
+.modal-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #f5f5f4;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #78716c;
+  transition: background 0.15s;
+}
+.modal-close:hover { background: #e7e5e4; color: #1c1917; }
+.modal-title {
+  font-family: 'Playfair Display', serif;
+  font-style: italic;
+  font-size: 1.6rem;
+  color: #1c1917;
+  margin: 6px 0 8px;
+  line-height: 1.2;
+}
+.modal-sub {
+  font-size: 0.875rem;
+  color: #78716c;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+.modal-form { display: flex; flex-direction: column; gap: 12px; }
+.modal-input {
+  width: 100%;
+  padding: 13px 16px;
+  border: 1.5px solid #e7e5e4;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-family: inherit;
+  color: #1c1917;
+  background: #fafaf9;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+.modal-input:focus { outline: none; border-color: #78716c; background: white; }
+.modal-input::placeholder { color: #a8a29e; }
+.modal-error {
+  font-size: 0.8rem;
+  color: #e11d48;
+  padding: 8px 12px;
+  background: #fff1f2;
+  border-radius: 10px;
+}
+.modal-submit {
+  padding: 14px;
+  background: #1c1917;
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.modal-submit:hover { background: #292524; }
+.modal-submit:disabled { opacity: 0.6; cursor: not-allowed; }
+.modal-divider {
+  margin: 20px 0 14px;
+  text-align: center;
+  position: relative;
+  font-size: 0.75rem;
+  color: #a8a29e;
+  line-height: 1.4;
+}
+.modal-whatsapp {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 16px;
+  color: #15803d;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.modal-whatsapp:hover { background: #dcfce7; }
+.modal-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 24px 0;
+  text-align: center;
+}
+.success-icon {
+  width: 56px;
+  height: 56px;
+  background: #f0fdf4;
+  border: 2px solid #bbf7d0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: #15803d;
+}
+.success-msg {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1c1917;
+  line-height: 1.5;
+}
+
+/* Modal transition */
+.modal-enter-active, .modal-leave-active { transition: all 0.25s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; transform: scale(0.95); }
 </style>
