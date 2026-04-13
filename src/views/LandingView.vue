@@ -73,7 +73,7 @@ const T = {
       eyebrow: 'Conserje virtual para hoteles boutique',
       h1a: 'Tu hotel.',
       h1b: 'En el idioma de cada huésped.',
-      sub: 'Consergi responde las preguntas de tus huéspedes al instante, genera itinerarios personalizados y funciona en 10 idiomas. Sin descargas. Sin integraciones. Listo en 15 minutos.',
+      sub: 'Consergi libera a tu equipo de las preguntas repetitivas, crea itinerarios con IA para cada huésped y convierte visitas en ingresos reales a través de socios locales. Sin descargas. Sin integraciones. Listo en 15 minutos.',
       cta1: 'Ver demo en vivo',
       cta2: 'Agenda tu demo',
       whatsapp: 'O escríbenos por WhatsApp',
@@ -87,6 +87,27 @@ const T = {
         { icon: '🌍', t: 'Barreras de idioma', d: 'El 40% de tus huéspedes no habla español. Las preguntas se pierden en traducciones torpes. La experiencia también.' },
         { icon: '🔁', t: 'Las mismas 20 preguntas', d: '¿WiFi? ¿Desayuno? ¿Check-out? Tu equipo responde lo mismo 30 veces al día, en lugar de crear momentos memorables.' },
         { icon: '💎', t: 'Experiencias perdidas', d: 'Tus huéspedes se van sin conocer el restaurante de tu socio, el tour exclusivo o los descuentos que podrías ofrecerles.' },
+      ],
+    },
+    roi: {
+      eyebrow: 'El impacto real',
+      h2: 'Lo que cambia en tu hotel desde el primer día',
+      stats: [
+        {
+          stat: '+2h',
+          label: 'ahorradas al día en recepción',
+          desc: 'WiFi, check-out, desayuno... tu equipo responde las mismas preguntas más de 30 veces al día. Consergi las resuelve al instante, en el idioma del huésped, sin que nadie tenga que intervenir.',
+        },
+        {
+          stat: '+€800/mes',
+          label: 'en ingresos que antes no existían',
+          desc: 'Si el 10% de tus huéspedes visita un socio y gasta €40 de media, un hotel de 30 habitaciones genera más de €800 al mes en ventas nuevas. Restaurantes, tours, upgrades — sin comisión para nosotros.',
+        },
+        {
+          stat: '3×',
+          label: 'más conocimiento de tus huéspedes',
+          desc: '¿Familias, parejas o viajeros solos? Descubre quién te visita, qué idiomas hablan y qué quieren hacer. Diseña paquetes y ofertas que de verdad se venden.',
+        },
       ],
     },
     features: {
@@ -114,9 +135,9 @@ const T = {
       eyebrow: 'Hoteles que ya lo usan',
       h2: 'Lo que dicen nuestros clientes',
       items: [
-        { quote: 'Antes pasábamos horas respondiendo las mismas preguntas en inglés con el traductor. Ahora los huéspedes lo resuelven solos y la recepción puede centrarse en lo que realmente importa.', name: 'Laura M.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
-        { quote: 'Lo mejor fue ver a un grupo de turistas japoneses usando el chatbot sin ningún problema. Jamás habríamos podido comunicarnos así. Y lo pusimos en marcha en menos de una hora.', name: 'Javier C.', role: 'Propietario', location: 'Finca boutique · Mallorca' },
-        { quote: 'Los huéspedes llegan ya con todo claro: horarios, WiFi, qué ver en la ciudad. Las preguntas de recepción han bajado muchísimo y las valoraciones en Booking han subido.', name: 'Ana S.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
+        { quote: 'Antes pasábamos más de dos horas al día respondiendo las mismas preguntas con el traductor. Ahora los huéspedes lo resuelven solos en su idioma y la recepción puede crear experiencias de verdad. Las valoraciones en Booking subieron en menos de un mes.', name: 'Laura M.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
+        { quote: 'Ver a un grupo de turistas japoneses manejando el chatbot solos fue increíble. Jamás podríamos haberlos atendido así antes. Lo tuvimos funcionando en menos de una hora, y la puntuación media en Google subió medio punto.', name: 'Javier C.', role: 'Propietario', location: 'Finca boutique · Mallorca' },
+        { quote: 'Los huéspedes llegan ya sabiendo el WiFi, el check-out y qué ver. Las interrupciones en recepción bajaron más de un 60%. Y los socios que recomendamos generan ingresos extra sin ningún esfuerzo por nuestra parte.', name: 'Ana S.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
       ],
     },
     demo: {
@@ -136,8 +157,8 @@ const T = {
       ],
     },
     cta: {
-      h2: '¿Listo para transformar la experiencia de tus huéspedes?',
-      sub: 'Únete a los primeros hoteles boutique que ya usan Consergi.',
+      h2: '¿Listo para convertir cada estancia en una experiencia —y en un ingreso?',
+      sub: 'Sé de los primeros hoteles boutique en dar el salto. Tu equipo lo agradecerá.',
       btn: 'Agenda tu demo gratuita',
     },
     contact: {
@@ -167,7 +188,7 @@ const T = {
       eyebrow: 'Concierge virtual per a hotels boutique',
       h1a: 'El teu hotel.',
       h1b: "En l'idioma de cada hoste.",
-      sub: "Consergi respon les preguntes dels teus hostes a l'instant, genera itineraris personalitzats i funciona en 10 idiomes. Sense descàrregues. Sense integracions. Llest en 15 minuts.",
+      sub: "Consergi allibera el teu equip de les preguntes repetitives, crea itineraris amb IA per a cada hoste i converteix visites en ingressos reals gràcies als socis locals. Sense descàrregues. Sense integracions. Llest en 15 minuts.",
       cta1: 'Veure demo en viu',
       cta2: 'Agenda la demo',
       whatsapp: 'O escriu-nos per WhatsApp',
@@ -181,6 +202,27 @@ const T = {
         { icon: '🌍', t: "Barreres d'idioma", d: "El 40% dels teus hostes no parla català ni castellà. Les preguntes es perden en traduccions pobres. L'experiència també." },
         { icon: '🔁', t: 'Les mateixes 20 preguntes', d: "WiFi? Desdejuni? Check-out? El teu equip respon el mateix 30 vegades al dia, en lloc de crear moments memorables." },
         { icon: '💎', t: 'Experiències perdudes', d: "Els teus hostes marxen sense conèixer el restaurant del teu soci, el tour exclusiu o els descomptes que podries oferir-los." },
+      ],
+    },
+    roi: {
+      eyebrow: "L'impacte real",
+      h2: 'El que canvia al teu hotel des del primer dia',
+      stats: [
+        {
+          stat: '+2h',
+          label: 'estalviades al dia a recepció',
+          desc: "WiFi, check-out, desdejuni... el teu equip respon les mateixes preguntes més de 30 vegades al dia. Consergi les resol a l'instant, en l'idioma de l'hoste, sense que ningú hagi d'intervenir.",
+        },
+        {
+          stat: '+€800/mes',
+          label: "en ingressos que abans no existien",
+          desc: "Si el 10% dels teus hostes visita un soci i gasta €40 de mitjana, un hotel de 30 habitacions genera més de €800 al mes en vendes noves. Restaurants, tours, upgrades — sense comissió per a nosaltres.",
+        },
+        {
+          stat: '3×',
+          label: 'més coneixement dels teus hostes',
+          desc: "Famílies, parelles o viatgers sols? Descobreix qui et visita, quins idiomes parlen i què volen fer. Dissenya paquets i ofertes que de debò es venen.",
+        },
       ],
     },
     features: {
@@ -208,9 +250,9 @@ const T = {
       eyebrow: 'Hotels que ja ho fan servir',
       h2: 'El que diuen els nostres clients',
       items: [
-        { quote: "Abans passàvem hores responent les mateixes preguntes en anglès amb el traductor. Ara els hostes ho resolen sols i la recepció pot centrar-se en el que realment importa.", name: 'Laura M.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
-        { quote: "El millor va ser veure un grup de turistes japonesos fent servir el chatbot sense cap problema. Mai hauríem pogut comunicar-nos així. I ho vam posar en marxa en menys d'una hora.", name: 'Javier C.', role: 'Propietari', location: 'Finca boutique · Mallorca' },
-        { quote: "Els hostes arriben ja amb tot clar: horaris, WiFi, què veure a la ciutat. Les preguntes de recepció han baixat moltíssim i les valoracions a Booking han pujat.", name: 'Ana S.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
+        { quote: "Abans passàvem més de dues hores al dia responent les mateixes preguntes amb el traductor. Ara els hostes ho resolen sols en el seu idioma i la recepció pot crear experiències de debò. Les valoracions a Booking van pujar en menys d'un mes.", name: 'Laura M.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
+        { quote: "Veure un grup de turistes japonesos usant el chatbot tot sols va ser increïble. Mai hauríem pogut atendre'ls així. Ho vam tenir en marxa en menys d'una hora, i la puntuació a Google va pujar mig punt.", name: 'Javier C.', role: 'Propietari', location: 'Finca boutique · Mallorca' },
+        { quote: "Els hostes arriben ja sabent el WiFi, el check-out i què fer a la ciutat. Les interrupcions a recepció van baixar més d'un 60%. I els socis que recomanem generen ingressos extra sense cap esforç per part nostra.", name: 'Ana S.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
       ],
     },
     demo: {
@@ -230,8 +272,8 @@ const T = {
       ],
     },
     cta: {
-      h2: "Llest per transformar l'experiència dels teus hostes?",
-      sub: "Uneix-te als primers hotels boutique que ja fan servir Consergi.",
+      h2: "Llest per convertir cada estada en una experiència — i en uns ingressos?",
+      sub: "Sigues dels primers hotels boutique a fer el salt. El teu equip t'ho agrairà.",
       btn: 'Agenda la teva demo gratuïta',
     },
     contact: {
@@ -261,7 +303,7 @@ const T = {
       eyebrow: 'AI concierge for boutique hotels',
       h1a: 'Your hotel.',
       h1b: "In every guest's language.",
-      sub: "Consergi answers guest questions instantly, generates personalized city itineraries, and works in 10 languages. No downloads. No integrations. Ready in 15 minutes.",
+      sub: "Consergi frees your team from repetitive questions, creates AI-powered itineraries for every guest, and turns visits into real revenue through local partners. No downloads. No integrations. Ready in 15 minutes.",
       cta1: 'See live demo',
       cta2: 'Book your demo',
       whatsapp: 'Or message us on WhatsApp',
@@ -275,6 +317,27 @@ const T = {
         { icon: '🌍', t: 'Language barriers', d: "40% of your guests don't speak Spanish. Questions get lost in awkward translations. So does the experience." },
         { icon: '🔁', t: 'The same 20 questions', d: 'WiFi? Breakfast? Checkout? Your team answers the same questions 30 times a day instead of creating memorable moments.' },
         { icon: '💎', t: 'Missed experiences', d: "Guests leave without knowing about your partner restaurant, the exclusive tour, or the discounts you could offer them." },
+      ],
+    },
+    roi: {
+      eyebrow: 'Real impact',
+      h2: 'What changes in your hotel from day one',
+      stats: [
+        {
+          stat: '+2h',
+          label: 'saved per day at reception',
+          desc: 'WiFi, checkout, breakfast... your team answers the same questions 30+ times a day. Consergi handles them instantly, in the guest\'s own language, without anyone having to step in.',
+        },
+        {
+          stat: '+€800/mo',
+          label: 'in revenue that didn\'t exist before',
+          desc: 'If 10% of your guests visit a partner and spend an average of €40, a 30-room hotel generates over €800/month in new sales. Restaurants, tours, upgrades — no commission for us.',
+        },
+        {
+          stat: '3×',
+          label: 'better insight into your guests',
+          desc: 'Families, couples or solo travelers? Know who visits you, what languages they speak, and what they want to do. Build packages and offers that actually sell.',
+        },
       ],
     },
     features: {
@@ -302,9 +365,9 @@ const T = {
       eyebrow: 'Hotels already using it',
       h2: 'What our customers say',
       items: [
-        { quote: 'We used to spend hours answering the same questions in broken English. Now guests sort it out themselves and our reception team can focus on what actually matters.', name: 'Laura M.', role: 'Hotel Director', location: 'Rural boutique hotel · Girona' },
-        { quote: 'Seeing a group of Japanese tourists using the chatbot without any issues was incredible. We never could have communicated that way before. And we had it running in under an hour.', name: 'Javier C.', role: 'Owner', location: 'Boutique finca · Mallorca' },
-        { quote: 'Guests now arrive already knowing everything: check-out times, WiFi, what to do in the city. Reception questions dropped a lot and our Booking.com reviews went up.', name: 'Ana S.', role: 'Receptionist', location: 'Boutique guesthouse · Granada' },
+        { quote: 'We used to spend over two hours a day answering the same questions. Now guests sort it out themselves in their own language, and reception can focus on creating real experiences. Our Booking.com score went up within the first month.', name: 'Laura M.', role: 'Hotel Director', location: 'Rural boutique hotel · Girona' },
+        { quote: 'Watching a group of Japanese tourists navigate the chatbot on their own was incredible. We never could have served them that way before. It was live in under an hour — and our Google rating went up half a point.', name: 'Javier C.', role: 'Owner', location: 'Boutique finca · Mallorca' },
+        { quote: 'Guests arrive already knowing the WiFi, check-out time, and what to do in the city. Interruptions at reception dropped over 60%. And the partners we recommend generate extra income with zero effort on our part.', name: 'Ana S.', role: 'Receptionist', location: 'Boutique guesthouse · Granada' },
       ],
     },
     demo: {
@@ -324,8 +387,8 @@ const T = {
       ],
     },
     cta: {
-      h2: 'Ready to transform your guest experience?',
-      sub: 'Join the first boutique hotels already using Consergi.',
+      h2: 'Ready to turn every stay into an experience — and into revenue?',
+      sub: 'Be among the first boutique hotels to make the leap. Your team will thank you.',
       btn: 'Book your free demo',
     },
     contact: {
@@ -532,6 +595,27 @@ const t = computed(() => T[lang.value]);
       </div>
     </div>
 
+    <!-- ═══ ROI / IMPACT ═════════════════════════════════════════════════════ -->
+    <section class="section roi-section reveal">
+      <div class="section-inner">
+        <div class="section-header">
+          <p class="eyebrow">{{ t.roi.eyebrow }}</p>
+          <h2 class="section-title">{{ t.roi.h2 }}</h2>
+        </div>
+        <div class="roi-grid">
+          <div
+            v-for="(item, i) in t.roi.stats" :key="i"
+            class="roi-card reveal"
+            :style="`animation-delay: ${i * 0.12}s`"
+          >
+            <div class="roi-stat">{{ item.stat }}</div>
+            <div class="roi-stat-label">{{ item.label }}</div>
+            <p class="roi-desc">{{ item.desc }}</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══ FEATURES ══════════════════════════════════════════════════════════ -->
     <section class="section reveal">
       <div class="section-inner">
@@ -671,7 +755,12 @@ const t = computed(() => T[lang.value]);
             >{{ plan.cta }}</button>
           </div>
         </div>
-        <p class="trial-note reveal">{{ t.pricing.trial }}</p>
+        <div class="trial-banner reveal">
+          <svg class="trial-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <span>{{ t.pricing.trial }}</span>
+        </div>
       </div>
     </section>
 
@@ -1300,12 +1389,26 @@ const t = computed(() => T[lang.value]);
   color: #1c1917;
 }
 .plan-cta-highlight:hover { background: #f5f5f4; }
-.trial-note {
-  text-align: center;
-  margin-top: 28px;
-  font-size: 0.8rem;
-  color: #a8a29e;
-  letter-spacing: 0.03em;
+.trial-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin-top: 2rem;
+  padding: 1rem 1.5rem;
+  background: #f0fdf4;
+  border: 1.5px solid #bbf7d0;
+  border-radius: 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #15803d;
+  letter-spacing: 0.01em;
+}
+.trial-icon {
+  width: 1.2rem;
+  height: 1.2rem;
+  flex-shrink: 0;
+  color: #16a34a;
 }
 
 /* ─── Footer CTA ──────────────────────────────────────────────────────────── */
@@ -1598,4 +1701,68 @@ const t = computed(() => T[lang.value]);
 /* Modal transition */
 .modal-enter-active, .modal-leave-active { transition: all 0.25s ease; }
 .modal-enter-from, .modal-leave-to { opacity: 0; transform: scale(0.95); }
+
+/* ─── ROI / Impact section ──────────────────────────────────────────────── */
+.roi-section {
+  background: #1c1917;
+}
+.roi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+@media (max-width: 768px) {
+  .roi-grid { grid-template-columns: 1fr; }
+}
+.roi-card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 1.5rem;
+  padding: 2.5rem 2rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+.roi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 2rem;
+  right: 2rem;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #b45309, transparent);
+  border-radius: 999px;
+}
+.roi-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+.roi-stat {
+  font-family: "Plus Jakarta Sans", sans-serif;
+  font-size: 3.2rem;
+  font-weight: 800;
+  color: #fafaf9;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.roi-stat-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: 0.5rem;
+}
+.roi-desc {
+  font-size: 0.9rem;
+  color: #a8a29e;
+  margin-top: 1.25rem;
+  line-height: 1.7;
+}
+.roi-section .section-title {
+  color: #fafaf9;
+}
+.roi-section .eyebrow {
+  color: #b45309;
+}
 </style>
