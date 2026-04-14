@@ -19,7 +19,9 @@ No es una gran empresa ni un producto de catálogo. Lo hice porque vi de primera
 
 Ahora estoy buscando hoteles que quieran probarlo. Sin compromiso, sin coste inicial. A cambio solo necesito tu opinión sincera.
 
-¿Te parece bien si te mando el demo para que le eches un vistazo?
+Si quieres echarle un vistazo antes de responder, aquí está el demo en vivo: consergi.com/welcome?hotel=hotel-nova-gracia
+
+¿Te parece bien que lo hablemos?
 
 Agustín
 agustin@consergi.com · +34 667 310 019

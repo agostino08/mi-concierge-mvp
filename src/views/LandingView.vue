@@ -100,7 +100,7 @@ const T = {
         },
         {
           stat: '+€800/mes',
-          label: 'en ingresos que antes no existían',
+          label: 'en ingresos potenciales que antes no existían',
           desc: 'Si el 10% de tus huéspedes visita un socio y gasta €40 de media, un hotel de 30 habitaciones genera más de €800 al mes en ventas nuevas. Restaurantes, tours, upgrades — sin comisión para nosotros.',
         },
         {
@@ -132,12 +132,13 @@ const T = {
       ],
     },
     reviews: {
-      eyebrow: 'Hoteles que ya lo usan',
-      h2: 'Lo que dicen nuestros clientes',
+      eyebrow: 'Primeras impresiones',
+      h2: 'Lo que dicen quienes lo han probado',
+      disclaimer: 'Testimonios basados en experiencias de usuarios piloto.',
       items: [
-        { quote: 'Antes pasábamos más de dos horas al día respondiendo las mismas preguntas con el traductor. Ahora los huéspedes lo resuelven solos en su idioma y la recepción puede crear experiencias de verdad. Las valoraciones en Booking subieron en menos de un mes.', name: 'Laura M.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
-        { quote: 'Ver a un grupo de turistas japoneses manejando el chatbot solos fue increíble. Jamás podríamos haberlos atendido así antes. Lo tuvimos funcionando en menos de una hora, y la puntuación media en Google subió medio punto.', name: 'Javier C.', role: 'Propietario', location: 'Finca boutique · Mallorca' },
-        { quote: 'Los huéspedes llegan ya sabiendo el WiFi, el check-out y qué ver. Las interrupciones en recepción bajaron más de un 60%. Y los socios que recomendamos generan ingresos extra sin ningún esfuerzo por nuestra parte.', name: 'Ana S.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
+        { quote: 'Antes pasábamos más de dos horas al día respondiendo las mismas preguntas con el traductor. Ahora los huéspedes lo resuelven solos en su idioma y la recepción puede crear experiencias de verdad. Las valoraciones en Booking subieron en menos de un mes.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
+        { quote: 'Ver a un grupo de turistas japoneses manejando el chatbot solos fue increíble. Jamás podríamos haberlos atendido así antes. Lo tuvimos funcionando en menos de una hora, y la puntuación media en Google subió medio punto.', role: 'Propietario', location: 'Finca boutique · Mallorca' },
+        { quote: 'Los huéspedes llegan ya sabiendo el WiFi, el check-out y qué ver. Las interrupciones en recepción bajaron más de un 60%. Y los socios que recomendamos generan ingresos extra sin ningún esfuerzo por nuestra parte.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
       ],
     },
     demo: {
@@ -151,6 +152,7 @@ const T = {
       h2: 'Sencillo y transparente',
       sub: 'Empieza gratis. Sin tarjeta de crédito.',
       trial: '30 días gratis en cualquier plan · Sin tarjeta de crédito · Cancela cuando quieras',
+      vat: '+ IVA',
       plans: [
         { name: 'Starter', price: '€49', per: '/mes', desc: 'Para hoteles que empiezan', features: ['1 hotel', 'Chatbot + 10 idiomas', 'Itinerarios con IA', 'Soporte por email'], cta: 'Habla con nosotros', highlight: false },
         { name: 'Growth', price: '€99', per: '/mes', desc: 'Para hoteles que quieren crecer', features: ['1 hotel', 'Todo en Starter', 'Panel de analítica', 'Portal de socios', 'Marca personalizada', 'Soporte prioritario'], cta: 'Habla con nosotros', highlight: true },
@@ -215,7 +217,7 @@ const T = {
         },
         {
           stat: '+€800/mes',
-          label: "en ingressos que abans no existien",
+          label: "en ingressos potencials que abans no existien",
           desc: "Si el 10% dels teus hostes visita un soci i gasta €40 de mitjana, un hotel de 30 habitacions genera més de €800 al mes en vendes noves. Restaurants, tours, upgrades — sense comissió per a nosaltres.",
         },
         {
@@ -247,12 +249,13 @@ const T = {
       ],
     },
     reviews: {
-      eyebrow: 'Hotels que ja ho fan servir',
-      h2: 'El que diuen els nostres clients',
+      eyebrow: 'Primeres impressions',
+      h2: 'El que diuen els qui ho han provat',
+      disclaimer: "Testimonis basats en experiències d'usuaris pilot.",
       items: [
-        { quote: "Abans passàvem més de dues hores al dia responent les mateixes preguntes amb el traductor. Ara els hostes ho resolen sols en el seu idioma i la recepció pot crear experiències de debò. Les valoracions a Booking van pujar en menys d'un mes.", name: 'Laura M.', role: 'Directora', location: 'Hotel rural boutique · Girona' },
-        { quote: "Veure un grup de turistes japonesos usant el chatbot tot sols va ser increïble. Mai hauríem pogut atendre'ls així. Ho vam tenir en marxa en menys d'una hora, i la puntuació a Google va pujar mig punt.", name: 'Javier C.', role: 'Propietari', location: 'Finca boutique · Mallorca' },
-        { quote: "Els hostes arriben ja sabent el WiFi, el check-out i què fer a la ciutat. Les interrupcions a recepció van baixar més d'un 60%. I els socis que recomanem generen ingressos extra sense cap esforç per part nostra.", name: 'Ana S.', role: 'Recepcionista', location: 'Casa boutique · Granada' },
+        { quote: "Abans passàvem més de dues hores al dia responent les mateixes preguntes amb el traductor. Ara els hostes ho resolen sols en el seu idioma i la recepció pot crear experiències de debò. Les valoracions a Booking van pujar en menys d'un mes.", role: 'Directora', location: 'Hotel rural boutique · Girona' },
+        { quote: "Veure un grup de turistes japonesos usant el chatbot tot sols va ser increïble. Mai hauríem pogut atendre'ls així. Ho vam tenir en marxa en menys d'una hora, i la puntuació a Google va pujar mig punt.", role: 'Propietari', location: 'Finca boutique · Mallorca' },
+        { quote: "Els hostes arriben ja sabent el WiFi, el check-out i què fer a la ciutat. Les interrupcions a recepció van baixar més d'un 60%. I els socis que recomanem generen ingressos extra sense cap esforç per part nostra.", role: 'Recepcionista', location: 'Casa boutique · Granada' },
       ],
     },
     demo: {
@@ -266,6 +269,7 @@ const T = {
       h2: 'Senzill i transparent',
       sub: 'Comença gratis. Sense targeta de crèdit.',
       trial: '30 dies gratis en qualsevol pla · Sense targeta de crèdit · Cancel·la quan vulguis',
+      vat: '+ IVA',
       plans: [
         { name: 'Starter', price: '€49', per: '/mes', desc: 'Per a hotels que comencen', features: ['1 hotel', 'Chatbot + 10 idiomes', 'Itineraris amb IA', 'Suport per email'], cta: 'Parla amb nosaltres', highlight: false },
         { name: 'Growth', price: '€99', per: '/mes', desc: 'Per a hotels que volen créixer', features: ['1 hotel', 'Tot a Starter', "Panell d'analítica", 'Portal de socis', 'Marca personalitzada', 'Suport prioritari'], cta: 'Parla amb nosaltres', highlight: true },
@@ -330,7 +334,7 @@ const T = {
         },
         {
           stat: '+€800/mo',
-          label: 'in revenue that didn\'t exist before',
+          label: 'in potential revenue that didn\'t exist before',
           desc: 'If 10% of your guests visit a partner and spend an average of €40, a 30-room hotel generates over €800/month in new sales. Restaurants, tours, upgrades — no commission for us.',
         },
         {
@@ -362,12 +366,13 @@ const T = {
       ],
     },
     reviews: {
-      eyebrow: 'Hotels already using it',
-      h2: 'What our customers say',
+      eyebrow: 'First impressions',
+      h2: 'What early users say',
+      disclaimer: 'Testimonials based on pilot user experiences.',
       items: [
-        { quote: 'We used to spend over two hours a day answering the same questions. Now guests sort it out themselves in their own language, and reception can focus on creating real experiences. Our Booking.com score went up within the first month.', name: 'Laura M.', role: 'Hotel Director', location: 'Rural boutique hotel · Girona' },
-        { quote: 'Watching a group of Japanese tourists navigate the chatbot on their own was incredible. We never could have served them that way before. It was live in under an hour — and our Google rating went up half a point.', name: 'Javier C.', role: 'Owner', location: 'Boutique finca · Mallorca' },
-        { quote: 'Guests arrive already knowing the WiFi, check-out time, and what to do in the city. Interruptions at reception dropped over 60%. And the partners we recommend generate extra income with zero effort on our part.', name: 'Ana S.', role: 'Receptionist', location: 'Boutique guesthouse · Granada' },
+        { quote: 'We used to spend over two hours a day answering the same questions. Now guests sort it out themselves in their own language, and reception can focus on creating real experiences. Our Booking.com score went up within the first month.', role: 'Hotel Director', location: 'Rural boutique hotel · Girona' },
+        { quote: 'Watching a group of Japanese tourists navigate the chatbot on their own was incredible. We never could have served them that way before. It was live in under an hour — and our Google rating went up half a point.', role: 'Owner', location: 'Boutique finca · Mallorca' },
+        { quote: 'Guests arrive already knowing the WiFi, check-out time, and what to do in the city. Interruptions at reception dropped over 60%. And the partners we recommend generate extra income with zero effort on our part.', role: 'Receptionist', location: 'Boutique guesthouse · Granada' },
       ],
     },
     demo: {
@@ -381,6 +386,7 @@ const T = {
       h2: 'Simple and transparent',
       sub: 'Start free. No credit card needed.',
       trial: '30 days free on any plan · No credit card · Cancel anytime',
+      vat: '+ VAT',
       plans: [
         { name: 'Starter', price: '€49', per: '/mo', desc: 'For hotels getting started', features: ['1 hotel', 'Chatbot + 10 languages', 'AI itineraries', 'Email support'], cta: 'Talk to us', highlight: false },
         { name: 'Growth', price: '€99', per: '/mo', desc: 'For hotels that want to grow', features: ['1 hotel', 'Everything in Starter', 'Analytics dashboard', 'Partners portal', 'Custom branding', 'Priority support'], cta: 'Talk to us', highlight: true },
@@ -686,14 +692,14 @@ const t = computed(() => T[lang.value]);
             </div>
             <p class="review-quote">"{{ review.quote }}"</p>
             <div class="review-author">
-              <div class="review-avatar">{{ review.name[0] }}</div>
+              <div class="review-avatar">{{ review.role[0] }}</div>
               <div>
-                <p class="review-name">{{ review.name }}</p>
                 <p class="review-role">{{ review.role }} · {{ review.location }}</p>
               </div>
             </div>
           </div>
         </div>
+        <p class="reviews-disclaimer">{{ t.reviews.disclaimer }}</p>
       </div>
     </section>
 
@@ -739,6 +745,7 @@ const t = computed(() => T[lang.value]);
             <div class="plan-price">
               <span class="price-amount">{{ plan.price }}</span>
               <span class="price-per" :class="plan.highlight ? 'text-stone-300' : 'text-stone-400'">{{ plan.per }}</span>
+              <span class="price-vat" :class="plan.highlight ? 'text-stone-400' : 'text-stone-400'">{{ t.pricing.vat }}</span>
             </div>
             <ul class="plan-features">
               <li v-for="(feat, j) in plan.features" :key="j" class="plan-feat">
@@ -819,7 +826,14 @@ const t = computed(() => T[lang.value]);
             <template v-else>
               <p class="eyebrow mb-1">{{ t.nav.cta }}</p>
               <h3 class="modal-title">{{ t.contact.title }}</h3>
-              <p class="modal-sub">{{ t.contact.sub }}</p>
+              <!-- Founder trust card -->
+              <div class="modal-founder">
+                <img src="/img/profile.jpeg" alt="Agustín" class="modal-founder-photo" />
+                <div class="modal-founder-info">
+                  <p class="modal-founder-name">Agustín Ponce</p>
+                  <p class="modal-founder-bio">{{ t.contact.sub }}</p>
+                </div>
+              </div>
 
               <form @submit.prevent="submitForm()" class="modal-form">
                 <input
@@ -1601,6 +1615,35 @@ const t = computed(() => T[lang.value]);
   margin: 6px 0 8px;
   line-height: 1.2;
 }
+.modal-founder {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fafaf9;
+  border: 1px solid #e7e5e4;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 10px 0 20px;
+}
+.modal-founder-photo {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid #e7e5e4;
+}
+.modal-founder-name {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #1c1917;
+  margin-bottom: 2px;
+}
+.modal-founder-bio {
+  font-size: 0.8rem;
+  color: #78716c;
+  line-height: 1.5;
+}
 .modal-sub {
   font-size: 0.875rem;
   color: #78716c;
@@ -1701,6 +1744,25 @@ const t = computed(() => T[lang.value]);
 /* Modal transition */
 .modal-enter-active, .modal-leave-active { transition: all 0.25s ease; }
 .modal-enter-from, .modal-leave-to { opacity: 0; transform: scale(0.95); }
+
+/* ─── Reviews disclaimer ────────────────────────────────────────────────── */
+.reviews-disclaimer {
+  text-align: center;
+  margin-top: 1.5rem;
+  font-size: 0.75rem;
+  color: #a8a29e;
+  letter-spacing: 0.02em;
+}
+
+/* ─── Price VAT label ───────────────────────────────────────────────────── */
+.price-vat {
+  display: block;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: #a8a29e;
+  letter-spacing: 0.05em;
+  margin-top: 2px;
+}
 
 /* ─── ROI / Impact section ──────────────────────────────────────────────── */
 .roi-section {
