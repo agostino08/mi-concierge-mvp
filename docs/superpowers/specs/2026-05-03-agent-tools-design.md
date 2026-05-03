@@ -58,10 +58,10 @@ while steps < MAX_STEPS (5):
 Returns a single human-readable string: current conditions + 3-day forecast summary. Claude uses this to flag bad-weather days in activity descriptions.
 
 **`get_local_events(city: string, date_from: string, date_to: string)`**  
-ISO date strings. Returns a list of event name / date / venue summaries. Claude highlights relevant events in the activities section.
+ISO date strings (YYYY-MM-DD). Claude computes these from today's date and `user.days` — today's date is injected into the system prompt as `TODAY: {date}` so the agent can calculate the stay window without hallucinating it. Returns a list of event name / date / venue summaries. Claude highlights relevant events in the activities section.
 
 **`search_venues(city: string, query: string, max_results?: number)`**  
-Claude constructs the query from guest interests and budget (e.g. `"vegan restaurants"`, `"rooftop bars"`, `"jazz clubs"`). Returns `[{name, rating, address, price_level}]` from Places Text Search. Claude must only recommend venues returned by this tool.
+`max_results` defaults to 5. Claude constructs the query from guest interests and budget (e.g. `"vegan restaurants"`, `"rooftop bars"`, `"jazz clubs"`). Returns `[{name, rating, address, price_level}]` from Places Text Search. Claude must only recommend venues returned by this tool.
 
 ### System prompt
 
