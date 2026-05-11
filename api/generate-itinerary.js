@@ -98,6 +98,19 @@ async function executeTool(name, input) {
   }
 }
 
+// Haiku sometimes wraps its JSON output in markdown code fences even when told not to.
+// Strip them, then fall back to finding the outermost { } if extra prose is present.
+function extractJson(text) {
+  const s = text.trim();
+  const fenced = s.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```\s*$/);
+  if (fenced) return fenced[1].trim();
+  if (s.startsWith('{')) return s;
+  const start = s.indexOf('{');
+  const end = s.lastIndexOf('}');
+  if (start !== -1 && end > start) return s.slice(start, end + 1);
+  return s;
+}
+
 function sseWrite(res, event, data) {
   res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
 }
@@ -266,9 +279,10 @@ ${hotelPartners ? `\n━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━\nTh
       if (response.stop_reason === 'end_turn') {
         finalText = response.content.find(b => b.type === 'text')?.text ?? '';
         try {
-          const parsed = JSON.parse(finalText);
+          const parsed = JSON.parse(extractJson(finalText));
           sseWrite(res, 'content', parsed);
-        } catch {
+        } catch (parseErr) {
+          console.error('JSON parse failed. Raw response:', finalText?.slice(0, 500));
           sseWrite(res, 'error', { message: 'Could not parse AI response. Please try again.' });
           res.end();
           return;
