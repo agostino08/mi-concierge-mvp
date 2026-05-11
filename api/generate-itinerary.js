@@ -245,16 +245,23 @@ ${hotelPartners ? `\n━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━\nTh
 
     while (steps < MAX_STEPS) {
       steps++;
-      // Keep-alive: resets the client's inactivity timer before the Anthropic call
-      // which can take 10-20s and produces no SSE bytes while it runs.
+      // Send a ping every 2s during the Anthropic call. This does two things:
+      // (1) keeps Vercel's streaming function detector active so it doesn't kill
+      //     the function at the 10s default, and (2) resets the client's inactivity timer.
       sseWrite(res, 'ping', {});
-      const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
-        max_tokens: 4096,
-        system: systemPrompt,
-        tools: TOOLS,
-        messages,
-      });
+      const pingInterval = setInterval(() => sseWrite(res, 'ping', {}), 2000);
+      let response;
+      try {
+        response = await anthropic.messages.create({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 4096,
+          system: systemPrompt,
+          tools: TOOLS,
+          messages,
+        });
+      } finally {
+        clearInterval(pingInterval);
+      }
 
       if (response.stop_reason === 'end_turn') {
         finalText = response.content.find(b => b.type === 'text')?.text ?? '';
