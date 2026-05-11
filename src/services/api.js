@@ -1,5 +1,6 @@
 const CONNECT_TIMEOUT_MS = 20_000;
-const INACTIVITY_TIMEOUT_MS = 15_000;
+// Raised to 60s: Anthropic API calls between tool rounds can take 15-20s each.
+const INACTIVITY_TIMEOUT_MS = 60_000;
 
 // Pure function — exported for unit tests.
 // Splits a raw SSE buffer on \n\n boundaries and returns parsed {event, data} pairs.
@@ -71,6 +72,7 @@ export async function generateItinerary(hotel, user, lang, callbacks) {
           case 'content':     onContent?.(data); break;
           case 'error':       onError?.(data.message); break;
           case 'done':        break;
+          case 'ping':        break;
         }
       }
     }

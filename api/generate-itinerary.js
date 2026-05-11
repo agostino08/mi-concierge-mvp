@@ -245,6 +245,9 @@ ${hotelPartners ? `\n━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━\nTh
 
     while (steps < MAX_STEPS) {
       steps++;
+      // Keep-alive: resets the client's inactivity timer before the Anthropic call
+      // which can take 10-20s and produces no SSE bytes while it runs.
+      sseWrite(res, 'ping', {});
       const response = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 4096,
