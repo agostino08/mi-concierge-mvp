@@ -260,9 +260,11 @@ ${hotelPartners ? `\n━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━\nTh
           sseWrite(res, 'content', parsed);
         } catch {
           sseWrite(res, 'error', { message: 'Could not parse AI response. Please try again.' });
-          return res.end();
+          res.end();
+          return;
         }
         sseWrite(res, 'done', {});
+        res.end();
         break;
       }
 
@@ -295,11 +297,13 @@ ${hotelPartners ? `\n━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━\nTh
 
     if (steps >= MAX_STEPS && !finalText) {
       sseWrite(res, 'error', { message: 'Agent reached maximum steps without completing.' });
+      res.end();
     }
 
-    // Background: validate with Google Places, write to cache
+    // Fire-and-forget: validate with Google Places and write to cache.
+    // Runs after the response is closed so it doesn't delay the client.
     if (db && cacheHash && finalText) {
-      try {
+      Promise.resolve().then(async () => {
         const parsed = JSON.parse(finalText);
         const placesKey = process.env.GOOGLE_PLACES_API_KEY;
         if (placesKey) {
@@ -314,16 +318,16 @@ ${hotelPartners ? `\n━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━\nTh
           result: parsed,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
-      } catch (e) {
-        console.error('Validate/cache error:', e.message);
-      }
+      }).catch(e => console.error('Validate/cache error:', e.message));
     }
 
-    return res.end();
   } catch (error) {
     console.error('Agent error:', error);
-    if (!res.headersSent) return res.status(500).json({ error: 'Error generating options', details: error.message });
-    sseWrite(res, 'error', { message: error.message });
-    return res.end();
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Error generating options', details: error.message });
+    } else if (!res.writableEnded) {
+      sseWrite(res, 'error', { message: error.message });
+      res.end();
+    }
   }
 }
