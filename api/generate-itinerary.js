@@ -1,35 +1,31 @@
-import OpenAI from "openai";
-import crypto from "crypto";
-import admin from "firebase-admin";
+import Anthropic from '@anthropic-ai/sdk';
+import crypto from 'crypto';
+import admin from 'firebase-admin';
+import { getWeather } from './tools/weather.js';
+import { getLocalEvents } from './tools/events.js';
+import { searchVenues } from './tools/venues.js';
 
-// --- GOOGLE PLACES VALIDATION ---
+// --- GOOGLE PLACES VALIDATION (runs after agent, before caching) ---
 async function validatePlace(name, city, apiKey) {
   try {
     const input = encodeURIComponent(`${name} ${city}`);
     const url = `https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=${input}&inputtype=textquery&fields=business_status,rating,name&key=${apiKey}`;
     const response = await fetch(url);
     const data = await response.json();
-
-    if (data.status !== "OK" || !data.candidates || data.candidates.length === 0) {
-      console.log(`Places: "${name}" — not found, removing from cache.`);
-      return null;
-    }
+    if (data.status !== 'OK' || !data.candidates?.length) return null;
     const place = data.candidates[0];
-    if (place.business_status === "CLOSED_PERMANENTLY" || place.business_status === "CLOSED_TEMPORARILY") {
-      console.log(`Places: "${name}" — ${place.business_status}, removing from cache.`);
-      return null;
-    }
+    if (place.business_status === 'CLOSED_PERMANENTLY' || place.business_status === 'CLOSED_TEMPORARILY') return null;
     return { rating: place.rating || null };
   } catch (e) {
     console.warn(`Places error for "${name}":`, e.message);
-    return { rating: null }; // fail open on network error
+    return { rating: null };
   }
 }
 
 async function validateItems(items, city, apiKey) {
   const results = await Promise.all(
     items.map(async (item) => {
-      if (item.is_partner) return item; // partners are admin-verified
+      if (item.is_partner) return item;
       const v = await validatePlace(item.title, city, apiKey);
       if (v === null) return null;
       return { ...item, ...(v.rating ? { rating: v.rating } : {}) };
@@ -39,119 +35,149 @@ async function validateItems(items, city, apiKey) {
 }
 // --- END GOOGLE PLACES VALIDATION ---
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 if (!admin.apps.length) {
   try {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-
+    admin.initializeApp({ credential: admin.credential.cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
   } catch (e) {
-    console.warn("Firebase Admin not initialized. Caching disabled:", e.message);
+    console.warn('Firebase Admin not initialized. Caching disabled:', e.message);
   }
 }
 
-const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS = 5;
+const MAX_STEPS = 5;
 
+const TOOLS = [
+  {
+    name: 'get_weather',
+    description: 'Get current weather and 3-day forecast for the hotel city. Always call this first.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        city: { type: 'string', description: 'City name' },
+      },
+      required: ['city'],
+    },
+  },
+  {
+    name: 'get_local_events',
+    description: 'Get upcoming local events (concerts, festivals, shows) in the city for the guest stay dates.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        city: { type: 'string' },
+        date_from: { type: 'string', description: 'ISO date YYYY-MM-DD — start of guest stay' },
+        date_to: { type: 'string', description: 'ISO date YYYY-MM-DD — end of guest stay' },
+      },
+      required: ['city', 'date_from', 'date_to'],
+    },
+  },
+  {
+    name: 'search_venues',
+    description: 'Search Google Places for venues matching guest interests. Call once per interest category.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        city: { type: 'string' },
+        query: { type: 'string', description: 'Search query e.g. "rooftop bars" or "vegan restaurants"' },
+        max_results: { type: 'integer', description: 'Max results to return, default 5' },
+      },
+      required: ['city', 'query'],
+    },
+  },
+];
+
+async function executeTool(name, input) {
+  switch (name) {
+    case 'get_weather':      return getWeather(input);
+    case 'get_local_events': return getLocalEvents(input);
+    case 'search_venues':    return searchVenues(input);
+    default:                 return `Unknown tool: ${name}`;
+  }
+}
+
+function sseWrite(res, event, data) {
+  res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+}
 
 export default async function handler(req, res) {
-  // Configuración de CORS
-  res.setHeader("Access-Control-Allow-Credentials", true);
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,OPTIONS,PATCH,DELETE,POST,PUT"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version"
-  );
+  res.setHeader('Access-Control-Allow-Credentials', true);
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
+  res.setHeader('Access-Control-Allow-Headers', 'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version');
 
-  if (req.method === "OPTIONS") {
-    res.status(200).end();
-    return;
-  }
+  if (req.method === 'OPTIONS') { res.status(200).end(); return; }
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
-
-  // --- RATE LIMITING (Firestore-based — survives serverless cold starts) ---
-  const rawIp = req.headers["x-forwarded-for"]?.split(",")[0]?.trim() || req.socket?.remoteAddress || "unknown";
-  const ipKey = rawIp.replace(/[^a-zA-Z0-9]/g, "_");
+  // Rate limiting
+  const rawIp = req.headers['x-forwarded-for']?.split(',')[0]?.trim() || req.socket?.remoteAddress || 'unknown';
+  const ipKey = rawIp.replace(/[^a-zA-Z0-9]/g, '_');
   try {
     if (admin.apps.length) {
       const db = admin.firestore();
-      const rlRef = db.collection("rate_limits").doc(ipKey);
+      const rlRef = db.collection('rate_limits').doc(ipKey);
       const now = Date.now();
       const snap = await rlRef.get();
       const data = snap.data();
       if (!data || now - data.windowStart > RATE_LIMIT_WINDOW_MS) {
         await rlRef.set({ count: 1, windowStart: now });
       } else if (data.count >= MAX_REQUESTS) {
-        return res.status(429).json({ error: "Too many requests. Please try again in 10 minutes." });
+        return res.status(429).json({ error: 'Too many requests. Please try again in 10 minutes.' });
       } else {
         await rlRef.update({ count: data.count + 1 });
       }
     }
   } catch (e) {
-    console.warn("Rate limit check failed (non-blocking):", e.message);
+    console.warn('Rate limit check failed (non-blocking):', e.message);
   }
-  // --- END RATE LIMITING ---
 
   try {
     const { hotel, user, lang } = req.body;
+    if (!hotel?.name) return res.status(400).json({ error: 'Incomplete hotel data' });
 
-    if (!hotel || !hotel.name) {
-      return res.status(400).json({ error: "Incomplete hotel data" });
-    }
-
-    // --- CACHING LOGIC ---
-    let db;
-    let cacheHash;
+    // Cache check — model name included in hash so old OpenAI entries don't match
+    let db, cacheHash;
     try {
       db = admin.firestore();
-      
       const hashPayload = JSON.stringify({
-         hotelId: hotel.id,
-         group: user.group,
-         days: user.days,
-         style: (user.style || []).sort().join(','),
-         food: (user.food || []).sort().join(','),
-         budget: user.budget,
-         transport: (user.transport || []).sort().join(','),
-         lang: lang
+        hotelId: hotel.id,
+        group: user.group,
+        days: user.days,
+        style: (user.style || []).sort().join(','),
+        food: (user.food || []).sort().join(','),
+        budget: user.budget,
+        transport: (user.transport || []).sort().join(','),
+        lang,
+        model: 'claude-haiku-4-5-20251001',
       });
       cacheHash = crypto.createHash('sha256').update(hashPayload).digest('hex');
-      
-      const cachedDoc = await db.collection("cached_itineraries").doc(cacheHash).get();
+      const cachedDoc = await db.collection('cached_itineraries').doc(cacheHash).get();
       if (cachedDoc.exists) {
-         res.setHeader("Content-Type", "text/event-stream");
-         res.setHeader("Cache-Control", "no-cache");
-         res.setHeader("Connection", "keep-alive");
-         const cachedData = JSON.stringify(cachedDoc.data().result);
-         res.write(cachedData);
-         return res.end();
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+        sseWrite(res, 'content', cachedDoc.data().result);
+        sseWrite(res, 'done', {});
+        return res.end();
       }
-    } catch(e) {
-      console.warn("Firebase Admin caching error or not configured:", e.message);
+    } catch (e) {
+      console.warn('Cache check error:', e.message);
     }
-    // --- END CACHING FIREBASE READ ---
 
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
 
-    const guestStyles    = user.style?.length    > 0 ? user.style.join(", ")    : "General sightseeing";
-    const guestFood      = user.food?.length      > 0 ? user.food.join(", ")     : "Local cuisine";
-    const guestTransport = user.transport?.length > 0 ? user.transport.join(", "): "Walking";
+    const today = new Date().toISOString().split('T')[0];
+    const endDt = new Date();
+    endDt.setDate(endDt.getDate() + (user.days - 1));
+    const endDate = endDt.toISOString().split('T')[0];
 
-    const hotelPartners = (hotel.partners && Array.isArray(hotel.partners) && hotel.partners.length > 0)
-      ? hotel.partners.map(p => `- ${p.name} (${p.category}): ${p.description}${p.discount ? ' — Guest discount: ' + p.discount : ''}`).join("\n")
-      : null;
+    const guestStyles    = user.style?.length    > 0 ? user.style.join(', ')    : 'General sightseeing';
+    const guestFood      = user.food?.length      > 0 ? user.food.join(', ')     : 'Local cuisine';
+    const guestTransport = user.transport?.length > 0 ? user.transport.join(', '): 'Walking';
 
     const hotelContext = [
       hotel.hotel_category && `Category: ${hotel.hotel_category}`,
@@ -159,9 +185,17 @@ export default async function handler(req, res) {
       hotel.neighborhood   && `Neighbourhood: ${hotel.neighborhood}`,
       hotel.description    && `About the hotel: ${hotel.description}`,
       hotel.ai_context     && `Local context: ${hotel.ai_context}`,
-    ].filter(Boolean).join("\n");
+    ].filter(Boolean).join('\n');
 
-    const systemPrompt = `You are the expert concierge of "${hotel.name}", a ${hotel.hotel_category || 'hotel'} in ${hotel.neighborhood ? hotel.neighborhood + ', ' : ''}${hotel.city}. Your mission is to deliver a hyper-personalised guide that feels tailor-made for this specific guest — not a generic tourist list.
+    const hotelPartners = hotel.partners?.length > 0
+      ? hotel.partners.map(p =>
+          `- ${p.name} (${p.category}): ${p.description}${p.discount ? ' — Guest discount: ' + p.discount : ''}`
+        ).join('\n')
+      : null;
+
+    const systemPrompt = `You are the expert concierge of "${hotel.name}", a ${hotel.hotel_category || 'hotel'} in ${hotel.city}. Deliver a hyper-personalised guide for this specific guest.
+
+TODAY: ${today}
 
 LANGUAGE: Write ALL JSON string values in the language for ISO code "${lang}". Every title, description, and category_tag must be fluent and natural — not a literal translation.
 
@@ -169,150 +203,127 @@ LANGUAGE: Write ALL JSON string values in the language for ISO code "${lang}". E
 ${hotelContext || `${hotel.name}, ${hotel.city}`}
 
 ━━━ GUEST PROFILE ━━━
-- Traveling as:      ${user.group}
-- Days staying:      ${user.days} day${user.days > 1 ? 's' : ''}
-- Travel interests:  ${guestStyles}
-- Food preferences:  ${guestFood}
-- Budget:            ${user.budget}
-- Getting around by: ${guestTransport}
+- Traveling as: ${user.group}
+- Stay: ${user.days} day${user.days > 1 ? 's' : ''} from ${today} to ${endDate}
+- Interests: ${guestStyles}
+- Food preferences: ${guestFood}
+- Budget: ${user.budget}
+- Getting around: ${guestTransport}
 
-━━━ CORE RULE: GUEST INTERESTS ARE THE ONLY FILTER ━━━
-The guest's selected interests ("${guestStyles}") are the SOLE lens for every activity you recommend.
-- DO NOT add sightseeing, landmarks, or museums unless the guest chose "Guided Tours", "Architecture", "History", or "Museums & Culture".
-- DO NOT add beaches or nature unless the guest chose "Beach", "Nature", or "Mountains".
-- DO NOT pad the list with generic tourist spots that do not match the chosen interests.
-- A guest who chose Nightlife wants bars, clubs, and late-night venues — NOT museums or monuments.
-- Mix interests only when multiple were selected.
+━━━ TOOL INSTRUCTIONS ━━━
+1. Call get_weather("${hotel.city}") first. Use the forecast to flag bad-weather alternatives.
+2. Call get_local_events("${hotel.city}", "${today}", "${endDate}"). Highlight relevant events as activities.
+3. Call search_venues once per guest interest category. Form queries from interests + budget.
+   ONLY recommend venues returned by this tool — never invent venue names.
 
-━━━ VERIFIED REAL PLACES — YOUR MOST CRITICAL RESPONSIBILITY ━━━
-The guest will physically visit every place you name. If it does not exist or is closed, they will be stranded. This is unacceptable.
+Query guidance by interest:
+- Nightlife → "cocktail bars", "rooftop bars evening", "nightclubs"
+- Beach → "beach clubs", "surf schools"
+- Nature → "nature reserves", "botanical gardens"
+- Wellness & Spa → "spas", "yoga studios"
+- Museums & Culture → "art museums", "cultural centres"
+- Gastronomy → "food markets", "wine bars", "cooking classes"
+- Live Music → "live music bars", "jazz clubs"
+- Architecture → "architectural tours"
+- Shopping → "luxury boutiques", "artisan markets"
+(Use your judgement for other interests)
 
-1. ONLY recommend venues you are HIGHLY CERTAIN exist and are CURRENTLY OPERATING in ${hotel.city}. "Highly certain" means: you have seen this venue mentioned multiple times in travel guides, reviews, or news — not just once.
-2. Use the EXACT commercial name as it appears on Google Maps — guests will search for it directly.
-3. NEVER invent, approximate, or conflate venue names. A venue that sounds plausible but that you are not certain about MUST be omitted.
-4. Prefer well-established venues (5+ years operating, with a clear public presence) over recent or obscure openings.
-5. If you cannot confidently name a real, currently-open venue for a slot, SKIP THAT SLOT entirely — do not fabricate a substitute.
-6. It is far better to return 3 real, verified places than 6 places where 2 are invented.
-7. NEVER include addresses, phone numbers, websites, or opening hours — you cannot verify these and they will be wrong.
-
-━━━ ACTIVITIES — EXCLUSIVELY BASED ON: ${guestStyles} ━━━
-Every activity must directly serve at least one of the guest's selected interests. Use this mapping:
-
-• Nightlife        → cocktail bars, nightclubs, wine bars, rooftop bars (evening/night), jazz clubs, live DJ venues, late-night tapas spots
-• Nature           → botanical gardens, nature reserves, greenways, scenic viewpoints, coastal nature paths
-• Mountains        → cable cars, mountain hikes, mountain villages, ski resorts (if seasonal), mountain panoramic viewpoints
-• Beach            → named beaches, beach clubs, surf schools, coastal promenades
-• Rooftops         → rooftop bars, sky lounges, rooftop restaurants, open-air observation decks with city views
-• Parks            → city parks, urban gardens, landscaped public spaces, riverside walks
-• Live Music       → live music bars, jazz clubs, flamenco tablaos, concert halls, open-air music venues
-• Theater & Shows  → theaters, opera houses, comedy clubs, cultural performance venues, cabaret shows
-• Guided Tours     → walking tours, private city tours, food tours, bike tours, boat tours
-• Museums & Culture → museums, art galleries, cultural centres, permanent exhibitions, cultural foundations
-• Local Experiences → local markets, neighbourhood craft workshops, authentic studios, community-led experiences
-• Luxury Shopping  → designer boutiques, luxury concept stores, high-end jewellers, flagship department stores
-• Handicrafts      → artisan markets, pottery/textile studios, craft workshops, local artisan shops
-• Architecture     → iconic buildings, architectural walking routes, historic districts, skyline viewpoints
-• Wellness & Spa   → spas, thermal baths, yoga studios, sound healing sessions, wellness retreats, float tanks
-• Sports           → sports events/stadiums, golf courses, climbing walls, cycling routes, water sports centres
-• History          → historical sites, ancient monuments, old town districts, heritage museums
-• Relax            → scenic café terraces, tranquil gardens, lakeside or seaside promenades, panoramic resting spots
-• Gastronomy       → food markets, culinary tours, cooking classes, gourmet food shops, wine/cheese tastings
-
-Scale quantity and pace to ${user.days} day${user.days > 1 ? 's' : ''} — do not overwhelm a 1-day visitor.
-Each description must explicitly state WHY this venue matches "${guestStyles}" for a ${user.group} on a ${user.budget} budget.
-
-━━━ FOOD & DRINK — STRICTLY BASED ON: ${guestFood} ━━━
-- Match every recommendation directly to the food style (${guestFood}) AND budget (${user.budget}).
-- DO NOT default to generic "local cuisine" if the guest chose a specific style (Michelin Star, Vegan, Asian, etc.).
-- Cover meal occasions suited to ${user.days} day${user.days > 1 ? 's' : ''} (breakfast, lunch, dinner, drinks as relevant).
-- For each venue, mention the neighbourhood so the guest can plan routing.
-
-━━━ TRANSPORT — BASED ON: ${guestTransport} ━━━
-- Give concrete, actionable logistics: exact app names, ticket types, where to buy, estimated costs in local currency.
-- One practical guide per transport mode the guest selected.
-- Recommend the most cost-effective pass or combination for ${user.days} day${user.days > 1 ? 's' : ''}.
-
-━━━ QUANTITIES ━━━
-- "activities": aim for ${Math.min(Math.max(3, Math.round(user.days * 2)), 10)} items — but return FEWER if you are not fully confident in a venue. Quality over quantity.
-- "food": aim for ${Math.min(Math.max(2, Math.round(user.days * 1.5)), 7)} items — same rule applies.
-- "transport": 2–3 items (one per selected mode)
-
-${hotelPartners ? `━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━
-These are verified partners of ${hotel.name}. Include them where they genuinely match the guest profile and set "is_partner": true:
-${hotelPartners}
-
-` : ''
-}━━━ OUTPUT FORMAT ━━━
-Respond with ONLY valid JSON — no markdown, no code fences, no text before or after the JSON object.
+━━━ OUTPUT ━━━
+After all tool calls, respond with ONLY valid JSON — no markdown, no code fences:
 {
-  "activities": [{ "title": "Exact venue name", "description": "2–3 sentences personalised to this guest's specific interests", "is_partner": false, "category_tag": "Short interest tag in ${lang}" }],
-  "food":       [{ "title": "Exact venue name", "description": "2–3 sentences with cuisine style, vibe, and neighbourhood", "is_partner": false }],
-  "transport":  [{ "title": "Transport mode title", "description": "Step-by-step practical guide with costs, apps, and tips" }]
-}`;
+  "activities": [{"title": "Exact venue name from search results", "description": "2–3 sentences personalised to guest", "is_partner": false, "category_tag": "Short tag in ${lang}"}],
+  "food":       [{"title": "Exact venue name from search results", "description": "2–3 sentences with cuisine, vibe, neighbourhood", "is_partner": false}],
+  "transport":  [{"title": "Transport mode", "description": "Step-by-step guide with costs and apps"}]
+}
 
-    const completion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
-        { role: "system", content: systemPrompt },
-        {
-          role: "user",
-          content: "Generate the personalized recommendations now.",
-        },
-      ],
-      response_format: { type: "json_object" },
-      stream: true,
-    });
+Aim for ${Math.min(Math.max(3, Math.round(user.days * 2)), 10)} activities, ${Math.min(Math.max(2, Math.round(user.days * 1.5)), 7)} food items, 2–3 transport items.
+${hotelPartners ? `\n━━━ HOTEL PARTNERS — PRIORITISE THESE ━━━\nThese partners are verified. Include where they genuinely match the guest profile and set "is_partner": true:\n${hotelPartners}` : ''}`;
 
-    res.setHeader("Content-Type", "text/event-stream");
-    res.setHeader("Cache-Control", "no-cache");
-    res.setHeader("Connection", "keep-alive");
+    const messages = [{ role: 'user', content: 'Generate personalized recommendations for this guest.' }];
+    let steps = 0;
+    let finalText = '';
 
-    let fullResponse = "";
+    while (steps < MAX_STEPS) {
+      steps++;
+      const response = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
+        max_tokens: 4096,
+        system: systemPrompt,
+        tools: TOOLS,
+        messages,
+      });
 
-    for await (const chunk of completion) {
-      const content = chunk.choices[0]?.delta?.content || "";
-      if (content) {
-        fullResponse += content;
-        res.write(content);
+      if (response.stop_reason === 'end_turn') {
+        finalText = response.content.find(b => b.type === 'text')?.text ?? '';
+        try {
+          const parsed = JSON.parse(finalText);
+          sseWrite(res, 'content', parsed);
+        } catch {
+          sseWrite(res, 'error', { message: 'Could not parse AI response. Please try again.' });
+          return res.end();
+        }
+        sseWrite(res, 'done', {});
+        break;
+      }
+
+      if (response.stop_reason === 'tool_use') {
+        const toolBlocks = response.content.filter(b => b.type === 'tool_use');
+
+        for (const block of toolBlocks) {
+          sseWrite(res, 'tool_call', { name: block.name, input: block.input });
+        }
+
+        const toolResults = await Promise.all(
+          toolBlocks.map(async (block) => {
+            try {
+              const result = await executeTool(block.name, block.input);
+              const summary = String(result).slice(0, 150);
+              sseWrite(res, 'tool_result', { name: block.name, summary });
+              return { type: 'tool_result', tool_use_id: block.id, content: String(result) };
+            } catch (e) {
+              const errMsg = `Error: ${e.message}`;
+              sseWrite(res, 'tool_result', { name: block.name, summary: errMsg });
+              return { type: 'tool_result', tool_use_id: block.id, content: errMsg };
+            }
+          })
+        );
+
+        messages.push({ role: 'assistant', content: response.content });
+        messages.push({ role: 'user', content: toolResults });
       }
     }
 
-    // --- VALIDATE + CACHE ---
-    // Streaming is complete — client already has the full AI response.
-    // Now validate with Places API (parallel, ~2-3s) before closing the connection.
-    // The validated version is saved to cache so future requests with the same profile
-    // get clean, verified results immediately.
-    if (db && cacheHash) {
-      try {
-        let parsed = JSON.parse(fullResponse);
+    if (steps >= MAX_STEPS && !finalText) {
+      sseWrite(res, 'error', { message: 'Agent reached maximum steps without completing.' });
+    }
 
-        const placesApiKey = process.env.GOOGLE_PLACES_API_KEY;
-        if (placesApiKey) {
+    // Background: validate with Google Places, write to cache
+    if (db && cacheHash && finalText) {
+      try {
+        const parsed = JSON.parse(finalText);
+        const placesKey = process.env.GOOGLE_PLACES_API_KEY;
+        if (placesKey) {
           const [validatedActivities, validatedFood] = await Promise.all([
-            validateItems(parsed.activities || [], hotel.city, placesApiKey),
-            validateItems(parsed.food || [], hotel.city, placesApiKey),
+            validateItems(parsed.activities || [], hotel.city, placesKey),
+            validateItems(parsed.food || [], hotel.city, placesKey),
           ]);
           parsed.activities = validatedActivities;
           parsed.food = validatedFood;
-          console.log(`Places validation done: ${parsed.activities.length} activities, ${parsed.food.length} food saved to cache.`);
         }
-
-        await db.collection("cached_itineraries").doc(cacheHash).set({
+        await db.collection('cached_itineraries').doc(cacheHash).set({
           result: parsed,
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
         });
       } catch (e) {
-        console.error("Validate/cache error:", e.message);
+        console.error('Validate/cache error:', e.message);
       }
     }
-    // --- END VALIDATE + CACHE ---
 
     return res.end();
   } catch (error) {
-    console.error("API Error:", error);
-    if (!res.headersSent) {
-      return res.status(500).json({ error: "Error generating options", details: error.message });
-    }
+    console.error('Agent error:', error);
+    if (!res.headersSent) return res.status(500).json({ error: 'Error generating options', details: error.message });
+    sseWrite(res, 'error', { message: error.message });
     return res.end();
   }
 }
