@@ -3,10 +3,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useRecommendationsStore } from '../stores/useRecommendationsStore';
 import { useUIStore } from '../stores/useUIStore';
 
-// Mock the API service
-vi.mock('../services/api', () => ({
-  generateItinerary: vi.fn(),
-}));
+vi.mock('../services/api', () => ({ generateItinerary: vi.fn() }));
 
 const localStorageMock = (() => {
   let store = {};
@@ -26,9 +23,10 @@ describe('useRecommendationsStore', () => {
     vi.clearAllMocks();
   });
 
-  it('initializes with empty recommendations and generating=false', () => {
+  it('initializes with empty recommendations, generating=false, agentStep=null', () => {
     const store = useRecommendationsStore();
     expect(store.generating).toBe(false);
+    expect(store.agentStep).toBeNull();
     expect(store.recommendations.activities).toEqual([]);
     expect(store.recommendations.food).toEqual([]);
     expect(store.recommendations.transport).toEqual([]);
@@ -65,7 +63,7 @@ describe('useRecommendationsStore', () => {
     expect(uiStore.error).toBe('Network error');
   });
 
-  it('generateRecommendations parses complete JSON response', async () => {
+  it('generateRecommendations sets recommendations from onContent callback', async () => {
     const { generateItinerary } = await import('../services/api');
     const mockData = {
       activities: [{ title: 'Museum', description: 'Great art', is_partner: false }],
@@ -73,8 +71,8 @@ describe('useRecommendationsStore', () => {
       transport: [{ title: 'Metro', description: 'Fast & cheap' }],
     };
 
-    generateItinerary.mockImplementationOnce(async (_hotel, _form, _lang, onChunk) => {
-      onChunk(JSON.stringify(mockData));
+    generateItinerary.mockImplementationOnce(async (_hotel, _form, _lang, callbacks) => {
+      callbacks.onContent(mockData);
     });
 
     const store = useRecommendationsStore();
@@ -83,5 +81,27 @@ describe('useRecommendationsStore', () => {
     expect(store.recommendations.activities[0].title).toBe('Museum');
     expect(store.recommendations.food[0].title).toBe('Tapas Bar');
     expect(store.generating).toBe(false);
+  });
+
+  it('agentStep is null after generation completes', async () => {
+    const { generateItinerary } = await import('../services/api');
+    generateItinerary.mockImplementationOnce(async (_hotel, _form, _lang, callbacks) => {
+      callbacks.onToolCall('get_weather', { city: 'Barcelona' });
+      callbacks.onContent({ activities: [], food: [], transport: [] });
+    });
+    const store = useRecommendationsStore();
+    await store.generateRecommendations({ city: 'Barcelona' }, {}, 'en');
+    expect(store.agentStep).toBeNull();
+  });
+
+  it('generateRecommendations sets error from onError callback', async () => {
+    const { generateItinerary } = await import('../services/api');
+    generateItinerary.mockImplementationOnce(async (_hotel, _form, _lang, callbacks) => {
+      callbacks.onError('Agent reached maximum steps');
+    });
+    const store = useRecommendationsStore();
+    const uiStore = useUIStore();
+    await store.generateRecommendations({}, {}, 'en');
+    expect(uiStore.error).toBe('Agent reached maximum steps');
   });
 });
