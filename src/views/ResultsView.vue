@@ -19,6 +19,7 @@ const recommendations = computed(() => recommendationsStore.recommendations);
 const myItinerary = computed(() => itineraryStore.myItinerary);
 const generating = computed(() => recommendationsStore.generating);
 const hotelData = computed(() => hotelStore.hotelData);
+const agentStep = computed(() => recommendationsStore.agentStep);
 
 const activeTab = ref('activities');
 
@@ -126,7 +127,16 @@ function handleReset() {
           </transition>
         </div>
 
-        <div class="pt-10">
+        <div class="pt-10 space-y-2">
+          <transition name="slide-up" mode="out-in">
+            <p
+              v-if="agentStep"
+              :key="agentStep"
+              class="text-amber-400/70 text-[10px] uppercase tracking-[0.2em]"
+            >
+              {{ agentStep }}
+            </p>
+          </transition>
           <p class="text-white/40 text-[10px] uppercase tracking-[0.2em]">
             {{ $t('results.customizing', { city: hotelData?.city }) }}
           </p>
