@@ -155,7 +155,7 @@ const T = {
       vat: '+ IVA',
       plans: [
         { name: 'Starter', price: '€49', per: '/mes', desc: 'Para hoteles que empiezan', features: ['1 hotel', 'Chatbot + 10 idiomas', 'Itinerarios con IA', 'Soporte por email'], cta: 'Habla con nosotros', highlight: false },
-        { name: 'Growth', price: '€99', per: '/mes', desc: 'Para hoteles que quieren crecer', features: ['1 hotel', 'Todo en Starter', 'Panel de analítica', 'Portal de socios', 'Marca personalizada', 'Soporte prioritario'], cta: 'Habla con nosotros', highlight: true },
+        { name: 'Growth', price: '€99', per: '/mes', desc: 'Para hoteles que quieren crecer', features: ['1 hotel', 'Todo en Starter', 'Panel de analítica', 'Portal de socios', 'Logo del hotel', 'Soporte prioritario'], cta: 'Habla con nosotros', highlight: true },
       ],
     },
     cta: {
@@ -272,7 +272,7 @@ const T = {
       vat: '+ IVA',
       plans: [
         { name: 'Starter', price: '€49', per: '/mes', desc: 'Per a hotels que comencen', features: ['1 hotel', 'Chatbot + 10 idiomes', 'Itineraris amb IA', 'Suport per email'], cta: 'Parla amb nosaltres', highlight: false },
-        { name: 'Growth', price: '€99', per: '/mes', desc: 'Per a hotels que volen créixer', features: ['1 hotel', 'Tot a Starter', "Panell d'analítica", 'Portal de socis', 'Marca personalitzada', 'Suport prioritari'], cta: 'Parla amb nosaltres', highlight: true },
+        { name: 'Growth', price: '€99', per: '/mes', desc: 'Per a hotels que volen créixer', features: ['1 hotel', 'Tot a Starter', "Panell d'analítica", 'Portal de socis', "Logo de l'hotel", 'Suport prioritari'], cta: 'Parla amb nosaltres', highlight: true },
       ],
     },
     cta: {
@@ -389,7 +389,7 @@ const T = {
       vat: '+ VAT',
       plans: [
         { name: 'Starter', price: '€49', per: '/mo', desc: 'For hotels getting started', features: ['1 hotel', 'Chatbot + 10 languages', 'AI itineraries', 'Email support'], cta: 'Talk to us', highlight: false },
-        { name: 'Growth', price: '€99', per: '/mo', desc: 'For hotels that want to grow', features: ['1 hotel', 'Everything in Starter', 'Analytics dashboard', 'Partners portal', 'Custom branding', 'Priority support'], cta: 'Talk to us', highlight: true },
+        { name: 'Growth', price: '€99', per: '/mo', desc: 'For hotels that want to grow', features: ['1 hotel', 'Everything in Starter', 'Analytics dashboard', 'Partners portal', 'Hotel logo', 'Priority support'], cta: 'Talk to us', highlight: true },
       ],
     },
     cta: {
@@ -670,36 +670,6 @@ const t = computed(() => T[lang.value]);
             class="qr-stand-img"
           />
         </div>
-      </div>
-    </section>
-
-    <!-- ═══ REVIEWS ═════════════════════════════════════════════════════════════ -->
-    <section class="section reveal">
-      <div class="section-inner">
-        <div class="section-header">
-          <p class="eyebrow">{{ t.reviews.eyebrow }}</p>
-          <h2 class="section-title">{{ t.reviews.h2 }}</h2>
-        </div>
-        <div class="reviews-grid">
-          <div
-            v-for="(review, i) in t.reviews.items" :key="i"
-            class="review-card reveal"
-            :style="`animation-delay: ${i * 0.12}s`"
-          >
-            <!-- Stars -->
-            <div class="review-stars">
-              <span v-for="s in 5" :key="s" class="star">★</span>
-            </div>
-            <p class="review-quote">"{{ review.quote }}"</p>
-            <div class="review-author">
-              <div class="review-avatar">{{ review.role[0] }}</div>
-              <div>
-                <p class="review-role">{{ review.role }} · {{ review.location }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-        <p class="reviews-disclaimer">{{ t.reviews.disclaimer }}</p>
       </div>
     </section>
 
