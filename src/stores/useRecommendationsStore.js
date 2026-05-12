@@ -8,7 +8,7 @@ const EMPTY_RECOMMENDATIONS = () => ({ activities: [], food: [], transport: [] }
 const TOOL_MESSAGES = {
   get_weather:      (input) => `Checking weather in ${input?.city ?? 'the city'}…`,
   get_local_events: (input) => `Looking for events in ${input?.city ?? 'the city'}…`,
-  search_venues:    (input) => `Searching for ${input?.query ?? 'venues'}…`,
+  generating:       ()      => `Writing your personalised guide…`,
 };
 
 export const useRecommendationsStore = defineStore('recommendations', () => {

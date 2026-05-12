@@ -4,7 +4,8 @@ export function parseEventsData(data) {
   return events.slice(0, 10).map(e => {
     const date = e.dates?.start?.localDate ?? 'date TBC';
     const venue = e._embedded?.venues?.[0]?.name ?? 'venue TBC';
-    return `${e.name} — ${date} at ${venue}`;
+    const url = e.url ?? null;
+    return `${e.name} — ${date} at ${venue}${url ? ` [tickets: ${url}]` : ''}`;
   }).join('\n');
 }
 
